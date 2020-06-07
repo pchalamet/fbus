@@ -16,7 +16,7 @@ type BusService(busControl: Core.IBusControl, serviceProvider: IServiceProvider)
 
 type IServiceCollection with
     member services.AddFBus(configurator: Core.BusBuilder -> Core.BusBuilder) =
-        let containerRegistrant (msgHandler: Type) (implType: Type) = 
+        let containerRegistrant (msgHandler: Type, implType: Type) = 
             services.AddTransient(msgHandler, implType) |> ignore
 
         let bus = Builder.init() |> configurator

@@ -18,7 +18,7 @@ type IConsumer<'t> =
 type BusBuilder =
     { Name: string
       Uri : System.Uri
-      Registrant: System.Type -> System.Type -> unit
+      Registrant: (System.Type * System.Type) -> unit
       Activator: System.Type -> obj
       Handlers : (System.Type * System.Type) list }
 

@@ -9,7 +9,7 @@ let init () =
     let queueName = sprintf "fbus-%s-%d-%d" computerName pid rnd
     { Name = queueName
       Uri = Uri("amqp://guest:guest@localhost")
-      Registrant = fun msgType implType -> ()
+      Registrant = fun (msgType, implType) -> ()
       Activator = System.Activator.CreateInstance
       Handlers = List.empty }
 
@@ -34,5 +34,5 @@ let inline withHandler<'t> busBuilder =
     { busBuilder with Handlers = busBuilder.Handlers @ handlers }
 
 let build (busBuilder : BusBuilder) =
-    busBuilder.Handlers |> List.iter (fun (msgType, implType) -> busBuilder.Registrant msgType implType)
+    busBuilder.Handlers |> List.iter busBuilder.Registrant
     BusControl(busBuilder) :> IBusControl
