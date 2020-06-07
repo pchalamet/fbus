@@ -1,0 +1,2 @@
+module FBus.Transport.RabbitMQ
+
