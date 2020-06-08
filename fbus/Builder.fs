@@ -9,12 +9,16 @@ let init () =
     let queueName = sprintf "fbus-%s-%d-%d" computerName pid rnd
     { Name = queueName
       Uri = Uri("amqp://guest:guest@localhost")
+      Persistent = false
       Registrant = fun (_) -> ()
       Activator = fun _ t -> System.Activator.CreateInstance(t)
       Handlers = List.empty }
 
 let withEndpoint uri busBuilder =
     { busBuilder with Uri = uri }
+
+let withPersistent persistent busBuilder =
+    { busBuilder with Persistent = persistent }
 
 let withActivator activator busBuilder = 
     { busBuilder with Activator = activator }

@@ -25,6 +25,7 @@ type HandlerInfo = {
 type BusBuilder =
     { Name: string
       Uri : System.Uri
+      Persistent: bool
       Registrant: HandlerInfo -> unit
       Activator: obj -> System.Type -> obj
       Handlers : HandlerInfo list }
@@ -57,14 +58,27 @@ type BusControl(busBuilder: BusBuilder) =
                 use model = conn.CreateModel()
                 model.BasicQos(prefetchSize = 0ul, prefetchCount = 1us, ``global`` = false)
                 model.ConfirmSelect()
-                let queue = model.QueueDeclare(busBuilder.Name)
-                // let xchgDeadLetter = 
-                // let queueDeadLetter = model.QueueDeclare(queue = busBuilder.Name + "-dead-letter",
-                //                                          durable = true, exclusive = false, autoDelete = false)
+
+                // dead letter queues are bound to a single exchange (direct) - the routingKey is the target queue
+                let xchgDeadLetter = "fbus-dead-letter"
+                let deadLetterQueueName = busBuilder.Name + "-dead-letter"
+                let queueName = busBuilder.Name
+                model.ExchangeDeclare(exchange = xchgDeadLetter,
+                                      ``type`` = ExchangeType.Direct,
+                                      durable = true, autoDelete = false)
+                model.QueueDeclare(queue = deadLetterQueueName,
+                                   durable = true, exclusive = false, autoDelete = false) |> ignore
+                model.QueueBind(queue = deadLetterQueueName, exchange = xchgDeadLetter, routingKey = "")
+
+                // message queues are bound to an exchange (fanout) - all bound subscribers receive messages
+                model.QueueDeclare(busBuilder.Name,
+                                   durable = false, exclusive = true, autoDelete = true,
+                                   arguments = dict [ "x-dead-letter-exchange", xchgDeadLetter :> obj
+                                                      "x-dead-letter-routing-key", queueName :> obj ]) |> ignore
                 let bindExchangeAndQueue xchgName =
                     model.ExchangeDeclare(exchange = xchgName, ``type`` = ExchangeType.Fanout, 
                                           durable = true, autoDelete = false)
-                    model.QueueBind(queue = queue.QueueName, exchange = xchgName, routingKey = "")
+                    model.QueueBind(queue = queueName, exchange = xchgName, routingKey = "")
 
                 busBuilder.Handlers |> List.iter (fun x -> x.MessageType |> getExchangeName |> bindExchangeAndQueue)
                 
@@ -97,7 +111,7 @@ type BusControl(busBuilder: BusBuilder) =
                         | exn -> model.BasicNack(deliveryTag = ea.DeliveryTag, multiple = false, requeue = false)
 
                 consumer.Received.Add consumerCallback
-                model.BasicConsume(queue = queue.QueueName, autoAck = false, consumer = consumer) |> ignore
+                model.BasicConsume(queue = queueName, autoAck = false, consumer = consumer) |> ignore
 
             failwith "Not Implemented"
 
