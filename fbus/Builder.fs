@@ -3,11 +3,7 @@ open System
 open FBus.Core
 
 let init () =
-    let computerName = Environment.MachineName
-    let pid = Diagnostics.Process.GetCurrentProcess().Id
-    let rnd = Random().Next()
-    let queueName = sprintf "fbus-%s-%d-%d" computerName pid rnd
-    { Name = queueName
+    { Name = None
       Uri = Uri("amqp://guest:guest@localhost")
       AutoDelete = true
       Registrant = fun (_) -> ()
@@ -19,6 +15,9 @@ let withEndpoint uri busBuilder =
 
 let withAutoDelete autoDelete busBuilder =
     { busBuilder with AutoDelete = autoDelete }
+
+let withName name busBuilder =
+    { busBuilder with Name = Some name }
 
 let withActivator activator busBuilder = 
     { busBuilder with Activator = activator }

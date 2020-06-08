@@ -28,7 +28,9 @@ type Titi =
 
 [<EntryPoint>]
 let main argv =
-    let bus = init() |> withHandler<Toto> 
+    let bus = init() |> withName "sample-generic-host"
+                     |> withAutoDelete false
+                     |> withHandler<Toto> 
                      |> withHandler<Titi>
                      |> build
     bus.Start()

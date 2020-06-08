@@ -23,7 +23,7 @@ type HandlerInfo = {
 }
 
 type BusBuilder =
-    { Name: string
+    { Name: string option
       Uri : System.Uri
       AutoDelete: bool
       Registrant: HandlerInfo -> unit
@@ -59,11 +59,18 @@ type BusControl(busBuilder: BusBuilder) =
                 model.BasicQos(prefetchSize = 0ul, prefetchCount = 1us, ``global`` = false)
                 model.ConfirmSelect()
 
+                // use or create queue name
+                let generateQueueName() =
+                    let computerName = System.Environment.MachineName
+                    let pid = System.Diagnostics.Process.GetCurrentProcess().Id
+                    let rnd = System.Random().Next()
+                    sprintf "fbus-%s-%d-%d" computerName pid rnd
+                let queueName = busBuilder.Name |> Option.defaultWith generateQueueName
+
                 // dead letter queues are bound to a single exchange (direct) - the routingKey is the target queue
                 let autoDelete = busBuilder.AutoDelete
                 let xchgDeadLetter = "fbus-dead-letter"
-                let deadLetterQueueName = busBuilder.Name + "-dead-letter"
-                let queueName = busBuilder.Name
+                let deadLetterQueueName = queueName + "-dead-letter"
                 model.ExchangeDeclare(exchange = xchgDeadLetter,
                                       ``type`` = ExchangeType.Direct,
                                       durable = true, autoDelete = false)
@@ -72,7 +79,7 @@ type BusControl(busBuilder: BusBuilder) =
                 model.QueueBind(queue = deadLetterQueueName, exchange = xchgDeadLetter, routingKey = "")
 
                 // message queues are bound to an exchange (fanout) - all bound subscribers receive messages
-                model.QueueDeclare(busBuilder.Name,
+                model.QueueDeclare(queueName,
                                    durable = false, exclusive = false, autoDelete = autoDelete,
                                    arguments = dict [ "x-dead-letter-exchange", xchgDeadLetter :> obj
                                                       "x-dead-letter-routing-key", queueName :> obj ]) |> ignore
