@@ -25,7 +25,7 @@ type HandlerInfo = {
 type BusBuilder =
     { Name: string
       Uri : System.Uri
-      Persistent: bool
+      AutoDelete: bool
       Registrant: HandlerInfo -> unit
       Activator: obj -> System.Type -> obj
       Handlers : HandlerInfo list }
@@ -60,6 +60,7 @@ type BusControl(busBuilder: BusBuilder) =
                 model.ConfirmSelect()
 
                 // dead letter queues are bound to a single exchange (direct) - the routingKey is the target queue
+                let autoDelete = busBuilder.AutoDelete
                 let xchgDeadLetter = "fbus-dead-letter"
                 let deadLetterQueueName = busBuilder.Name + "-dead-letter"
                 let queueName = busBuilder.Name
@@ -72,12 +73,12 @@ type BusControl(busBuilder: BusBuilder) =
 
                 // message queues are bound to an exchange (fanout) - all bound subscribers receive messages
                 model.QueueDeclare(busBuilder.Name,
-                                   durable = false, exclusive = true, autoDelete = true,
+                                   durable = false, exclusive = false, autoDelete = autoDelete,
                                    arguments = dict [ "x-dead-letter-exchange", xchgDeadLetter :> obj
                                                       "x-dead-letter-routing-key", queueName :> obj ]) |> ignore
                 let bindExchangeAndQueue xchgName =
                     model.ExchangeDeclare(exchange = xchgName, ``type`` = ExchangeType.Fanout, 
-                                          durable = true, autoDelete = false)
+                                          durable = true, autoDelete = autoDelete)
                     model.QueueBind(queue = queueName, exchange = xchgName, routingKey = "")
 
                 busBuilder.Handlers |> List.iter (fun x -> x.MessageType |> getExchangeName |> bindExchangeAndQueue)
