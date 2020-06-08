@@ -8,6 +8,7 @@ let init () =
       AutoDelete = true
       Registrant = fun (_) -> ()
       Activator = fun _ t -> System.Activator.CreateInstance(t)
+      Transport = FBus.Transport.RabbitMQ.Create
       Handlers = List.empty }
 
 let withEndpoint uri busBuilder =
@@ -24,6 +25,9 @@ let withActivator activator busBuilder =
 
 let withRegistrant registrant busBuilder = 
     { busBuilder with Registrant = registrant }
+
+let withTransport transport busBuilder = 
+    { busBuilder with Transport = transport }
 
 let inline withHandler<'t> busBuilder =
     let findMessageHandler (t: System.Type) =

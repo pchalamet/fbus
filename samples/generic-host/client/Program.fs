@@ -28,21 +28,25 @@ type Titi =
 
 [<EntryPoint>]
 let main argv =
-    let bus = init() |> withName "sample-generic-host"
-                     |> withAutoDelete false
-                     |> withHandler<Toto> 
-                     |> withHandler<Titi>
-                     |> build
-    bus.Start()
+    let configureBus builder =
+        builder |> withName "sample-generic-host"
+                |> withAutoDelete false
+                |> withHandler<Toto> 
+                |> withHandler<Titi>
 
-//     let configureBus builder =
-//         builder
+    // let bus = init() |> withName "sample-generic-host"
+    //                  |> withAutoDelete false
+    //                  |> withHandler<Toto> 
+    //                  |> withHandler<Titi>
+    //                  |> build
+    // bus.Start()
 
-//     Host.CreateDefaultBuilder(argv)
-// //        .ConfigureServices(fun services -> services.AddHostedService<IntegratorWorker>() |> ignore)
-//         .ConfigureServices(fun services -> services.AddFBus(configureBus) |> ignore)
-//         .UseConsoleLifetime()
-//         .Build()
-//         .Run()
+                     
+    Host.CreateDefaultBuilder(argv)
+//        .ConfigureServices(fun services -> services.AddHostedService<IntegratorWorker>() |> ignore)
+        .ConfigureServices(fun services -> services.AddFBus(configureBus) |> ignore)
+        .UseConsoleLifetime()
+        .Build()
+        .Run()
 
     0 // return an integer exit code

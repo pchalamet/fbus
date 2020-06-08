@@ -4,6 +4,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="Core.fs" />
+    <Compile Include="RabbitMQ.fs" />
     <Compile Include="Builder.fs" />
     <Compile Include="Hosting.fs" />
   </ItemGroup>
