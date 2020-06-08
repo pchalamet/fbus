@@ -4,14 +4,14 @@ open RabbitMQ.Client.Events
 open FBus.Core
 
 
-type BusSender(conn: IConnection, model: IModel) =
-    interface IBusSender with
-        member this.Publish<'t> (m: 't) =
+type BusTransport(conn: IConnection, model: IModel) =
+    interface IBusTransport with
+        member this.Publish (t: System.Type) (m: string) =
             async { 
                 ()
             }
 
-        member this.Send<'t> (m: 't) =
+        member this.Send (t: System.Type) (m: string) =
             async {
                 ()
             }
@@ -103,7 +103,7 @@ let Create (busBuilder: BusBuilder) msgCallback =
         subscribeMessages ()
         listenMessages()
 
-        new BusSender(conn, model) :> IBusSender
+        new BusTransport(conn, model) :> IBusTransport
     with
         | _ -> dispose()
                reraise()
