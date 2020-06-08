@@ -49,12 +49,13 @@ type BusSender(busTransport: IBusTransport) =
 
 type BusControl(busBuilder: BusBuilder) =
 
+    let mutable busSender = None
     let mutable busTransport = None
 
     interface IBusControl with
         member _.Sender: IBusSender =
-            match busTransport with
-            | Some busTransport -> busTransport |> BusSender :> IBusSender
+            match busSender with
+            | Some busSender -> busSender
             | None -> failwith "Bus is not started"
  
         member this.Start (context: obj) =
@@ -72,7 +73,9 @@ type BusControl(busBuilder: BusBuilder) =
 
                     callsite.Invoke(handler, [| msg |]) |> ignore
 
-                busTransport <- busBuilder.Transport busBuilder msgCallback |> Some
+                let transport = busBuilder.Transport busBuilder msgCallback
+                busTransport <- transport |> Some
+                busSender <- transport |> BusSender :> IBusSender |> Some
 
         member this.Stop() = 
             match busTransport with
