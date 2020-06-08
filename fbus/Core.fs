@@ -32,7 +32,7 @@ type BusBuilder =
 
 
 let getExchangeName (t: System.Type) =
-    let xchgname = sprintf "fbus-%s" t.FullName
+    let xchgname = sprintf "fbus:type:%s" t.FullName
     xchgname
 
 let deserializeMessage (t: System.Type) (json: string) =
@@ -64,13 +64,13 @@ type BusControl(busBuilder: BusBuilder) =
                     let computerName = System.Environment.MachineName
                     let pid = System.Diagnostics.Process.GetCurrentProcess().Id
                     let rnd = System.Random().Next()
-                    sprintf "fbus-%s-%d-%d" computerName pid rnd
-                let queueName = busBuilder.Name |> Option.defaultWith generateQueueName
+                    sprintf "fbus:%s-%d-%d" computerName pid rnd
+                let queueName = busBuilder.Name |> Option.defaultWith generateQueueName |> sprintf "fbus:%s"
 
                 // dead letter queues are bound to a single exchange (direct) - the routingKey is the target queue
                 let autoDelete = busBuilder.AutoDelete
-                let xchgDeadLetter = "fbus-dead-letter"
-                let deadLetterQueueName = queueName + "-dead-letter"
+                let xchgDeadLetter = "fbus:dead-letter"
+                let deadLetterQueueName = queueName + ":dead-letter"
                 model.ExchangeDeclare(exchange = xchgDeadLetter,
                                       ``type`` = ExchangeType.Direct,
                                       durable = true, autoDelete = false)
@@ -96,9 +96,9 @@ type BusControl(busBuilder: BusBuilder) =
                 let consumer = EventingBasicConsumer(model)
                 let consumerCallback (ea: BasicDeliverEventArgs) =
                     try
-                        let msgType = match ea.BasicProperties.Headers.TryGetValue "fbus-msgtype" with
+                        let msgType = match ea.BasicProperties.Headers.TryGetValue "fbus:msgtype" with
                                       | true, (:? string as msgType) -> msgType
-                                      | _ -> failwithf "Missing header fbus-msgtype"
+                                      | _ -> failwithf "Missing header fbus:msgtype"
                         let handlerInfo = match msgType2HandlerInfo |> Map.tryFind msgType with
                                           | Some handlerInfo -> handlerInfo
                                           | _ -> failwithf "Unknown message type [%s]" msgType
