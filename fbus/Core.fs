@@ -38,16 +38,24 @@ let deserializeMessage (t: System.Type) (json: string) =
     let options = JsonSerializerOptions()
     JsonSerializer.Deserialize(json, t, options)
 
+let serializeMessage (v: obj) =
+    let options = JsonSerializerOptions()
+    JsonSerializer.Serialize(v, options)
 
 type BusControl(busBuilder: BusBuilder) =
 
     let mutable busTransport : IBusTransport option = None
 
     interface IBusSender with
-        member this.Publish(arg1: 't): Async<Unit> = 
-            failwith "Not Implemented"
-        member this.Send(arg1: 't): Async<Unit> = 
-            failwith "Not Implemented"
+        member this.Publish(msg: 't): Async<Unit> = 
+            match busTransport with
+            | None -> failwith "Bus is not started"
+            | Some busTransport -> busTransport.Publish typeof<'t> (serializeMessage msg)
+
+        member this.Send(msg: 't): Async<Unit> = 
+            match busTransport with
+            | None -> failwith "Bus is not started"
+            | Some busTransport -> busTransport.Send typeof<'t> (serializeMessage msg)
 
     interface IBusControl with
         member this.Start (context: obj) =
