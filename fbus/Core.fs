@@ -14,7 +14,6 @@ type IBusSender =
 type IBusControl =
     abstract Start: obj -> unit
     abstract Stop: unit -> unit
-    abstract Sender: IBusSender
 
 type IConsumer<'t> =
     abstract Handle: 't -> unit
@@ -39,28 +38,21 @@ let deserializeMessage (t: System.Type) (json: string) =
     let options = JsonSerializerOptions()
     JsonSerializer.Deserialize(json, t, options)
 
-type BusSender(busTransport: IBusTransport) =
+
+type BusControl(busBuilder: BusBuilder) =
+
+    let mutable busTransport : IBusTransport option = None
+
     interface IBusSender with
         member this.Publish(arg1: 't): Async<Unit> = 
             failwith "Not Implemented"
         member this.Send(arg1: 't): Async<Unit> = 
             failwith "Not Implemented"
 
-
-type BusControl(busBuilder: BusBuilder) =
-
-    let mutable busSender = None
-    let mutable busTransport = None
-
     interface IBusControl with
-        member _.Sender: IBusSender =
-            match busSender with
-            | Some busSender -> busSender
-            | None -> failwith "Bus is not started"
- 
         member this.Start (context: obj) =
             match busTransport with
-            | Some _ -> ()
+            | Some _ -> failwith "Bus already started"
             | None ->
                 let msgCallback handlerInfo content =
                     let handler = busBuilder.Activator context handlerInfo.InterfaceType
@@ -73,12 +65,10 @@ type BusControl(busBuilder: BusBuilder) =
 
                     callsite.Invoke(handler, [| msg |]) |> ignore
 
-                let transport = busBuilder.Transport busBuilder msgCallback
-                busTransport <- transport |> Some
-                busSender <- transport |> BusSender :> IBusSender |> Some
+                busTransport <- Some (busBuilder.Transport busBuilder msgCallback)
 
         member this.Stop() = 
             match busTransport with
-            | None -> ()
+            | None -> failwith "Bus already stopped"
             | Some dispose -> dispose.Dispose()
                               busTransport <- None

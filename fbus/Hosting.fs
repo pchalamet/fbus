@@ -24,10 +24,13 @@ type IServiceCollection with
             | :? IServiceProvider as serviceProvider -> serviceProvider.GetService(t)
             | _ -> null
 
-        let bus = Builder.init() |> configurator
-                                 |> Builder.withRegistrant containerRegistrant
-                                 |> Builder.withActivator containerActivator
-                                 |> Builder.build
+        let busControl = Builder.init() |> configurator
+                                        |> Builder.withRegistrant containerRegistrant
+                                        |> Builder.withActivator containerActivator
+                                        |> Builder.build
 
-        services.AddSingleton(bus)
-                .AddSingleton<IHostedService, BusService>() |> ignore
+        let busSender = busControl :?> Core.IBusSender
+
+        services.AddSingleton(busControl)
+                .AddSingleton(busSender)
+                .AddHostedService<BusService>() |> ignore
