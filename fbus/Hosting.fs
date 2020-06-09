@@ -3,8 +3,9 @@ open System
 open System.Threading.Tasks
 open Microsoft.Extensions.Hosting
 open Microsoft.Extensions.DependencyInjection
+open FBus
 
-type BusService(busControl: Core.IBusControl, serviceProvider: IServiceProvider) =
+type BusService(busControl: IBusControl, serviceProvider: IServiceProvider) =
     interface IHostedService with
         member this.StartAsync cancellationToken =
             busControl.Start serviceProvider
@@ -15,8 +16,8 @@ type BusService(busControl: Core.IBusControl, serviceProvider: IServiceProvider)
             Task.CompletedTask
 
 type IServiceCollection with
-    member services.AddFBus(configurator: Core.BusBuilder -> Core.BusBuilder) =
-        let containerRegistrant (handlerInfo: Core.HandlerInfo) = 
+    member services.AddFBus(configurator: BusBuilder -> BusBuilder) =
+        let containerRegistrant (handlerInfo: HandlerInfo) = 
             services.AddTransient(handlerInfo.InterfaceType, handlerInfo.ImplementationType) |> ignore
 
         let containerActivator (ctx: obj) (t: System.Type) =
@@ -29,7 +30,7 @@ type IServiceCollection with
                                         |> Builder.withActivator containerActivator
                                         |> Builder.build
 
-        let busSender = busControl :?> Core.IBusSender
+        let busSender = busControl :?> IBusSender
 
         services.AddSingleton(busControl)
                 .AddSingleton(busSender)

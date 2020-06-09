@@ -16,12 +16,12 @@ type Msg2 = {
 }
 
 type Toto =
-    interface FBus.Core.IConsumer<Msg1> with
+    interface FBus.IConsumer<Msg1> with
         member this.Handle(msg: Msg1): unit = 
             failwith "Not Implemented"
 
 type Titi =
-    interface FBus.Core.IConsumer<Msg2> with
+    interface FBus.IConsumer<Msg2> with
         member this.Handle(msg: Msg2): unit = 
             failwith "Not Implemented"
 

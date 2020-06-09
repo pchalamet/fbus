@@ -8,7 +8,7 @@ let init () =
       AutoDelete = true
       Registrant = fun (_) -> ()
       Activator = fun _ t -> System.Activator.CreateInstance(t)
-      Transport = FBus.Transport.RabbitMQ.Create
+      Transport = Transport.RabbitMQ.Create
       Handlers = List.empty }
 
 let withEndpoint uri busBuilder =

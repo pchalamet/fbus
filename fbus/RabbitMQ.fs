@@ -1,7 +1,7 @@
 module FBus.Transport.RabbitMQ
+open FBus
 open RabbitMQ.Client
 open RabbitMQ.Client.Events
-open FBus.Core
 
 
 type BusTransport(conn: IConnection, model: IModel) =

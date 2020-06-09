@@ -3,6 +3,7 @@
     <TargetFramework>netcoreapp3.1</TargetFramework>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="FBus.fs" />
     <Compile Include="Core.fs" />
     <Compile Include="RabbitMQ.fs" />
     <Compile Include="Builder.fs" />
