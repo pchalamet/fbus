@@ -1,15 +1,14 @@
 namespace FBus
 open System
-open System.Threading.Tasks
 
 type IBusTransport =
     inherit IDisposable
-    abstract Publish: Type -> string -> Task
-    abstract Send: Type -> string -> Task
+    abstract Publish: Type -> ReadOnlyMemory<byte> -> unit
+    abstract Send: Type -> ReadOnlyMemory<byte> -> unit
 
 type IBusSender =
-    abstract Publish: 't -> Task
-    abstract Send: 't -> Task
+    abstract Publish: 't -> unit
+    abstract Send: 't -> unit
 
 type IBusControl =
     abstract Start: obj -> unit
@@ -19,17 +18,17 @@ type IConsumer<'t> =
     abstract Handle: 't -> unit
 
 type HandlerInfo = {
-    MessageType: System.Type
-    InterfaceType: System.Type
-    ImplementationType: System.Type
+    MessageType: Type
+    InterfaceType: Type
+    ImplementationType: Type
 }
 
 type BusBuilder =
     { Name: string option
-      Uri : System.Uri
+      Uri : Uri
       AutoDelete: bool
       Registrant: HandlerInfo -> unit
-      Activator: obj -> System.Type -> obj
-      Transport: BusBuilder -> (HandlerInfo -> string -> unit) -> IBusTransport
+      Activator: obj -> Type -> obj
+      Transport: BusBuilder -> (HandlerInfo -> ReadOnlyMemory<byte> -> unit) -> IBusTransport
       Handlers : HandlerInfo list }
 

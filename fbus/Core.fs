@@ -1,28 +1,30 @@
 module FBus.Core
 
 open FBus
+open System
 open System.Text.Json
 open System.Threading.Tasks
 
-let deserializeMessage (t: System.Type) (json: string) =
+let deserializeMessage (t: System.Type) (body: ReadOnlyMemory<byte>) =
     let options = JsonSerializerOptions()
-    JsonSerializer.Deserialize(json, t, options)
+    JsonSerializer.Deserialize(body.Span, t, options)
 
 let serializeMessage (v: obj) =
     let options = JsonSerializerOptions()
-    JsonSerializer.Serialize(v, options)
+    let body = JsonSerializer.SerializeToUtf8Bytes(v, options)
+    ReadOnlyMemory(body)
 
 type BusControl(busBuilder: BusBuilder) =
 
     let mutable busTransport : IBusTransport option = None
 
     interface IBusSender with
-        member this.Publish(msg: 't): Task = 
+        member this.Publish(msg: 't) = 
             match busTransport with
             | None -> failwith "Bus is not started"
             | Some busTransport -> busTransport.Publish typeof<'t> (serializeMessage msg)
 
-        member this.Send(msg: 't): Task = 
+        member this.Send(msg: 't) = 
             match busTransport with
             | None -> failwith "Bus is not started"
             | Some busTransport -> busTransport.Send typeof<'t> (serializeMessage msg)
