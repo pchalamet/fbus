@@ -2,19 +2,15 @@ module FBus.Transport.RabbitMQ
 open FBus
 open RabbitMQ.Client
 open RabbitMQ.Client.Events
-
+open System.Threading.Tasks
 
 type BusTransport(conn: IConnection, model: IModel) =
     interface IBusTransport with
         member this.Publish (t: System.Type) (m: string) =
-            async { 
-                ()
-            }
+            Task.CompletedTask
 
         member this.Send (t: System.Type) (m: string) =
-            async {
-                ()
-            }
+            Task.CompletedTask
 
     interface System.IDisposable with
         member this.Dispose() =

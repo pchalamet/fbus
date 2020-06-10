@@ -1,14 +1,15 @@
 namespace FBus
 open System
+open System.Threading.Tasks
 
 type IBusTransport =
     inherit IDisposable
-    abstract Publish: Type -> string -> Async<Unit>
-    abstract Send: Type -> string -> Async<Unit>
+    abstract Publish: Type -> string -> Task
+    abstract Send: Type -> string -> Task
 
 type IBusSender =
-    abstract Publish: 't -> Async<Unit>
-    abstract Send: 't -> Async<Unit>
+    abstract Publish: 't -> Task
+    abstract Send: 't -> Task
 
 type IBusControl =
     abstract Start: obj -> unit

@@ -2,6 +2,7 @@ module FBus.Core
 
 open FBus
 open System.Text.Json
+open System.Threading.Tasks
 
 let deserializeMessage (t: System.Type) (json: string) =
     let options = JsonSerializerOptions()
@@ -16,12 +17,12 @@ type BusControl(busBuilder: BusBuilder) =
     let mutable busTransport : IBusTransport option = None
 
     interface IBusSender with
-        member this.Publish(msg: 't): Async<Unit> = 
+        member this.Publish(msg: 't): Task = 
             match busTransport with
             | None -> failwith "Bus is not started"
             | Some busTransport -> busTransport.Publish typeof<'t> (serializeMessage msg)
 
-        member this.Send(msg: 't): Async<Unit> = 
+        member this.Send(msg: 't): Task = 
             match busTransport with
             | None -> failwith "Bus is not started"
             | Some busTransport -> busTransport.Send typeof<'t> (serializeMessage msg)
