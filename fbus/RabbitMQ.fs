@@ -17,7 +17,7 @@ type BusTransport(conn: IConnection, channel: IModel) =
     interface IBusTransport with
         member this.Publish (t: System.Type) (body: ReadOnlyMemory<byte>) =
             let xchgName = t |> getExchangeName
-            let msgTypeProp = System.Text.Encoding.UTF8.GetBytes(t |> getTypeName) :> obj
+            let msgTypeProp = t |> getTypeName :> obj
             let props = channel.CreateBasicProperties(Headers = dict [ "fbus:msgtype", msgTypeProp ] )
             channel.BasicPublish(exchange = xchgName,
                                  routingKey = "",
@@ -26,7 +26,7 @@ type BusTransport(conn: IConnection, channel: IModel) =
 
         member this.Send (destination: string) (t: System.Type) (body: ReadOnlyMemory<byte>) =
             let routingKey = sprintf "fbus:%s" destination
-            let msgTypeProp = System.Text.Encoding.UTF8.GetBytes(t |> getTypeName) :> obj
+            let msgTypeProp = t |> getTypeName :> obj
             let props = channel.CreateBasicProperties(Headers = dict [ "fbus:msgtype", msgTypeProp ] )
             channel.BasicPublish(exchange = "",
                                  routingKey = routingKey,
