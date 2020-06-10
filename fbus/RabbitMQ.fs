@@ -70,13 +70,13 @@ let Create (busBuilder: BusBuilder) msgCallback =
                                 durable = true, autoDelete = false)
         channel.QueueDeclare(queue = deadLetterQueueName,
                              durable = true, exclusive = false, autoDelete = false) |> ignore
-        channel.QueueBind(queue = deadLetterQueueName, exchange = xchgDeadLetter, routingKey = "")
+        channel.QueueBind(queue = deadLetterQueueName, exchange = xchgDeadLetter, routingKey = deadLetterQueueName)
 
         // message queues are bound to an exchange (fanout) - all bound subscribers receive messages
         channel.QueueDeclare(queueName,
-                             durable = false, exclusive = false, autoDelete = autoDelete,
+                             durable = true, exclusive = false, autoDelete = autoDelete,
                              arguments = dict [ "x-dead-letter-exchange", xchgDeadLetter :> obj
-                                                "x-dead-letter-routing-key", queueName :> obj ]) |> ignore
+                                                "x-dead-letter-routing-key", deadLetterQueueName :> obj ]) |> ignore
 
     let bindExchangeAndQueue xchgName =
         channel.ExchangeDeclare(exchange = xchgName, ``type`` = ExchangeType.Fanout, 
@@ -104,8 +104,7 @@ let Create (busBuilder: BusBuilder) msgCallback =
 
                 channel.BasicAck(deliveryTag = ea.DeliveryTag, multiple = false)
             with
-                | exn -> printfn "Failed with error: %A" exn
-                         channel.BasicNack(deliveryTag = ea.DeliveryTag, multiple = false, requeue = false)
+                | exn -> channel.BasicNack(deliveryTag = ea.DeliveryTag, multiple = false, requeue = false)
 
         consumer.Received.Add (consumerCallback msgCallback)
         channel.BasicConsume(queue = queueName, autoAck = false, consumer = consumer) |> ignore
