@@ -8,7 +8,7 @@ open FBus
 type BusService(busControl: IBusControl, serviceProvider: IServiceProvider) =
     interface IHostedService with
         member this.StartAsync cancellationToken =
-            busControl.Start serviceProvider
+            busControl.Start serviceProvider |> ignore
             Task.CompletedTask
 
         member this.StopAsync cancellationToken =

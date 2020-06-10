@@ -17,19 +17,19 @@ type BusTransport(conn: IConnection, channel: IModel) =
     interface IBusTransport with
         member this.Publish (t: System.Type) (body: ReadOnlyMemory<byte>) =
             let xchgName = t |> getExchangeName
-            let props = channel.CreateBasicProperties()
-            props.Headers.Add("fbus:msgtype", t |> getTypeName)
+            let msgTypeProp = System.Text.Encoding.UTF8.GetBytes(t |> getTypeName) :> obj
+            let props = channel.CreateBasicProperties(Headers = dict [ "fbus:msgtype", msgTypeProp ] )
             channel.BasicPublish(exchange = xchgName,
                                  routingKey = "",
                                  basicProperties = props,
                                  body = body)
 
-        member this.Send (t: System.Type) (body: ReadOnlyMemory<byte>) =
-            let xchgName = t |> getExchangeName
-            let props = channel.CreateBasicProperties()
-            props.Headers.Add("fbus:msgtype", t |> getTypeName)
+        member this.Send (destination: string) (t: System.Type) (body: ReadOnlyMemory<byte>) =
+            let routingKey = sprintf "fbus:%s" destination
+            let msgTypeProp = System.Text.Encoding.UTF8.GetBytes(t |> getTypeName) :> obj
+            let props = channel.CreateBasicProperties(Headers = dict [ "fbus:msgtype", msgTypeProp ] )
             channel.BasicPublish(exchange = "",
-                                 routingKey = xchgName,
+                                 routingKey = routingKey,
                                  basicProperties = props,
                                  body = body)
 
@@ -94,7 +94,7 @@ let Create (busBuilder: BusBuilder) msgCallback =
         let consumerCallback msgCallback (ea: BasicDeliverEventArgs) =
             try
                 let msgType = match ea.BasicProperties.Headers.TryGetValue "fbus:msgtype" with
-                              | true, (:? string as msgType) -> msgType
+                              | true, (:? (byte[]) as msgType) -> System.Text.Encoding.UTF8.GetString(msgType)
                               | _ -> failwithf "Missing header fbus:msgtype"
                 let handlerInfo = match msgType2HandlerInfo |> Map.tryFind msgType with
                                   | Some handlerInfo -> handlerInfo
@@ -104,7 +104,8 @@ let Create (busBuilder: BusBuilder) msgCallback =
 
                 channel.BasicAck(deliveryTag = ea.DeliveryTag, multiple = false)
             with
-                | exn -> channel.BasicNack(deliveryTag = ea.DeliveryTag, multiple = false, requeue = false)
+                | exn -> printfn "Failed with error: %A" exn
+                         channel.BasicNack(deliveryTag = ea.DeliveryTag, multiple = false, requeue = false)
 
         consumer.Received.Add (consumerCallback msgCallback)
         channel.BasicConsume(queue = queueName, autoAck = false, consumer = consumer) |> ignore

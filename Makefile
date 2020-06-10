@@ -6,3 +6,9 @@ build:
 test:
 	dotnet test -c $(config)
 
+client:
+	cd samples/client; dotnet run -c $(config)
+
+server:
+	cd samples/server; dotnet run -c $(config)
+

@@ -4,14 +4,15 @@ open System
 type IBusTransport =
     inherit IDisposable
     abstract Publish: Type -> ReadOnlyMemory<byte> -> unit
-    abstract Send: Type -> ReadOnlyMemory<byte> -> unit
+    abstract Send: string -> Type -> ReadOnlyMemory<byte> -> unit
 
 type IBusSender =
     abstract Publish: 't -> unit
-    abstract Send: 't -> unit
+    abstract Send: string -> 't -> unit
 
 type IBusControl =
-    abstract Start: obj -> unit
+    inherit IDisposable
+    abstract Start: obj -> IBusSender
     abstract Stop: unit -> unit
 
 type IConsumer<'t> =
