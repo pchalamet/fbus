@@ -4,23 +4,22 @@ open RabbitMQ.Client
 open RabbitMQ.Client.Events
 open System
 
-let getExchangeName (t: System.Type) =
+let private getExchangeName (t: System.Type) =
     let xchgname = sprintf "fbus:type:%s" t.FullName
     xchgname
 
-let getTypeName (t: System.Type) =
+let private getTypeName (t: System.Type) =
     let typeName = t.FullName
     typeName
 
 type BusTransport(conn: IConnection, channel: IModel) =
-
     let send xchgName routingKey t body =
-            let msgTypeProp = t |> getTypeName :> obj
-            let props = channel.CreateBasicProperties(Headers = dict [ "fbus:msgtype", msgTypeProp ] )
-            channel.BasicPublish(exchange = xchgName,
-                                 routingKey = routingKey,
-                                 basicProperties = props,
-                                 body = body)
+        let msgTypeProp = t |> getTypeName :> obj
+        let props = channel.CreateBasicProperties(Headers = dict [ "fbus:msgtype", msgTypeProp ] )
+        channel.BasicPublish(exchange = xchgName,
+                             routingKey = routingKey,
+                             basicProperties = props,
+                             body = body)
 
     interface IBusTransport with
         member _.Publish (t: System.Type) (body: ReadOnlyMemory<byte>) =
@@ -51,9 +50,9 @@ let Create (busBuilder: BusBuilder) msgCallback =
         channel.ConfirmSelect()
 
     let generateQueueName() =
-        let computerName = System.Environment.MachineName
-        let pid = System.Diagnostics.Process.GetCurrentProcess().Id
-        let rnd = System.Random().Next()
+        let computerName = Environment.MachineName
+        let pid = Diagnostics.Process.GetCurrentProcess().Id
+        let rnd = Random().Next()
         sprintf "fbus:%s-%d-%d" computerName pid rnd
 
     let queueName = busBuilder.Name |> Option.defaultWith generateQueueName |> sprintf "fbus:%s"
@@ -102,7 +101,8 @@ let Create (busBuilder: BusBuilder) msgCallback =
 
                 channel.BasicAck(deliveryTag = ea.DeliveryTag, multiple = false)
             with
-                | exn -> channel.BasicNack(deliveryTag = ea.DeliveryTag, multiple = false, requeue = false)
+                | exn -> // TODO: report exception to someone
+                         channel.BasicNack(deliveryTag = ea.DeliveryTag, multiple = false, requeue = false)
 
         consumer.Received.Add (consumerCallback msgCallback)
         channel.BasicConsume(queue = queueName, autoAck = false, consumer = consumer) |> ignore
