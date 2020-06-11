@@ -11,23 +11,23 @@ let init () =
       Serializer = Serializer.Json() :> IBusSerializer
       Handlers = List.empty }
 
-let withEndpoint uri busBuilder =
-    { busBuilder with Uri = uri }
-
-let withAutoDelete autoDelete busBuilder =
-    { busBuilder with AutoDelete = autoDelete }
-
 let withName name busBuilder =
     { busBuilder with Name = Some name }
-
-let withContainer container busBuilder =
-    { busBuilder with Container = container }
 
 let withTransport transport busBuilder = 
     { busBuilder with Transport = transport }
 
+let withEndpoint uri busBuilder =
+    { busBuilder with Uri = uri }
+
+let withContainer container busBuilder =
+    { busBuilder with Container = container }
+
 let withSerializer serializer busBuilder =
     { busBuilder with Serializer = serializer }
+
+let withAutoDelete autoDelete busBuilder =
+    { busBuilder with AutoDelete = autoDelete }
 
 let inline withHandler<'t> busBuilder =
     let findMessageHandler (t: System.Type) =
