@@ -4,8 +4,6 @@ open System
 open System.Text.Json
 open System.Text.Json.Serialization
 
-let inline (!>) (x : ^a) : ^b = (((^a or ^b) : (static member op_Explicit : ^a -> ^b) x))
-
 type Serializer() =
     interface ISerializer with
         member _.Serialize (v: obj) =
