@@ -1,11 +1,11 @@
 ﻿open System
 open FBus.Builder
-open FBus.Hosting.GenericHost
+open FBus.Hosting
 open Microsoft.Extensions.Hosting
 
 
 type HelloWorldProcessor() =
-    interface FBus.IConsumer<Common.HelloWorld> with
+    interface FBus.IBusConsumer<Common.HelloWorld> with
         member this.Handle(msg: Common.HelloWorld) = 
             printfn "Received HelloWorld message: %A" msg
 

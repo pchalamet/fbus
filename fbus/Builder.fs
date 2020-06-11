@@ -6,10 +6,9 @@ let init () =
     { Name = None
       Uri = Uri("amqp://guest:guest@localhost")
       AutoDelete = true
-      Registrant = fun (_) -> ()
-      Activator = fun _ t -> System.Activator.CreateInstance(t)
+      Container = Container.Activator()
       Transport = Transport.RabbitMQ.Create
-      Serializer = Serializer.Json.Serializer() :> ISerializer
+      Serializer = Serializer.Json() :> IBusSerializer
       Handlers = List.empty }
 
 let withEndpoint uri busBuilder =
@@ -21,11 +20,8 @@ let withAutoDelete autoDelete busBuilder =
 let withName name busBuilder =
     { busBuilder with Name = Some name }
 
-let withActivator activator busBuilder = 
-    { busBuilder with Activator = activator }
-
-let withRegistrant registrant busBuilder = 
-    { busBuilder with Registrant = registrant }
+let withContainer container busBuilder =
+    { busBuilder with Container = container }
 
 let withTransport transport busBuilder = 
     { busBuilder with Transport = transport }
@@ -35,7 +31,7 @@ let withSerializer serializer busBuilder =
 
 let inline withHandler<'t> busBuilder =
     let findMessageHandler (t: System.Type) =
-        if t.IsGenericType && t.GetGenericTypeDefinition() = typedefof<IConsumer<_>> then 
+        if t.IsGenericType && t.GetGenericTypeDefinition() = typedefof<IBusConsumer<_>> then 
             let msgType = t.GetGenericArguments().[0]
             Some (msgType, t)
         else None
@@ -52,5 +48,5 @@ let inline withHandler<'t> busBuilder =
     { busBuilder with Handlers = busBuilder.Handlers @ handlers }
 
 let build (busBuilder : BusBuilder) =
-    busBuilder.Handlers |> List.iter busBuilder.Registrant
+    busBuilder.Handlers |> List.iter busBuilder.Container.Register
     new BusControl(busBuilder) :> IBusControl

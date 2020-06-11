@@ -1,11 +1,11 @@
-module FBus.Serializer.Json
+namespace FBus.Serializer
 open FBus
 open System
 open System.Text.Json
 open System.Text.Json.Serialization
 
-type Serializer() =
-    interface ISerializer with
+type Json() =
+    interface IBusSerializer with
         member _.Serialize (v: obj) =
             let options = JsonSerializerOptions()
             options.Converters.Add(JsonFSharpConverter())

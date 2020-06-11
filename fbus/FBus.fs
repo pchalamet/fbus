@@ -15,25 +15,29 @@ type IBusControl =
     abstract Start: obj -> IBusSender
     abstract Stop: unit -> unit
 
-type ISerializer =
+type IBusSerializer =
     abstract Serialize: obj -> ReadOnlyMemory<byte>
     abstract Deserialize: Type -> ReadOnlyMemory<byte> -> obj
-
-type IConsumer<'t> =
-    abstract Handle: 't -> unit
 
 type HandlerInfo =
     { MessageType: Type
       InterfaceType: Type
       ImplementationType: Type }
 
+type IBusContainer =
+    abstract Register: HandlerInfo -> unit
+    abstract Resolve: obj -> Type -> obj
+
+type IBusConsumer<'t> =
+    abstract Handle: 't -> unit
+
+
 type BusBuilder =
     { Name: string option
       Uri : Uri
       AutoDelete: bool
-      Registrant: HandlerInfo -> unit
-      Activator: obj -> Type -> obj
-      Serializer: ISerializer
+      Container: IBusContainer
+      Serializer: IBusSerializer
       Transport: BusBuilder -> (HandlerInfo -> ReadOnlyMemory<byte> -> unit) -> IBusTransport
       Handlers : HandlerInfo list }
 
@@ -42,7 +46,7 @@ type BusControl(busBuilder: BusBuilder) =
     let mutable busTransport : IBusTransport option = None
 
     let msgCallback context handlerInfo content =
-        let handler = busBuilder.Activator context handlerInfo.InterfaceType
+        let handler = busBuilder.Container.Resolve context handlerInfo.InterfaceType
         if handler |> isNull then failwith "No handler found"
 
         let callsite = handlerInfo.InterfaceType.GetMethod("Handle")
