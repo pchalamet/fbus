@@ -11,8 +11,8 @@ type Serializer() =
         member _.Serialize (v: obj) =
             let options = JsonSerializerOptions()
             options.Converters.Add(JsonFSharpConverter())
-            let body = JsonSerializer.SerializeToUtf8Bytes(v, options).AsMemory()
-            (!> body) : ReadOnlyMemory<byte>
+            let body = JsonSerializer.SerializeToUtf8Bytes(v, options)
+            ReadOnlyMemory(body)
 
         member _.Deserialize (t: System.Type) (body: ReadOnlyMemory<byte>) =
             let options = JsonSerializerOptions()
