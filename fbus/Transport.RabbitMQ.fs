@@ -13,24 +13,23 @@ let getTypeName (t: System.Type) =
     typeName
 
 type BusTransport(conn: IConnection, channel: IModel) =
-    interface IBusTransport with
-        member _.Publish (t: System.Type) (body: ReadOnlyMemory<byte>) =
-            let xchgName = t |> getExchangeName
+
+    let send xchgName routingKey t body =
             let msgTypeProp = t |> getTypeName :> obj
             let props = channel.CreateBasicProperties(Headers = dict [ "fbus:msgtype", msgTypeProp ] )
             channel.BasicPublish(exchange = xchgName,
-                                 routingKey = "",
-                                 basicProperties = props,
-                                 body = body)
-
-        member _.Send (destination: string) (t: System.Type) (body: ReadOnlyMemory<byte>) =
-            let routingKey = sprintf "fbus:%s" destination
-            let msgTypeProp = t |> getTypeName :> obj
-            let props = channel.CreateBasicProperties(Headers = dict [ "fbus:msgtype", msgTypeProp ] )
-            channel.BasicPublish(exchange = "",
                                  routingKey = routingKey,
                                  basicProperties = props,
                                  body = body)
+
+    interface IBusTransport with
+        member _.Publish (t: System.Type) (body: ReadOnlyMemory<byte>) =
+            let xchgName = t |> getExchangeName
+            send xchgName "" t body
+
+        member _.Send (destination: string) (t: System.Type) (body: ReadOnlyMemory<byte>) =
+            let routingKey = sprintf "fbus:%s" destination
+            send "" routingKey t body
 
     interface System.IDisposable with
         member _.Dispose() =
