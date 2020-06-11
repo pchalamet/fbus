@@ -20,22 +20,23 @@ let generateQueueName() =
 
 
 type RabbitMQ(conn: IConnection, channel: IModel) =
-    let send xchgName routingKey t body =
+    let send context xchgName routingKey t body =
         let msgTypeProp = t |> getTypeName :> obj
-        let props = channel.CreateBasicProperties(Headers = dict [ "fbus:msgtype", msgTypeProp ] )
+        let headers = context |> Map.map (fun _ v -> v :> obj) |> Map.add "fbus:msgtype" msgTypeProp
+        let props = channel.CreateBasicProperties(Headers = headers )
         channel.BasicPublish(exchange = xchgName,
                              routingKey = routingKey,
                              basicProperties = props,
                              body = body)
 
     interface IBusTransport with
-        member _.Publish (t: System.Type) (body: ReadOnlyMemory<byte>) =
+        member _.Publish (context: Map<string, string>) (t: System.Type) (body: ReadOnlyMemory<byte>) =
             let xchgName = t |> getExchangeName
-            send xchgName "" t body
+            send context xchgName "" t body
 
-        member _.Send (destination: string) (t: System.Type) (body: ReadOnlyMemory<byte>) =
+        member _.Send (context: Map<string, string>) (destination: string) (t: System.Type) (body: ReadOnlyMemory<byte>) =
             let routingKey = sprintf "fbus:%s" destination
-            send "" routingKey t body
+            send context "" routingKey t body
 
     interface System.IDisposable with
         member _.Dispose() =

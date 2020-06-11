@@ -3,8 +3,8 @@ open System
 
 type IBusTransport =
     inherit IDisposable
-    abstract Publish: Type -> ReadOnlyMemory<byte> -> unit
-    abstract Send: string -> Type -> ReadOnlyMemory<byte> -> unit
+    abstract Publish: Map<string, string> -> Type -> ReadOnlyMemory<byte> -> unit
+    abstract Send: Map<string, string> -> string -> Type -> ReadOnlyMemory<byte> -> unit
 
 type IBusSender =
     abstract Publish: 't -> unit
@@ -28,7 +28,8 @@ type IBusContainer =
     abstract Register: HandlerInfo -> unit
     abstract Resolve: obj -> Type -> obj
 
-type IContext = interface end
+type IContext =
+    abstract Sender: string
 
 type IBusConsumer<'t> =
     abstract Handle: IContext -> 't -> unit
@@ -44,8 +45,14 @@ type BusBuilder =
       Handlers : HandlerInfo list }
 
 
+type BusContext() =
+    interface IContext with
+        member this.Sender = "unset"
+
 type BusControl(busBuilder: BusBuilder) =
     let mutable busTransport : IBusTransport option = None
+
+    let defaultContext = Map [ "fbus:sender", busBuilder.Name.Value ]
 
     let msgCallback context handlerInfo content =
         let handler = busBuilder.Container.Resolve context handlerInfo.InterfaceType
@@ -54,19 +61,20 @@ type BusControl(busBuilder: BusBuilder) =
         let callsite = handlerInfo.InterfaceType.GetMethod("Handle")
         if callsite |> isNull then failwith "Handler method not found"
 
+        let ctx = BusContext()
         let msg = busBuilder.Serializer.Deserialize handlerInfo.MessageType content
-        callsite.Invoke(handler, [| msg |]) |> ignore
+        callsite.Invoke(handler, [| ctx; msg |]) |> ignore
 
     interface IBusSender with
         member _.Publish (msg: 't) = 
             match busTransport with
             | None -> failwith "Bus is not started"
-            | Some busTransport -> busBuilder.Serializer.Serialize msg |> busTransport.Publish typeof<'t>
+            | Some busTransport -> busBuilder.Serializer.Serialize msg |> busTransport.Publish defaultContext typeof<'t>
 
         member _.Send (destination: string) (msg: 't) = 
             match busTransport with
             | None -> failwith "Bus is not started"
-            | Some busTransport -> busBuilder.Serializer.Serialize msg |> busTransport.Send destination typeof<'t>
+            | Some busTransport -> busBuilder.Serializer.Serialize msg |> busTransport.Send defaultContext destination typeof<'t>
 
     interface IBusControl with
         member this.Start (context: obj) =

@@ -9,8 +9,7 @@ It comes with default implementation for:
 * System.Text.Json serialization
 
 Following features will appear in future revisions:
-* Reply support
-* More context information (see `IContext`)
+* Reply
 * Parallelism support via sharding
 
 Things that won't be:
