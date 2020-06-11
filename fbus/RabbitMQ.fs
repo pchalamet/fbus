@@ -1,28 +1,25 @@
-namespace FBus.Transport
+module FBus.Transport
 open System
-
-module RabbitMQHelpers =
-    let getExchangeName (t: System.Type) =
-        let xchgname = sprintf "fbus:type:%s" t.FullName
-        xchgname
-
-    let getTypeName (t: System.Type) =
-        let typeName = t.FullName
-        typeName
-
-    let generateQueueName() =
-        let computerName = Environment.MachineName
-        let pid = Diagnostics.Process.GetCurrentProcess().Id
-        let rnd = Random().Next()
-        sprintf "fbus:%s-%d-%d" computerName pid rnd
-
 open FBus
-open RabbitMQHelpers
 open RabbitMQ.Client
 open RabbitMQ.Client.Events
 
-type RabbitMQ(conn: IConnection, channel: IModel) =
+let getExchangeName (t: System.Type) =
+    let xchgname = sprintf "fbus:type:%s" t.FullName
+    xchgname
 
+let getTypeName (t: System.Type) =
+    let typeName = t.FullName
+    typeName
+
+let generateQueueName() =
+    let computerName = Environment.MachineName
+    let pid = Diagnostics.Process.GetCurrentProcess().Id
+    let rnd = Random().Next()
+    sprintf "fbus:%s-%d-%d" computerName pid rnd
+
+
+type RabbitMQ(conn: IConnection, channel: IModel) =
     let send xchgName routingKey t body =
         let msgTypeProp = t |> getTypeName :> obj
         let props = channel.CreateBasicProperties(Headers = dict [ "fbus:msgtype", msgTypeProp ] )

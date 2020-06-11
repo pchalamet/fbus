@@ -1,4 +1,4 @@
-namespace FBus.Hosting
+module FBus.Hosting
 open System
 open System.Threading.Tasks
 open Microsoft.Extensions.Hosting
@@ -26,17 +26,15 @@ type AspNetCoreContainer(services: IServiceCollection) =
             | :? IServiceProvider as serviceProvider -> serviceProvider.GetService(t)
             | _ -> null
 
-[<AutoOpen>]
-module DependencyInjectionExtensions =
 
-    type IServiceCollection with
-        member services.AddFBus(configurator: BusBuilder -> BusBuilder) =
-            let busControl = Builder.init() |> configurator
-                                            |> Builder.withContainer (AspNetCoreContainer(services))
-                                            |> Builder.build
+type IServiceCollection with
+    member services.AddFBus(configurator: BusBuilder -> BusBuilder) =
+        let busControl = Builder.init() |> configurator
+                                        |> Builder.withContainer (AspNetCoreContainer(services))
+                                        |> Builder.build
 
-            let busSender = busControl :?> IBusSender
+        let busSender = busControl :?> IBusSender
 
-            services.AddSingleton(busControl)
-                    .AddSingleton(busSender)
-                    .AddHostedService<BusService>() |> ignore
+        services.AddSingleton(busControl)
+                .AddSingleton(busSender)
+                .AddHostedService<BusService>() |> ignore

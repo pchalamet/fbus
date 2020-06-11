@@ -1,4 +1,4 @@
-namespace FBus.Container
+module FBus.Container
 open FBus
 
 type Activator() =

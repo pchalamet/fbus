@@ -1,5 +1,4 @@
-﻿open System
-open FBus.Builder
+﻿open FBus.Builder
 open FBus.Hosting
 open Microsoft.Extensions.Hosting
 
