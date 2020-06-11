@@ -4,11 +4,10 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="FBus.fs" />
-    <Compile Include="Core.fs" />
-    <Compile Include="RabbitMQ.fs" />
+    <Compile Include="Transport.RabbitMQ.fs" />
     <Compile Include="Serializer.Json.fs" />
     <Compile Include="Builder.fs" />
-    <Compile Include="Hosting.fs" />
+    <Compile Include="Hosting.GenericHost.fs" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="FSharp.SystemTextJson" Version="0.11.13" />

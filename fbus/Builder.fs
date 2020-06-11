@@ -1,6 +1,6 @@
 ﻿module FBus.Builder
+open FBus
 open System
-open FBus.Core
 
 let init () =
     { Name = None

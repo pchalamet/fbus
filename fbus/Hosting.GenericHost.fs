@@ -1,4 +1,4 @@
-module FBus.Hosting
+module FBus.Hosting.GenericHost
 open System
 open System.Threading.Tasks
 open Microsoft.Extensions.Hosting

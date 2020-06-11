@@ -1,6 +1,6 @@
 ﻿open System
 open FBus.Builder
-open FBus.Hosting
+open FBus.Hosting.GenericHost
 open Microsoft.Extensions.Hosting
 
 
