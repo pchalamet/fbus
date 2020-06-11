@@ -28,8 +28,10 @@ type IBusContainer =
     abstract Register: HandlerInfo -> unit
     abstract Resolve: obj -> Type -> obj
 
+type IContext = interface end
+
 type IBusConsumer<'t> =
-    abstract Handle: 't -> unit
+    abstract Handle: IContext -> 't -> unit
 
 
 type BusBuilder =

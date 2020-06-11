@@ -5,7 +5,7 @@ open Microsoft.Extensions.Hosting
 
 type HelloWorldProcessor() =
     interface FBus.IBusConsumer<Common.HelloWorld> with
-        member this.Handle(msg: Common.HelloWorld) = 
+        member this.Handle ctx (msg: Common.HelloWorld) = 
             printfn "Received HelloWorld message: %A" msg
 
 [<EntryPoint>]

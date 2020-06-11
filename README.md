@@ -1,5 +1,20 @@
 # fbus
-small service-bus in F# for (mainly) F#. But hey, it should work for C# as well.
+small service-bus in F# for (mainly) F#.
+
+It comes with default implementation for:
+* RabbitMQ (with dead-letter support)
+* Publish (broadcast) and Send (direct)
+* Persistent queue/buffering across activation
+* Generic Host support with dependency injection
+* System.Text.Json serialization
+
+Following features will appear in future revisions:
+* Reply support
+* More context information (see `IContext`)
+* Parallelism support via sharding
+
+Things that won't be:
+* Sagas
 
 # how to use it ?
 
@@ -88,5 +103,10 @@ Once bus is started, `IBusSender` is available:
 
 ```
 type IBusConsumer<'t> =
-    abstract Handle: 't -> unit
+    abstract Handle: IContext -> 't -> unit
 ```
+
+`IContext` is an empty interface but some information will be added later on.
+
+# Generic Host
+Support for Generic Host is available alongside dependency injection. See `AddFBus` and samples for more details.
