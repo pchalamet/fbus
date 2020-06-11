@@ -1,20 +1,6 @@
 module FBus.Core
-
 open FBus
 open System
-open System.Text.Json
-open System.Text.Json.Serialization
-
-let deserializeMessage (t: System.Type) (body: ReadOnlyMemory<byte>) =
-    let options = JsonSerializerOptions()
-    options.Converters.Add(JsonFSharpConverter())
-    JsonSerializer.Deserialize(body.Span, t, options)
-
-let serializeMessage (v: obj) =
-    let options = JsonSerializerOptions()
-    options.Converters.Add(JsonFSharpConverter())
-    let body = JsonSerializer.SerializeToUtf8Bytes(v, options)
-    ReadOnlyMemory(body)
 
 type BusControl(busBuilder: BusBuilder) =
 
@@ -24,13 +10,13 @@ type BusControl(busBuilder: BusBuilder) =
         member this.Publish (msg: 't) = 
             match busTransport with
             | None -> failwith "Bus is not started"
-            | Some busTransport -> let body = serializeMessage msg
+            | Some busTransport -> let body = busBuilder.Serializer.Serialize msg
                                    busTransport.Publish typeof<'t> body
 
         member this.Send (destination: string) (msg: 't) = 
             match busTransport with
             | None -> failwith "Bus is not started"
-            | Some busTransport -> let body = serializeMessage msg
+            | Some busTransport -> let body = busBuilder.Serializer.Serialize msg
                                    busTransport.Send destination typeof<'t> body
 
     interface IDisposable with
@@ -52,7 +38,7 @@ type BusControl(busBuilder: BusBuilder) =
                     let callsite = handlerInfo.InterfaceType.GetMethod("Handle")
                     if callsite |> isNull then failwith "Handler method not found"
 
-                    let msg = deserializeMessage handlerInfo.MessageType content
+                    let msg = busBuilder.Serializer.Deserialize handlerInfo.MessageType content
 
                     callsite.Invoke(handler, [| msg |]) |> ignore
 

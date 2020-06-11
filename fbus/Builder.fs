@@ -9,6 +9,7 @@ let init () =
       Registrant = fun (_) -> ()
       Activator = fun _ t -> System.Activator.CreateInstance(t)
       Transport = Transport.RabbitMQ.Create
+      Serializer = Serializer.Json.Serializer() :> ISerializer
       Handlers = List.empty }
 
 let withEndpoint uri busBuilder =
@@ -28,6 +29,9 @@ let withRegistrant registrant busBuilder =
 
 let withTransport transport busBuilder = 
     { busBuilder with Transport = transport }
+
+let withSerializer serializer busBuilder =
+    { busBuilder with Serializer = serializer }
 
 let inline withHandler<'t> busBuilder =
     let findMessageHandler (t: System.Type) =

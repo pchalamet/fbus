@@ -6,6 +6,7 @@
     <Compile Include="FBus.fs" />
     <Compile Include="Core.fs" />
     <Compile Include="RabbitMQ.fs" />
+    <Compile Include="Serializer.Json.fs" />
     <Compile Include="Builder.fs" />
     <Compile Include="Hosting.fs" />
   </ItemGroup>

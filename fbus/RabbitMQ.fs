@@ -2,7 +2,6 @@ module FBus.Transport.RabbitMQ
 open FBus
 open RabbitMQ.Client
 open RabbitMQ.Client.Events
-open System.Threading.Tasks
 open System
 
 let getExchangeName (t: System.Type) =
@@ -15,7 +14,7 @@ let getTypeName (t: System.Type) =
 
 type BusTransport(conn: IConnection, channel: IModel) =
     interface IBusTransport with
-        member this.Publish (t: System.Type) (body: ReadOnlyMemory<byte>) =
+        member _.Publish (t: System.Type) (body: ReadOnlyMemory<byte>) =
             let xchgName = t |> getExchangeName
             let msgTypeProp = t |> getTypeName :> obj
             let props = channel.CreateBasicProperties(Headers = dict [ "fbus:msgtype", msgTypeProp ] )
@@ -24,7 +23,7 @@ type BusTransport(conn: IConnection, channel: IModel) =
                                  basicProperties = props,
                                  body = body)
 
-        member this.Send (destination: string) (t: System.Type) (body: ReadOnlyMemory<byte>) =
+        member _.Send (destination: string) (t: System.Type) (body: ReadOnlyMemory<byte>) =
             let routingKey = sprintf "fbus:%s" destination
             let msgTypeProp = t |> getTypeName :> obj
             let props = channel.CreateBasicProperties(Headers = dict [ "fbus:msgtype", msgTypeProp ] )
@@ -34,7 +33,7 @@ type BusTransport(conn: IConnection, channel: IModel) =
                                  body = body)
 
     interface System.IDisposable with
-        member this.Dispose() =
+        member _.Dispose() =
             channel.Dispose()
             conn.Dispose()
 

@@ -15,6 +15,10 @@ type IBusControl =
     abstract Start: obj -> IBusSender
     abstract Stop: unit -> unit
 
+type ISerializer =
+    abstract Serialize: obj -> ReadOnlyMemory<byte>
+    abstract Deserialize: Type -> ReadOnlyMemory<byte> -> obj
+
 type IConsumer<'t> =
     abstract Handle: 't -> unit
 
@@ -30,6 +34,7 @@ type BusBuilder =
       AutoDelete: bool
       Registrant: HandlerInfo -> unit
       Activator: obj -> Type -> obj
+      Serializer: ISerializer
       Transport: BusBuilder -> (HandlerInfo -> ReadOnlyMemory<byte> -> unit) -> IBusTransport
       Handlers : HandlerInfo list }
 
