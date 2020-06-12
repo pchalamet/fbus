@@ -7,6 +7,7 @@ type HelloWorldProcessor() =
     interface FBus.IBusConsumer<Common.HelloWorld> with
         member this.Handle ctx (msg: Common.HelloWorld) = 
             printfn "Received HelloWorld message [%A] from [%s]" msg ctx.Sender
+            ctx.Reply "Hello !!!"
 
 [<EntryPoint>]
 let main argv =

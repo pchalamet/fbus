@@ -1,11 +1,19 @@
 ﻿open System
+open FBus
 open FBus.Builder
+
+type ResponseProcessor() =
+    interface FBus.IBusConsumer<string> with
+        member this.Handle ctx (msg: string) = 
+            printfn "Received string message [%A] from [%s]" msg ctx.Sender
 
 [<EntryPoint>]
 let main argv =
 
     use bus = FBus.Builder.init()
                  |> withName "sample-client"
+                 |> withAutoDelete false
+                 |> withHandler<ResponseProcessor>
                  |> build
  
     let busSender = bus.Start()
@@ -15,7 +23,9 @@ let main argv =
     | [| toServer |] -> busSender.Send toServer helloWorld
     | _ -> busSender.Publish helloWorld
 
+    printfn "Press ENTER to exit"
+    Console.ReadLine() |> ignore
 
+    bus.Stop()
     
-
-    0 // return an integer exit code
+    0
