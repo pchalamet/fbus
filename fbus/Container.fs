@@ -3,7 +3,7 @@ open FBus
 
 type Activator() =
     interface IBusContainer with
-        member this.Register handlerInfo = ()
+        member _.Register handlerInfo = ()
 
-        member this.Resolve ctx t =
-            System.Activator.CreateInstance(t)
+        member _.Resolve ctx handlerInfo =
+            System.Activator.CreateInstance(handlerInfo.ImplementationType)

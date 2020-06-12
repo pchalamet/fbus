@@ -26,7 +26,7 @@ type HandlerInfo =
 
 type IBusContainer =
     abstract Register: HandlerInfo -> unit
-    abstract Resolve: obj -> Type -> obj
+    abstract Resolve: obj -> HandlerInfo -> obj
 
 type IContext =
     abstract Sender: string
@@ -50,12 +50,15 @@ type BusContext() =
         member this.Sender = "unset"
 
 type BusControl(busBuilder: BusBuilder) =
+    do
+        busBuilder.Handlers |> List.iter busBuilder.Container.Register
+
     let mutable busTransport : IBusTransport option = None
 
     let defaultContext = Map [ "fbus:sender", busBuilder.Name.Value ]
 
     let msgCallback context handlerInfo content =
-        let handler = busBuilder.Container.Resolve context handlerInfo.InterfaceType
+        let handler = busBuilder.Container.Resolve context handlerInfo
         if handler |> isNull then failwith "No handler found"
 
         let callsite = handlerInfo.InterfaceType.GetMethod("Handle")

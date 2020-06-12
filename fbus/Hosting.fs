@@ -7,23 +7,23 @@ open FBus
 
 type BusService(busControl: IBusControl, serviceProvider: IServiceProvider) =
     interface IHostedService with
-        member this.StartAsync cancellationToken =
+        member _.StartAsync cancellationToken =
             busControl.Start serviceProvider |> ignore
             Task.CompletedTask
 
-        member this.StopAsync cancellationToken =
+        member _.StopAsync cancellationToken =
             busControl.Stop()
             Task.CompletedTask
 
 
 type AspNetCoreContainer(services: IServiceCollection) =
     interface IBusContainer with
-        member this.Register (handlerInfo: HandlerInfo) =
+        member _.Register (handlerInfo: HandlerInfo) =
             services.AddTransient(handlerInfo.InterfaceType, handlerInfo.ImplementationType) |> ignore
 
-        member this.Resolve (ctx: obj) (t: System.Type) =
+        member _.Resolve ctx handlerInfo =
             match ctx with
-            | :? IServiceProvider as serviceProvider -> serviceProvider.GetService(t)
+            | :? IServiceProvider as serviceProvider -> serviceProvider.GetService(handlerInfo.InterfaceType)
             | _ -> null
 
 

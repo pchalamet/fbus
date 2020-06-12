@@ -103,6 +103,7 @@ type RabbitMQ(conn: IConnection, channel: IModel) =
                     channel.BasicAck(deliveryTag = ea.DeliveryTag, multiple = false)
                 with
                     | exn -> // TODO: report exception to someone
+                             printfn "Failed to process message %A" exn
                              channel.BasicNack(deliveryTag = ea.DeliveryTag, multiple = false, requeue = false)
 
             consumer.Received.Add (consumerCallback msgCallback)

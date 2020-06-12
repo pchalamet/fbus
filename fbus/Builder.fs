@@ -48,5 +48,4 @@ let inline withHandler<'t> busBuilder =
     { busBuilder with Handlers = busBuilder.Handlers @ handlers }
 
 let build (busBuilder : BusBuilder) =
-    busBuilder.Handlers |> List.iter busBuilder.Container.Register
     new BusControl(busBuilder) :> IBusControl
