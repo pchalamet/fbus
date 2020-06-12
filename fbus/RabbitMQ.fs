@@ -20,9 +20,8 @@ let generateQueueName() =
 
 
 type RabbitMQ(conn: IConnection, channel: IModel) =
-    let send context xchgName routingKey t body =
-        let msgTypeProp = t |> getTypeName :> obj
-        let headers = context |> Map.map (fun _ v -> v :> obj) |> Map.add "fbus:msgtype" msgTypeProp
+    let send context xchgName routingKey typeId body =
+        let headers = context |> Map.map (fun _ v -> v :> obj) |> Map.add "fbus:msgtype" (typeId :> obj)
         let props = channel.CreateBasicProperties(Headers = headers )
         channel.BasicPublish(exchange = xchgName,
                              routingKey = routingKey,
@@ -30,11 +29,11 @@ type RabbitMQ(conn: IConnection, channel: IModel) =
                              body = body)
 
     interface IBusTransport with
-        member _.Publish (context: Map<string, string>) (msgType: System.Type) (body: ReadOnlyMemory<byte>) =
-            let xchgName = msgType |> getExchangeName
+        member _.Publish (context: Map<string, string>) (msgType: string) (body: ReadOnlyMemory<byte>) =
+            let xchgName = sprintf "fbus:type:%s" msgType
             send context xchgName "" msgType body
 
-        member _.Send (context: Map<string, string>) (destination: string) (msgType: System.Type) (body: ReadOnlyMemory<byte>) =
+        member _.Send (context: Map<string, string>) (destination: string) (msgType: string) (body: ReadOnlyMemory<byte>) =
             let routingKey = sprintf "fbus:%s" destination
             send context "" routingKey msgType body
 
@@ -94,11 +93,8 @@ type RabbitMQ(conn: IConnection, channel: IModel) =
                     let msgType = match ea.BasicProperties.Headers.TryGetValue "fbus:msgtype" with
                                   | true, (:? (byte[]) as msgType) -> System.Text.Encoding.UTF8.GetString(msgType)
                                   | _ -> failwithf "Missing header fbus:msgtype"
-                    let handlerInfo = match msgType2HandlerInfo |> Map.tryFind msgType with
-                                      | Some handlerInfo -> handlerInfo
-                                      | _ -> failwithf "Unknown message type [%s]" msgType
 
-                    msgCallback handlerInfo ea.Body
+                    msgCallback msgType ea.Body
 
                     channel.BasicAck(deliveryTag = ea.DeliveryTag, multiple = false)
                 with

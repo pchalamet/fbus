@@ -38,7 +38,8 @@ let inline withHandler<'t> busBuilder =
 
     let findMessageHandlers (t: System.Type) =    
         t.GetInterfaces() |> Array.choose findMessageHandler
-                          |> Array.map (fun (msgType, itfType) -> { MessageType = msgType
+                          |> Array.map (fun (msgType, itfType) -> { Id = msgType.FullName
+                                                                    MessageType = msgType
                                                                     InterfaceType = itfType
                                                                     ImplementationType = t })
                           |> List.ofArray
