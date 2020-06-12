@@ -20,8 +20,8 @@ let generateQueueName() =
 
 
 type RabbitMQ(conn: IConnection, channel: IModel) =
-    let send context xchgName routingKey typeId body =
-        let headers = context |> Map.map (fun _ v -> v :> obj) |> Map.add "fbus:msgtype" (typeId :> obj)
+    let send headers xchgName routingKey typeId body =
+        let headers = headers |> Map.map (fun _ v -> v :> obj) |> Map.add "fbus:msgtype" (typeId :> obj)
         let props = channel.CreateBasicProperties(Headers = headers )
         channel.BasicPublish(exchange = xchgName,
                              routingKey = routingKey,
@@ -29,13 +29,13 @@ type RabbitMQ(conn: IConnection, channel: IModel) =
                              body = body)
 
     interface IBusTransport with
-        member _.Publish (context: Map<string, string>) (msgType: string) (body: ReadOnlyMemory<byte>) =
+        member _.Publish (headers: Map<string, string>) (msgType: string) (body: ReadOnlyMemory<byte>) =
             let xchgName = sprintf "fbus:type:%s" msgType
-            send context xchgName "" msgType body
+            send headers xchgName "" msgType body
 
-        member _.Send (context: Map<string, string>) (destination: string) (msgType: string) (body: ReadOnlyMemory<byte>) =
+        member _.Send (headers: Map<string, string>) (destination: string) (msgType: string) (body: ReadOnlyMemory<byte>) =
             let routingKey = sprintf "fbus:%s" destination
-            send context "" routingKey msgType body
+            send headers "" routingKey msgType body
 
     interface System.IDisposable with
         member _.Dispose() =
@@ -85,8 +85,6 @@ type RabbitMQ(conn: IConnection, channel: IModel) =
 
 
         let listenMessages () =
-            let msgType2HandlerInfo = busBuilder.Handlers |> List.map (fun x -> x.MessageType |> getTypeName, x)
-                                                          |> Map
             let consumer = EventingBasicConsumer(channel)
             let consumerCallback msgCallback (ea: BasicDeliverEventArgs) =
                 try
@@ -94,7 +92,10 @@ type RabbitMQ(conn: IConnection, channel: IModel) =
                                   | true, (:? (byte[]) as msgType) -> System.Text.Encoding.UTF8.GetString(msgType)
                                   | _ -> failwithf "Missing header fbus:msgtype"
 
-                    msgCallback msgType ea.Body
+                    let headers = ea.BasicProperties.Headers |> Seq.map (fun kvp -> kvp.Key, System.Text.Encoding.UTF8.GetString(kvp.Value :?> byte[]))
+                                                             |> Map
+
+                    msgCallback headers msgType ea.Body
 
                     channel.BasicAck(deliveryTag = ea.DeliveryTag, multiple = false)
                 with

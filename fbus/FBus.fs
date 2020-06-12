@@ -42,13 +42,14 @@ type BusBuilder =
       AutoDelete: bool
       Container: IBusContainer
       Serializer: IBusSerializer
-      Transport: BusBuilder -> (string -> ReadOnlyMemory<byte> -> unit) -> IBusTransport
+      Transport: BusBuilder -> (Map<string,string> -> string -> ReadOnlyMemory<byte> -> unit) -> IBusTransport
       Handlers : HandlerInfo list }
 
 
-type BusContext() =
+type BusContext(headers) =
     interface IContext with
-        member this.Sender = "unset"
+        member this.Sender = 
+            headers |> Map.find "fbus:sender"
 
 type BusControl(busBuilder: BusBuilder) =
     do
@@ -60,7 +61,7 @@ type BusControl(busBuilder: BusBuilder) =
 
     let msgType2HandlerInfo = busBuilder.Handlers |> List.map (fun x -> x.Id, x) |> Map
 
-    let msgCallback context msgType content =
+    let msgCallback context headers msgType content =
         let handlerInfo = match msgType2HandlerInfo |> Map.tryFind msgType with
                           | Some handlerInfo -> handlerInfo
                           | _ -> failwithf "Unknown message type [%s]" msgType
@@ -70,7 +71,7 @@ type BusControl(busBuilder: BusBuilder) =
         let callsite = handlerInfo.InterfaceType.GetMethod("Handle")
         if callsite |> isNull then failwith "Handler method not found"
 
-        let ctx = BusContext()
+        let ctx = BusContext(headers)
         let msg = busBuilder.Serializer.Deserialize handlerInfo.MessageType content
         callsite.Invoke(handler, [| ctx; msg |]) |> ignore
 
