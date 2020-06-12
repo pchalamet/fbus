@@ -3,8 +3,8 @@ open System
 
 type IBusTransport =
     inherit IDisposable
-    abstract Publish: ctx:Map<string, string> -> t:Type -> body:ReadOnlyMemory<byte> -> unit
-    abstract Send: ctx:Map<string, string> -> target:string -> t:Type -> body:ReadOnlyMemory<byte> -> unit
+    abstract Publish: ctx:Map<string, string> -> msgType:Type -> body:ReadOnlyMemory<byte> -> unit
+    abstract Send: ctx:Map<string, string> -> target:string -> msgType:Type -> body:ReadOnlyMemory<byte> -> unit
 
 type IBusSender =
     abstract Publish: msg:'t -> unit

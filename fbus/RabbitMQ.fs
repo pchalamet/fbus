@@ -30,13 +30,13 @@ type RabbitMQ(conn: IConnection, channel: IModel) =
                              body = body)
 
     interface IBusTransport with
-        member _.Publish (context: Map<string, string>) (t: System.Type) (body: ReadOnlyMemory<byte>) =
-            let xchgName = t |> getExchangeName
-            send context xchgName "" t body
+        member _.Publish (context: Map<string, string>) (msgType: System.Type) (body: ReadOnlyMemory<byte>) =
+            let xchgName = msgType |> getExchangeName
+            send context xchgName "" msgType body
 
-        member _.Send (context: Map<string, string>) (destination: string) (t: System.Type) (body: ReadOnlyMemory<byte>) =
+        member _.Send (context: Map<string, string>) (destination: string) (msgType: System.Type) (body: ReadOnlyMemory<byte>) =
             let routingKey = sprintf "fbus:%s" destination
-            send context "" routingKey t body
+            send context "" routingKey msgType body
 
     interface System.IDisposable with
         member _.Dispose() =
