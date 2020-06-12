@@ -3,13 +3,12 @@ small service-bus in F# for (mainly) F#.
 
 It comes with default implementation for:
 * RabbitMQ (with dead-letter support)
-* Publish (broadcast) and Send (direct)
+* Publish (broadcast), Send (direct) and Reply (direct)
 * Persistent queue/buffering across activation
 * Generic Host support with dependency injection
 * System.Text.Json serialization
 
 Following features will appear in future revisions:
-* Reply
 * Parallelism support via sharding
 
 Things that won't be:
