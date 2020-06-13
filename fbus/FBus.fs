@@ -29,9 +29,9 @@ type IBusContainer =
     abstract Resolve: obj -> HandlerInfo -> obj
 
 type IContext =
-    abstract BusSender: IBusSender
-    abstract Sender: string
+    inherit IBusSender
     abstract Reply: msg:'t -> unit
+    abstract Sender: string
 
 type IBusConsumer<'t> =
     abstract Handle: IContext -> 't -> unit
@@ -47,16 +47,21 @@ type BusBuilder =
       Handlers : Map<string, HandlerInfo> }
 
 
-type BusContext(busSender, headers) =
-    interface IContext with
-        member _.BusSender = busSender
+type BusContext(busSender: IBusSender, headers) =
+    interface IBusSender with
+        member _.Publish msg = 
+            busSender.Publish msg
 
+        member _.Send client msg = 
+            busSender.Send client msg
+
+    interface IContext with
+        member this.Reply msg =
+            let me = this :> IContext
+            me.Send me.Sender msg
+        
         member _.Sender = 
             headers |> Map.find "fbus:sender"
-            
-        member this.Reply(msg: 't): unit = 
-            let me = this :> IContext
-            me.BusSender.Send me.Sender msg
 
 type BusControl(busBuilder: BusBuilder) =
     do
