@@ -1,5 +1,4 @@
 ﻿open System
-open FBus
 open FBus.Builder
 
 type ResponseConsumer() =
@@ -13,16 +12,13 @@ type ResponseConsumer() =
 let main argv =
 
     use bus = FBus.Builder.init()
-                //  |> withName "sample-client"
                  |> withConsumer<ResponseConsumer>
                  |> build
  
     let busSender = bus.Start()
     
     let helloWorld = { Common.HelloWorld.Message = "Hello from FBus !" }
-    match argv with
-    | [| toServer |] -> busSender.Send toServer helloWorld
-    | _ -> busSender.Publish helloWorld
+    busSender.Publish helloWorld
 
     printfn "Press ENTER to exit"
     Console.ReadLine() |> ignore
