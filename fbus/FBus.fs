@@ -3,8 +3,8 @@ open System
 
 type IBusTransport =
     inherit IDisposable
-    abstract Publish: ctx:Map<string, string> -> typeId:string -> body:ReadOnlyMemory<byte> -> unit
-    abstract Send: ctx:Map<string, string> -> target:string -> typeId:string -> body:ReadOnlyMemory<byte> -> unit
+    abstract Publish: ctx:Map<string, string> -> msgType:Type -> body:ReadOnlyMemory<byte> -> unit
+    abstract Send: ctx:Map<string, string> -> target:string -> msgType:Type -> body:ReadOnlyMemory<byte> -> unit
 
 type IBusSender =
     abstract Publish: msg:'t -> unit
@@ -84,12 +84,12 @@ type BusControl(busBuilder: BusBuilder) =
         member _.Publish (msg: 't) = 
             match busTransport with
             | None -> failwith "Bus is not started"
-            | Some busTransport -> busBuilder.Serializer.Serialize msg |> busTransport.Publish defaultContext (msg.GetType().FullName)
+            | Some busTransport -> busBuilder.Serializer.Serialize msg |> busTransport.Publish defaultContext (msg.GetType())
 
         member _.Send (busName: string) (msg: 't) = 
             match busTransport with
             | None -> failwith "Bus is not started"
-            | Some busTransport -> busBuilder.Serializer.Serialize msg |> busTransport.Send defaultContext busName (msg.GetType().FullName)
+            | Some busTransport -> busBuilder.Serializer.Serialize msg |> busTransport.Send defaultContext busName (msg.GetType())
 
     interface IBusControl with
         member this.Start (activationContext: obj) =

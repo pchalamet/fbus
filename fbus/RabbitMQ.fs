@@ -4,17 +4,15 @@ open FBus
 open RabbitMQ.Client
 open RabbitMQ.Client.Events
 
-let getExchangeName (t: System.Type) =
-    let xchgname = sprintf "fbus:type:%s" t.FullName
-    xchgname
+let getClientQueue name = sprintf "fbus:client:%s" name
 
-let getTypeName (t: System.Type) =
-    let typeName = t.FullName
-    typeName
+let getMsgType (t: System.Type) = t.FullName
+
+let getExchangeName (t: System.Type) = t |> getMsgType |> sprintf "fbus:type:%s"
 
 type RabbitMQ(conn: IConnection, channel: IModel) =
-    let send headers xchgName routingKey typeId body =
-        let headers = headers |> Map.map (fun _ v -> v :> obj) |> Map.add "fbus:msgtype" (typeId :> obj)
+    let send headers xchgName routingKey (msgType: Type) body =
+        let headers = headers |> Map.map (fun _ v -> v :> obj) |> Map.add "fbus:msgtype" (msgType |> getMsgType :> obj)
         let props = channel.CreateBasicProperties(Headers = headers )
         channel.BasicPublish(exchange = xchgName,
                              routingKey = routingKey,
@@ -22,12 +20,12 @@ type RabbitMQ(conn: IConnection, channel: IModel) =
                              body = body)
 
     interface IBusTransport with
-        member _.Publish (headers: Map<string, string>) (msgType: string) (body: ReadOnlyMemory<byte>) =
-            let xchgName = sprintf "fbus:type:%s" msgType
+        member _.Publish (headers: Map<string, string>) (msgType: Type) (body: ReadOnlyMemory<byte>) =
+            let xchgName = getExchangeName msgType
             send headers xchgName "" msgType body
 
-        member _.Send (headers: Map<string, string>) (destination: string) (msgType: string) (body: ReadOnlyMemory<byte>) =
-            let routingKey = sprintf "fbus:client:%s" destination
+        member _.Send (headers: Map<string, string>) (client: string) (msgType: Type) (body: ReadOnlyMemory<byte>) =
+            let routingKey = getClientQueue client
             send headers "" routingKey msgType body
 
     interface System.IDisposable with
@@ -48,7 +46,7 @@ type RabbitMQ(conn: IConnection, channel: IModel) =
             channel.BasicQos(prefetchSize = 0ul, prefetchCount = 1us, ``global`` = false)
             channel.ConfirmSelect()
 
-        let queueName = busBuilder.Name |> sprintf "fbus:client:%s"
+        let queueName = getClientQueue busBuilder.Name
 
         let configureDeadLettersQueues() =
            // ===============================================================================================
