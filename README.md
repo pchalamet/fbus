@@ -77,10 +77,10 @@ Prior using the bus, a configuration must be built:
 | withEndpoint | Transport endpoint | amqp://guest:guest@localhost |
 | withContainer | Container to use | System.Activator
 | withSerializer | Serializer to use | System.Text.Json with [FSharp.SystemTextJson](https://github.com/Tarmil/FSharp.SystemTextJson) |
-| withAutoDelete | Destroy queues upon exit | true |
-| withTTL | TTL for messages pending in dead letters queues | None | 
 | withConsumer | Add message consumer | None |
 | build | Create a bus instance based on configuration | | 
+
+Note: bus client is ephemeral by default (hence no traces left upon exit) - this is useful if you just want to connect to the bus for spying for eg :-) Assigning a name (see `withName`) makes the client public so no queues are not deleted upon exit.
 
 ## Bus
 `IBusControl` is the primary interface to control the bus:
