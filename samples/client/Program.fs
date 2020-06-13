@@ -12,7 +12,6 @@ let main argv =
 
     use bus = FBus.Builder.init()
                  |> withName "sample-client"
-                 |> withAutoDelete false
                  |> withHandler<ResponseProcessor>
                  |> build
  

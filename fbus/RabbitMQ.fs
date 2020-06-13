@@ -56,20 +56,24 @@ type RabbitMQ(conn: IConnection, channel: IModel) =
             channel.ConfirmSelect()
 
         let queueName = busBuilder.Name |> Option.defaultWith generateQueueName |> sprintf "fbus:%s"
-        let autoDelete = busBuilder.AutoDelete
-        let xchgDeadLetter = "fbus:dead-letter"
-        let deadLetterQueueName = queueName + ":dead-letter"
 
         let configureQueues () =
+            // ===============================================================================================
             // dead letter queues are bound to a single exchange (direct) - the routingKey is the target queue
+            // ===============================================================================================
+            let autoDelete = busBuilder.AutoDelete
+            let xchgDeadLetter = "fbus:dead-letter"
+            let deadLetterQueueName = queueName + ":dead-letter"
             channel.ExchangeDeclare(exchange = xchgDeadLetter,
                                     ``type`` = ExchangeType.Direct,
                                     durable = true, autoDelete = false)
             channel.QueueDeclare(queue = deadLetterQueueName,
-                                 durable = true, exclusive = false, autoDelete = false) |> ignore
+                                 durable = true, exclusive = false, autoDelete = autoDelete) |> ignore
             channel.QueueBind(queue = deadLetterQueueName, exchange = xchgDeadLetter, routingKey = deadLetterQueueName)
 
+            // =========================================================================================
             // message queues are bound to an exchange (fanout) - all bound subscribers receive messages
+            // =========================================================================================
             channel.QueueDeclare(queueName,
                                  durable = true, exclusive = false, autoDelete = autoDelete,
                                  arguments = dict [ "x-dead-letter-exchange", xchgDeadLetter :> obj
@@ -77,7 +81,7 @@ type RabbitMQ(conn: IConnection, channel: IModel) =
 
         let bindExchangeAndQueue xchgName =
             channel.ExchangeDeclare(exchange = xchgName, ``type`` = ExchangeType.Fanout, 
-                                    durable = true, autoDelete = autoDelete)
+                                    durable = true, autoDelete = false)
             channel.QueueBind(queue = queueName, exchange = xchgName, routingKey = "")
 
         let subscribeMessages () =

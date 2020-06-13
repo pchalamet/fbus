@@ -9,8 +9,8 @@
             "type": "coreclr",
             "request": "launch",
             "preLaunchTask": "build",
-            "program": "${workspaceFolder}/samples/server/bin/Debug/netcoreapp3.1/server.dll",
-            "args": [],
+            "program": "${workspaceFolder}/samples/server-console/bin/Debug/netcoreapp3.1/server-console.dll",
+            "args": ["server1"],
             "cwd": "${workspaceFolder}",
             "stopAtEntry": false,
             "console": "internalConsole"
