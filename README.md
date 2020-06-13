@@ -32,12 +32,13 @@ busSender.Send "hello from FBus !"
 open FBus
 open FBus.Builder
 
-type MessageHandler() =
+type MessageConsumer() =
     interface IConsumer<string> with
         member this.Handle(msg: string) = 
             printfn "Received message: %A" msg
 
-let bus = init() |> withHandler<MessageHandler> |> build
+let bus = init() |> withConsumer<MessageConsumer> 
+                 |> build
 bus.Start() |> ignore
 ```
 
@@ -45,9 +46,8 @@ bus.Start() |> ignore
 ```
 ...
 let configureBus builder =
-    builder |> withName serverName
-            |> withAutoDelete false
-            |> withHandler<HelloWorldProcessor> 
+    builder |> withName "server"
+            |> withHandler<HelloWorldConsumer> 
 
 Host.CreateDefaultBuilder(argv)
     .ConfigureServices(fun services -> services.AddFBus(configureBus) |> ignore)
