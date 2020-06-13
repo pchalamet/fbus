@@ -12,13 +12,6 @@ let getTypeName (t: System.Type) =
     let typeName = t.FullName
     typeName
 
-let generateQueueName() =
-    let computerName = Environment.MachineName
-    let pid = Diagnostics.Process.GetCurrentProcess().Id
-    let rnd = Random().Next()
-    sprintf "fbus:%s-%d-%d" computerName pid rnd
-
-
 type RabbitMQ(conn: IConnection, channel: IModel) =
     let send headers xchgName routingKey typeId body =
         let headers = headers |> Map.map (fun _ v -> v :> obj) |> Map.add "fbus:msgtype" (typeId :> obj)
@@ -34,7 +27,7 @@ type RabbitMQ(conn: IConnection, channel: IModel) =
             send headers xchgName "" msgType body
 
         member _.Send (headers: Map<string, string>) (destination: string) (msgType: string) (body: ReadOnlyMemory<byte>) =
-            let routingKey = sprintf "fbus:%s" destination
+            let routingKey = sprintf "fbus:client:%s" destination
             send headers "" routingKey msgType body
 
     interface System.IDisposable with
@@ -55,32 +48,32 @@ type RabbitMQ(conn: IConnection, channel: IModel) =
             channel.BasicQos(prefetchSize = 0ul, prefetchCount = 1us, ``global`` = false)
             channel.ConfirmSelect()
 
-        let queueName = busBuilder.Name |> Option.defaultWith generateQueueName |> sprintf "fbus:%s"
+        let queueName = busBuilder.Name |> sprintf "fbus:client:%s"
 
-        let configureQueues () =
-            // ===============================================================================================
+        let configureDeadLettersQueues() =
+           // ===============================================================================================
             // dead letter queues are bound to a single exchange (direct) - the routingKey is the target queue
             // ===============================================================================================
-            let autoDelete = busBuilder.AutoDelete
             let xchgDeadLetter = "fbus:dead-letter"
             let deadLetterQueueName = queueName + ":dead-letter"
-            channel.ExchangeDeclare(exchange = xchgDeadLetter,
-                                    ``type`` = ExchangeType.Direct,
-                                    durable = true, autoDelete = false)
-            let deadLetterTTL = busBuilder.TTL |> Option.map (fun ttl -> "x-message-ttl", (int)ttl.TotalSeconds :> obj)
-            let deadLetterArgs = [ deadLetterTTL ] |> List.choose id |> Map 
-            channel.QueueDeclare(queue = deadLetterQueueName,
-                                 durable = true, exclusive = false, autoDelete = autoDelete,
-                                 arguments = deadLetterArgs) |> ignore
-            channel.QueueBind(queue = deadLetterQueueName, exchange = xchgDeadLetter, routingKey = deadLetterQueueName)
+            if busBuilder.IsEphemeral then Map.empty
+            else
+                channel.ExchangeDeclare(exchange = xchgDeadLetter,
+                                        ``type`` = ExchangeType.Direct,
+                                        durable = true, autoDelete = false)
+                channel.QueueDeclare(queue = deadLetterQueueName,
+                                     durable = true, exclusive = false, autoDelete = false) |> ignore
+                channel.QueueBind(queue = deadLetterQueueName, exchange = xchgDeadLetter, routingKey = deadLetterQueueName)
 
+                Map [ "x-dead-letter-exchange", xchgDeadLetter :> obj
+                      "x-dead-letter-routing-key", deadLetterQueueName :> obj ]
+
+        let configureQueues queueArgs = 
             // =========================================================================================
             // message queues are bound to an exchange (fanout) - all bound subscribers receive messages
             // =========================================================================================
-            let queueArgs = dict [ "x-dead-letter-exchange", xchgDeadLetter :> obj
-                                   "x-dead-letter-routing-key", deadLetterQueueName :> obj ]
             channel.QueueDeclare(queueName,
-                                 durable = true, exclusive = false, autoDelete = autoDelete,
+                                 durable = true, exclusive = false, autoDelete = busBuilder.IsEphemeral,
                                  arguments = queueArgs) |> ignore
 
         let bindExchangeAndQueue xchgName =
@@ -116,7 +109,7 @@ type RabbitMQ(conn: IConnection, channel: IModel) =
 
         try
             configureAck()
-            configureQueues()
+            configureDeadLettersQueues() |> configureQueues
             subscribeMessages ()
             listenMessages()
 

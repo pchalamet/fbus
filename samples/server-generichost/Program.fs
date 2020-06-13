@@ -16,7 +16,6 @@ let main argv =
 
     let configureBus builder =
         builder |> withName serverName
-                |> withAutoDelete false
                 |> withConsumer<HelloWorldConsumer> 
 
     Host.CreateDefaultBuilder(argv)

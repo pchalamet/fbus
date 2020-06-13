@@ -13,7 +13,7 @@ type ResponseConsumer() =
 let main argv =
 
     use bus = FBus.Builder.init()
-                 |> withName "sample-client"
+                //  |> withName "sample-client"
                  |> withConsumer<ResponseConsumer>
                  |> build
  

@@ -3,17 +3,24 @@ open FBus
 open System
 
 let init () =
-    { Name = None
+
+    let generateClientName() =
+        let computerName = Environment.MachineName
+        let pid = Diagnostics.Process.GetCurrentProcess().Id
+        let rnd = Random().Next()
+        sprintf "%s-%d-%d" computerName pid rnd
+
+    { Name = generateClientName()
+      IsEphemeral = true
       Uri = Uri("amqp://guest:guest@localhost")
-      AutoDelete = true
-      TTL = None
       Container = Container.Activator()
       Transport = Transport.RabbitMQ.Create
       Serializer = Serializer.Json() :> IBusSerializer
       Handlers = Map.empty }
 
 let withName name busBuilder =
-    { busBuilder with Name = Some name }
+    { busBuilder with Name = name 
+                      IsEphemeral = false }
 
 let withTransport transport busBuilder = 
     { busBuilder with Transport = transport }
@@ -23,15 +30,6 @@ let withEndpoint uri busBuilder =
 
 let withContainer container busBuilder =
     { busBuilder with Container = container }
-
-let withSerializer serializer busBuilder =
-    { busBuilder with Serializer = serializer }
-
-let withAutoDelete autoDelete busBuilder =
-    { busBuilder with AutoDelete = autoDelete }
-
-let withTTL ttl busBuilder =
-    { busBuilder with TTL = Some ttl }
 
 let inline withConsumer<'t> busBuilder =
     let findMessageHandler (t: System.Type) =

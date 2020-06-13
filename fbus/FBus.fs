@@ -38,10 +38,9 @@ type IBusConsumer<'t> =
 
 
 type BusBuilder =
-    { Name: string option
-      Uri : Uri
-      AutoDelete: bool
-      TTL: TimeSpan option
+    { Name: string
+      IsEphemeral: bool
+      Uri: Uri
       Container: IBusContainer
       Serializer: IBusSerializer
       Transport: BusBuilder -> (Map<string,string> -> string -> ReadOnlyMemory<byte> -> unit) -> IBusTransport
@@ -65,7 +64,7 @@ type BusControl(busBuilder: BusBuilder) =
 
     let mutable busTransport : IBusTransport option = None
 
-    let defaultContext = Map [ "fbus:sender", busBuilder.Name.Value ]
+    let defaultContext = Map [ "fbus:sender", busBuilder.Name ]
 
     let msgCallback busSender activationContext headers msgType content =
         let handlerInfo = match busBuilder.Handlers |> Map.tryFind msgType with

@@ -17,9 +17,7 @@ let main argv =
                      | _ -> "sample-server"
 
     use bus = init() |> withName serverName
-                     |> withAutoDelete false
                      |> withConsumer<HelloWorldConsumer> 
-                     |> withTTL (System.TimeSpan.FromMinutes(1.0))
                      |> build
 
     bus.Start() |> ignore
