@@ -98,7 +98,7 @@ Once bus is started, `IBusSender` is available:
 | `Send` | Send only the message to given client |
 
 ## Consumer
-`withConsumer` register a new handler when a new message is received. Note exact type must match handler signature. A new instance is created each time a message has to be processed.
+`withConsumer` registers a new handler when a new message is received. Note exact type must match handler signature. A new instance is created each time a message has to be processed.
 
 ```
 type IBusConsumer<'t> =
