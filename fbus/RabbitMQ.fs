@@ -11,7 +11,7 @@ let getMsgType (t: System.Type) = t.FullName
 let getExchangeName (t: System.Type) = t |> getMsgType |> sprintf "fbus:type:%s"
 
 type RabbitMQ(conn: IConnection, channel: IModel) =
-    let send headers xchgName routingKey (msgType: Type) body =
+    let send headers xchgName routingKey msgType body =
         let headers = headers |> Map.map (fun _ v -> v :> obj) |> Map.add "fbus:msgtype" (msgType |> getMsgType :> obj)
         let props = channel.CreateBasicProperties(Headers = headers )
         channel.BasicPublish(exchange = xchgName,
@@ -20,11 +20,11 @@ type RabbitMQ(conn: IConnection, channel: IModel) =
                              body = body)
 
     interface IBusTransport with
-        member _.Publish (headers: Map<string, string>) (msgType: Type) (body: ReadOnlyMemory<byte>) =
+        member _.Publish headers msgType body =
             let xchgName = getExchangeName msgType
             send headers xchgName "" msgType body
 
-        member _.Send (headers: Map<string, string>) (client: string) (msgType: Type) (body: ReadOnlyMemory<byte>) =
+        member _.Send headers client msgType body =
             let routingKey = getClientQueue client
             send headers "" routingKey msgType body
 
@@ -33,15 +33,7 @@ type RabbitMQ(conn: IConnection, channel: IModel) =
             channel.Dispose()
             conn.Dispose()
 
-    static member Create (busBuilder: BusBuilder) msgCallback =
-        let factory = ConnectionFactory(Uri = busBuilder.Uri)
-        let conn = factory.CreateConnection()
-        let channel = conn.CreateModel()
-
-        let dispose () =
-            if channel |> isNull |> not then channel.Dispose()
-            if conn |> isNull |> not then conn.Dispose()
-
+    static member TryCreate (conn: IConnection) (channel: IModel) (busBuilder: BusBuilder) msgCallback =
         let configureAck () =
             channel.BasicQos(prefetchSize = 0ul, prefetchCount = 1us, ``global`` = false)
             channel.ConfirmSelect()
@@ -105,13 +97,23 @@ type RabbitMQ(conn: IConnection, channel: IModel) =
             consumer.Received.Add (consumerCallback msgCallback)
             channel.BasicConsume(queue = queueName, autoAck = false, consumer = consumer) |> ignore
 
-        try
-            configureAck()
-            configureDeadLettersQueues() |> configureQueues
-            subscribeMessages ()
-            listenMessages()
+        configureAck()
+        configureDeadLettersQueues() |> configureQueues
+        subscribeMessages ()
+        listenMessages()
 
-            new RabbitMQ(conn, channel) :> IBusTransport
+        new RabbitMQ(conn, channel) :> IBusTransport
+
+    static member Create (busBuilder: BusBuilder) msgCallback =
+        let factory = ConnectionFactory(Uri = busBuilder.Uri)
+        let conn = factory.CreateConnection()
+        try
+            let channel = conn.CreateModel()
+            try
+                RabbitMQ.TryCreate conn channel busBuilder msgCallback
+            with
+                | _ -> channel.Dispose()
+                       reraise()
         with
-            | _ -> dispose()
+            | _ -> conn.Dispose()
                    reraise()
