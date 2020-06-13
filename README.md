@@ -78,6 +78,7 @@ Prior using the bus, a configuration must be built:
 | withContainer | Container to use | System.Activator
 | withSerializer | Serializer to use | System.Text.Json with [FSharp.SystemTextJson](https://github.com/Tarmil/FSharp.SystemTextJson) |
 | withAutoDelete | Destroy queues upon exit | true |
+| withTTL | TTL for messages pending in dead letters queues | None | 
 | withHandler | Add message consumer | None |
 | build | Create a bus instance based on configuration | | 
 
@@ -104,7 +105,12 @@ type IBusConsumer<'t> =
     abstract Handle: IContext -> 't -> unit
 ```
 
-`IContext` is an empty interface but some information will be added later on.
+`IContext` provides some information to handler:
+| IContext | Description |
+|------------|-------------|
+| Sender | Name of the client |
+| BusSender | Interface to emit messages on behalf of current bus |
+| Reply | Send a direct message to the sender | 
 
 # Generic Host
 Support for Generic Host is available alongside dependency injection. See `AddFBus` and samples for more details.

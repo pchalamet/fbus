@@ -42,6 +42,7 @@ type BusBuilder =
     { Name: string option
       Uri : Uri
       AutoDelete: bool
+      TTL: TimeSpan option
       Container: IBusContainer
       Serializer: IBusSerializer
       Transport: BusBuilder -> (Map<string,string> -> string -> ReadOnlyMemory<byte> -> unit) -> IBusTransport

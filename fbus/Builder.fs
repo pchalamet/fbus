@@ -6,6 +6,7 @@ let init () =
     { Name = None
       Uri = Uri("amqp://guest:guest@localhost")
       AutoDelete = true
+      TTL = None
       Container = Container.Activator()
       Transport = Transport.RabbitMQ.Create
       Serializer = Serializer.Json() :> IBusSerializer
@@ -28,6 +29,9 @@ let withSerializer serializer busBuilder =
 
 let withAutoDelete autoDelete busBuilder =
     { busBuilder with AutoDelete = autoDelete }
+
+let withTTL ttl busBuilder =
+    { busBuilder with TTL = Some ttl }
 
 let inline withHandler<'t> busBuilder =
     let findMessageHandler (t: System.Type) =

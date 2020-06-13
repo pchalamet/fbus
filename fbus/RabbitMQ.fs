@@ -67,17 +67,21 @@ type RabbitMQ(conn: IConnection, channel: IModel) =
             channel.ExchangeDeclare(exchange = xchgDeadLetter,
                                     ``type`` = ExchangeType.Direct,
                                     durable = true, autoDelete = false)
+            let deadLetterTTL = busBuilder.TTL |> Option.map (fun ttl -> "x-message-ttl", (int)ttl.TotalSeconds :> obj)
+            let deadLetterArgs = [ deadLetterTTL ] |> List.choose id |> Map 
             channel.QueueDeclare(queue = deadLetterQueueName,
-                                 durable = true, exclusive = false, autoDelete = autoDelete) |> ignore
+                                 durable = true, exclusive = false, autoDelete = autoDelete,
+                                 arguments = deadLetterArgs) |> ignore
             channel.QueueBind(queue = deadLetterQueueName, exchange = xchgDeadLetter, routingKey = deadLetterQueueName)
 
             // =========================================================================================
             // message queues are bound to an exchange (fanout) - all bound subscribers receive messages
             // =========================================================================================
+            let queueArgs = dict [ "x-dead-letter-exchange", xchgDeadLetter :> obj
+                                   "x-dead-letter-routing-key", deadLetterQueueName :> obj ]
             channel.QueueDeclare(queueName,
                                  durable = true, exclusive = false, autoDelete = autoDelete,
-                                 arguments = dict [ "x-dead-letter-exchange", xchgDeadLetter :> obj
-                                                    "x-dead-letter-routing-key", deadLetterQueueName :> obj ]) |> ignore
+                                 arguments = queueArgs) |> ignore
 
         let bindExchangeAndQueue xchgName =
             channel.ExchangeDeclare(exchange = xchgName, ``type`` = ExchangeType.Fanout, 
