@@ -2,7 +2,7 @@
 open FBus
 open FBus.Builder
 
-type ResponseProcessor() =
+type ResponseConsumer() =
     interface FBus.IBusConsumer<string> with
         member this.Handle ctx (msg: string) = 
             printfn "Received string message [%A] from [%s]" msg ctx.Sender
@@ -14,7 +14,7 @@ let main argv =
 
     use bus = FBus.Builder.init()
                  |> withName "sample-client"
-                 |> withConsumer<ResponseProcessor>
+                 |> withConsumer<ResponseConsumer>
                  |> build
  
     let busSender = bus.Start()

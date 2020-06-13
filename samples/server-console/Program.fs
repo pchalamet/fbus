@@ -3,7 +3,7 @@ open FBus.Hosting
 open Microsoft.Extensions.Hosting
 
 
-type HelloWorldProcessor() =
+type HelloWorldConsumer() =
     interface FBus.IBusConsumer<Common.HelloWorld> with
         member this.Handle ctx (msg: Common.HelloWorld) = 
             printfn "Received HelloWorld message [%A] from [%s]" msg ctx.Sender
@@ -17,7 +17,7 @@ let main argv =
 
     use bus = init() |> withName serverName
                      |> withAutoDelete false
-                     |> withConsumer<HelloWorldProcessor> 
+                     |> withConsumer<HelloWorldConsumer> 
                      |> withTTL (System.TimeSpan.FromMinutes(1.0))
                      |> build
 
