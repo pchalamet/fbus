@@ -7,12 +7,14 @@ type ResponseProcessor() =
         member this.Handle ctx (msg: string) = 
             printfn "Received string message [%A] from [%s]" msg ctx.Sender
 
+
+
 [<EntryPoint>]
 let main argv =
 
     use bus = FBus.Builder.init()
                  |> withName "sample-client"
-                 |> withHandler<ResponseProcessor>
+                 |> withConsumer<ResponseProcessor>
                  |> build
  
     let busSender = bus.Start()

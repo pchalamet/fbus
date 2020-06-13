@@ -33,7 +33,7 @@ let withAutoDelete autoDelete busBuilder =
 let withTTL ttl busBuilder =
     { busBuilder with TTL = Some ttl }
 
-let inline withHandler<'t> busBuilder =
+let inline withConsumer<'t> busBuilder =
     let findMessageHandler (t: System.Type) =
         if t.IsGenericType && t.GetGenericTypeDefinition() = typedefof<IBusConsumer<_>> then 
             let msgType = t.GetGenericArguments().[0]
@@ -51,6 +51,7 @@ let inline withHandler<'t> busBuilder =
     let handlers = typeof<'t> |> findMessageHandlers
     if handlers = List.empty then failwith "No handler implemented"
     { busBuilder with Handlers = busBuilder.Handlers @ handlers }
+
 
 let build (busBuilder : BusBuilder) =
     new BusControl(busBuilder) :> IBusControl

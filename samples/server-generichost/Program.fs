@@ -17,7 +17,7 @@ let main argv =
     let configureBus builder =
         builder |> withName serverName
                 |> withAutoDelete false
-                |> withHandler<HelloWorldProcessor> 
+                |> withConsumer<HelloWorldProcessor> 
 
     Host.CreateDefaultBuilder(argv)
         .ConfigureServices(fun services -> services.AddFBus(configureBus) |> ignore)

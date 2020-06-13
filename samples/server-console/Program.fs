@@ -17,7 +17,7 @@ let main argv =
 
     use bus = init() |> withName serverName
                      |> withAutoDelete false
-                     |> withHandler<HelloWorldProcessor> 
+                     |> withConsumer<HelloWorldProcessor> 
                      |> withTTL (System.TimeSpan.FromMinutes(1.0))
                      |> build
 

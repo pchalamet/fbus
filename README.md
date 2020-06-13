@@ -79,7 +79,7 @@ Prior using the bus, a configuration must be built:
 | withSerializer | Serializer to use | System.Text.Json with [FSharp.SystemTextJson](https://github.com/Tarmil/FSharp.SystemTextJson) |
 | withAutoDelete | Destroy queues upon exit | true |
 | withTTL | TTL for messages pending in dead letters queues | None | 
-| withHandler | Add message consumer | None |
+| withConsumer | Add message consumer | None |
 | build | Create a bus instance based on configuration | | 
 
 ## Bus
