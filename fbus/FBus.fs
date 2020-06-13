@@ -49,9 +49,9 @@ type BusBuilder =
 
 type BusContext(busSender, headers) =
     interface IContext with
-        member this.BusSender = busSender
+        member _.BusSender = busSender
 
-        member this.Sender = 
+        member _.Sender = 
             headers |> Map.find "fbus:sender"
             
         member this.Reply(msg: 't): unit = 
