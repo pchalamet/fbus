@@ -10,7 +10,7 @@ let init () =
       Container = Container.Activator()
       Transport = Transport.RabbitMQ.Create
       Serializer = Serializer.Json() :> IBusSerializer
-      Handlers = List.empty }
+      Handlers = Map.empty }
 
 let withName name busBuilder =
     { busBuilder with Name = Some name }
@@ -42,15 +42,14 @@ let inline withConsumer<'t> busBuilder =
 
     let findMessageHandlers (t: System.Type) =    
         t.GetInterfaces() |> Array.choose findMessageHandler
-                          |> Array.map (fun (msgType, itfType) -> { Id = msgType.FullName
-                                                                    MessageType = msgType
+                          |> Array.map (fun (msgType, itfType) -> { MessageType = msgType
                                                                     InterfaceType = itfType
                                                                     ImplementationType = t })
                           |> List.ofArray
 
     let handlers = typeof<'t> |> findMessageHandlers
     if handlers = List.empty then failwith "No handler implemented"
-    { busBuilder with Handlers = busBuilder.Handlers @ handlers }
+    { busBuilder with Handlers = handlers |> List.fold (fun acc h -> acc |> Map.add h.MessageType.FullName h) busBuilder.Handlers }
 
 
 let build (busBuilder : BusBuilder) =

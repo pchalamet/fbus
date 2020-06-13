@@ -89,7 +89,7 @@ type RabbitMQ(conn: IConnection, channel: IModel) =
             channel.QueueBind(queue = queueName, exchange = xchgName, routingKey = "")
 
         let subscribeMessages () =
-            busBuilder.Handlers |> List.iter (fun x -> x.MessageType |> getExchangeName |> bindExchangeAndQueue)
+            busBuilder.Handlers |> Map.iter (fun k v -> v.MessageType |> getExchangeName |> bindExchangeAndQueue)
 
 
         let listenMessages () =

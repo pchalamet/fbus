@@ -20,8 +20,7 @@ type IBusSerializer =
     abstract Deserialize: Type -> ReadOnlyMemory<byte> -> obj
 
 type HandlerInfo =
-    { Id: string
-      MessageType: Type
+    { MessageType: Type
       InterfaceType: Type
       ImplementationType: Type }
 
@@ -46,7 +45,7 @@ type BusBuilder =
       Container: IBusContainer
       Serializer: IBusSerializer
       Transport: BusBuilder -> (Map<string,string> -> string -> ReadOnlyMemory<byte> -> unit) -> IBusTransport
-      Handlers : HandlerInfo list }
+      Handlers : Map<string, HandlerInfo> }
 
 
 type BusContext(busSender, headers) =
@@ -62,16 +61,14 @@ type BusContext(busSender, headers) =
 
 type BusControl(busBuilder: BusBuilder) =
     do
-        busBuilder.Handlers |> List.iter busBuilder.Container.Register
+        busBuilder.Handlers |> Map.iter (fun _ v -> busBuilder.Container.Register v)
 
     let mutable busTransport : IBusTransport option = None
 
     let defaultContext = Map [ "fbus:sender", busBuilder.Name.Value ]
 
-    let msgType2HandlerInfo = busBuilder.Handlers |> List.map (fun x -> x.Id, x) |> Map
-
     let msgCallback busSender activationContext headers msgType content =
-        let handlerInfo = match msgType2HandlerInfo |> Map.tryFind msgType with
+        let handlerInfo = match busBuilder.Handlers |> Map.tryFind msgType with
                           | Some handlerInfo -> handlerInfo
                           | _ -> failwithf "Unknown message type [%s]" msgType
         let handler = busBuilder.Container.Resolve activationContext handlerInfo
