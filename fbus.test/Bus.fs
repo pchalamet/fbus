@@ -36,16 +36,20 @@ let client = "test-client"
 let target = "test-target"
 let activationContext = "activationContext" :> obj
 
+let mutable latestConversationId = ""
+
 let consumerStringCallback (context: IBusConversation) (msg: string) =
     Interlocked.Increment(&consumerActivation) |> ignore
     msg |> should equal msg
     context.Sender |> should equal client
+    latestConversationId <- context.ConversationId
     context.Reply msgInt
 
 let consumerIntCallback (context: IBusConversation) (msg: int) =
     Interlocked.Increment(&consumerActivation) |> ignore
     msg |> should equal msgInt
     context.Sender |> should equal client // always same bus here
+    context.ConversationId |> should equal latestConversationId
 
 let buildContainer = {
     new IBusContainer with
