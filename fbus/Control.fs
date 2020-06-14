@@ -2,11 +2,8 @@ module FBus.Control
 open System
 
 type BusControl(busBuilder: BusBuilder) =
-    do
-        busBuilder.Handlers |> Map.iter (fun _ v -> busBuilder.Container.Register v)
-
+    do busBuilder.Handlers |> Map.iter (fun _ v -> busBuilder.Container.Register v)
     let mutable busTransport : IBusTransport option = None
-
     let defaultHeaders = Map [ "fbus:sender", busBuilder.Name ]
 
     let publish msg headers =
@@ -19,7 +16,6 @@ type BusControl(busBuilder: BusBuilder) =
         | None -> failwith "Bus is not started"
         | Some busTransport -> busBuilder.Serializer.Serialize msg |> busTransport.Send headers client (msg.GetType())
 
-
     let msgCallback activationContext headers msgType content =
         let handlerInfo = match busBuilder.Handlers |> Map.tryFind msgType with
                           | Some handlerInfo -> handlerInfo
@@ -30,7 +26,7 @@ type BusControl(busBuilder: BusBuilder) =
         let callsite = handlerInfo.InterfaceType.GetMethod("Handle")
         if callsite |> isNull then failwith "Handler method not found"
 
-        let flowHeaders () = 
+        let conversationHeaders () = 
             defaultHeaders |> Map.add "fbus:message-id" (Guid.NewGuid().ToString())
                            |> Map.add "fbus:conversation-id" (headers |> Map.find "fbus:conversation-id")
 
@@ -38,23 +34,20 @@ type BusControl(busBuilder: BusBuilder) =
                         member _.ConversationId: string = headers |> Map.find "fbus:conversation-id"
                         member _.MessageId: string = headers |> Map.find "fbus:message-id"
                         member _.Sender: string = headers |> Map.find "fbus:sender"
-                        member this.Reply msg = flowHeaders() |> send this.Sender msg
-                        member _.Publish msg = flowHeaders() |> publish msg
-                        member _.Send client msg = flowHeaders() |> send client msg }
+                        member this.Reply msg = conversationHeaders() |> send this.Sender msg
+                        member _.Publish msg = conversationHeaders() |> publish msg
+                        member _.Send client msg = conversationHeaders() |> send client msg }
 
         let msg = busBuilder.Serializer.Deserialize handlerInfo.MessageType content
         callsite.Invoke(handler, [| ctx; msg |]) |> ignore
 
-    let startHeaders () =
+    let newConversationHeaders () =
         defaultHeaders |> Map.add "fbus:conversation-id" (Guid.NewGuid().ToString())
                        |> Map.add "fbus:message-id" (Guid.NewGuid().ToString())
 
     interface IBusInitiator with
-        member _.Publish msg = 
-            startHeaders() |> publish msg
-
-        member _.Send client msg = 
-            startHeaders() |> send client msg
+        member _.Publish msg = newConversationHeaders() |> publish msg
+        member _.Send client msg = newConversationHeaders() |> send client msg
 
     interface IBusControl with
         member this.Start activationContext =
