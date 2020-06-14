@@ -8,7 +8,7 @@
   <ItemGroup>
     <Compile Include="Json.fs" />
     <Compile Include="Activator.fs" />
-    <Compile Include="Control.fs" />
+    <Compile Include="Bus.fs" />
     <Compile Include="Builder.fs" />
     <Compile Include="Program.fs" />
   </ItemGroup>
