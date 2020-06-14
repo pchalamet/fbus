@@ -1,4 +1,4 @@
-namespace FBus.Serializer
+module FBus.Serializer
 open FBus
 open System
 open System.Text.Json

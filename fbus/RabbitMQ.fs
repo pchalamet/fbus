@@ -1,5 +1,4 @@
 module FBus.Transport
-open System
 open FBus
 open RabbitMQ.Client
 open RabbitMQ.Client.Events
