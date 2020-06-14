@@ -14,8 +14,8 @@ let init () =
       IsEphemeral = true
       Uri = Uri("amqp://guest:guest@localhost")
       Container = Container.Activator()
-      Transport = Transport.RabbitMQ.Create
-      Serializer = Serializer.Json() :> IBusSerializer
+      Transport = RabbitMQ.Transport.Create
+      Serializer = Json.Serializer() :> IBusSerializer
       Handlers = Map.empty }
 
 let withName name busBuilder =
@@ -54,4 +54,4 @@ let inline withConsumer<'t> busBuilder =
 
 
 let build (busBuilder : BusBuilder) =
-    new Control.BusControl(busBuilder) :> IBusControl
+    new Control.Bus(busBuilder) :> IBusControl

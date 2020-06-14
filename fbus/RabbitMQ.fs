@@ -1,4 +1,4 @@
-module FBus.Transport
+module FBus.RabbitMQ
 open FBus
 open RabbitMQ.Client
 open RabbitMQ.Client.Events
@@ -7,7 +7,7 @@ let getClientQueue name = sprintf "fbus:client:%s" name
 
 let getExchangeName (msgType: string) = msgType |> sprintf "fbus:type:%s"
 
-type RabbitMQ(conn: IConnection, channel: IModel) =
+type Transport(conn: IConnection, channel: IModel) =
     let send headers xchgName routingKey msgType body =
         let headers = headers |> Map.map (fun _ v -> v :> obj) |> Map.add "fbus:msgtype" (msgType :> obj)
         let props = channel.CreateBasicProperties(Headers = headers )
@@ -99,7 +99,7 @@ type RabbitMQ(conn: IConnection, channel: IModel) =
         subscribeMessages ()
         listenMessages()
 
-        new RabbitMQ(conn, channel) :> IBusTransport
+        new Transport(conn, channel) :> IBusTransport
 
     static member Create (busBuilder: BusBuilder) msgCallback =
         let factory = ConnectionFactory(Uri = busBuilder.Uri)
@@ -107,7 +107,7 @@ type RabbitMQ(conn: IConnection, channel: IModel) =
         try
             let channel = conn.CreateModel()
             try
-                RabbitMQ.TryCreate conn channel busBuilder msgCallback
+                Transport.TryCreate conn channel busBuilder msgCallback
             with
                 | _ -> channel.Dispose()
                        reraise()

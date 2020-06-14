@@ -1,10 +1,10 @@
-module FBus.Serializer
+module FBus.Json
 open FBus
 open System
 open System.Text.Json
 open System.Text.Json.Serialization
 
-type Json() =
+type Serializer() =
     interface IBusSerializer with
         member _.Serialize (v: obj) =
             let options = JsonSerializerOptions()

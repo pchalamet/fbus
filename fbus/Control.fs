@@ -1,7 +1,7 @@
 module FBus.Control
 open System
 
-type BusControl(busBuilder: BusBuilder) =
+type Bus(busBuilder: BusBuilder) =
     do busBuilder.Handlers |> Map.iter (fun _ v -> busBuilder.Container.Register v)
     let mutable busTransport : IBusTransport option = None
     let defaultHeaders = Map [ "fbus:sender", busBuilder.Name ]
