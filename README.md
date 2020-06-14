@@ -4,15 +4,18 @@ small service-bus in F# for (mainly) F#.
 It comes with default implementation for:
 * RabbitMQ (with dead-letter support)
 * Publish (broadcast), Send (direct) and Reply (direct)
+* Conversation follow-up using headers (ConversationId and MessageId)
 * Persistent queue/buffering across activation
 * Generic Host support with dependency injection
 * System.Text.Json serialization
 
 Following features will appear in future revisions:
+* Logger extension point
+* Handlers using pure function
 * Parallelism support via sharding
 
-Things that won't be:
-* Sagas
+Features that won't be implemented in FBus:
+* Sagas: coordination is big topic by itself - technically, everything required to handle this is available (ConversationId and MessageId). This can be handled outside of a service-bus.
 
 # how to use it ?
 
@@ -21,7 +24,7 @@ Things that won't be:
 open FBus
 open FBus.Builder
 
-let bus = init() |> build
+use bus = init() |> build
 
 let busSender = bus.Start()
 busSender.Send "hello from FBus !"
@@ -37,7 +40,7 @@ type MessageConsumer() =
         member this.Handle(msg: string) = 
             printfn "Received message: %A" msg
 
-let bus = init() |> withConsumer<MessageConsumer> 
+use bus = init() |> withConsumer<MessageConsumer> 
                  |> build
 bus.Start() |> ignore
 ```
@@ -56,13 +59,15 @@ Host.CreateDefaultBuilder(argv)
     .Run()
 ```
 
-
 # Extensibility
-Extension points are supported:
+Following extension points are supported:
 * Transport: default is RabbitMQ. Transport can be changed using `withTransport`.
 * Serialization: default is System.Text.Json. Serialization can be changed using `withSerialization`.
 * Container: default is none. Container can be changed using `withContainer`.
 * Hosting: no hosting by default. GenericHost can be configured using `AddFBus`.
+
+## Generic Host
+Support for Generic Host is available alongside dependencies injection. See `AddFBus` and samples for more details.
 
 # Api
 
@@ -105,12 +110,12 @@ type IBusConsumer<'t> =
     abstract Handle: IContext -> 't -> unit
 ```
 
-`IContext` provides some information to handler:
+`IContext` inherits from `IBusSender` and provides some information to handler:
 | IContext | Description |
 |------------|-------------|
 | Sender | Name of the client |
-| BusSender | Interface to emit messages on behalf of current bus |
-| Reply | Send a direct message to the sender | 
-
-# Generic Host
-Support for Generic Host is available alongside dependency injection. See `AddFBus` and samples for more details.
+| ConversationId | Id of the conversation (identifier is flowing from initiator to subsequent consumers) |
+| MessageId | Id the this message |
+| Reply | Provide a shortcut to reply to sender |
+| Publish | see `IBusSender` |
+| Send | see `IBusSender` |
