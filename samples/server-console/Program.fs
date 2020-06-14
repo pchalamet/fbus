@@ -7,7 +7,11 @@ type HelloWorldConsumer() =
     interface FBus.IBusConsumer<Common.HelloWorld> with
         member this.Handle ctx (msg: Common.HelloWorld) = 
             printfn "Received HelloWorld message [%A] from [%s]" msg ctx.Sender
-            ctx.Reply "Hello !!!"
+            printfn "-> sender = %s" ctx.Sender
+            printfn "-> conversation-id = %s" ctx.ConversationId
+            printfn "-> message-id = %s" ctx.MessageId
+
+            ctx.Sender |> sprintf "Hello %s" |> ctx.Reply
 
 
 [<EntryPoint>]

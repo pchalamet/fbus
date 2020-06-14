@@ -32,6 +32,8 @@ type IContext =
     inherit IBusSender
     abstract Reply: msg:'t -> unit
     abstract Sender: string
+    abstract ConversationId: string
+    abstract MessageId: string
 
 type IBusConsumer<'t> =
     abstract Handle: IContext -> 't -> unit
@@ -47,31 +49,26 @@ type BusBuilder =
       Handlers : Map<string, HandlerInfo> }
 
 
-type BusContext(busSender: IBusSender, headers) =
-    interface IBusSender with
-        member _.Publish msg = 
-            busSender.Publish msg
-
-        member _.Send client msg = 
-            busSender.Send client msg
-
-    interface IContext with
-        member this.Reply msg =
-            let me = this :> IContext
-            me.Send me.Sender msg
-        
-        member _.Sender = 
-            headers |> Map.find "fbus:sender"
-
 type BusControl(busBuilder: BusBuilder) =
     do
         busBuilder.Handlers |> Map.iter (fun _ v -> busBuilder.Container.Register v)
 
     let mutable busTransport : IBusTransport option = None
 
-    let defaultContext = Map [ "fbus:sender", busBuilder.Name ]
+    let defaultHeaders = Map [ "fbus:sender", busBuilder.Name ]
 
-    let msgCallback busSender activationContext headers msgType content =
+    let publish msg headers =
+        match busTransport with
+        | None -> failwith "Bus is not started"
+        | Some busTransport -> busBuilder.Serializer.Serialize msg |> busTransport.Publish headers (msg.GetType())
+
+    let send client msg headers =
+        match busTransport with
+        | None -> failwith "Bus is not started"
+        | Some busTransport -> busBuilder.Serializer.Serialize msg |> busTransport.Send headers client (msg.GetType())
+
+
+    let msgCallback activationContext headers msgType content =
         let handlerInfo = match busBuilder.Handlers |> Map.tryFind msgType with
                           | Some handlerInfo -> handlerInfo
                           | _ -> failwithf "Unknown message type [%s]" msgType
@@ -81,26 +78,37 @@ type BusControl(busBuilder: BusBuilder) =
         let callsite = handlerInfo.InterfaceType.GetMethod("Handle")
         if callsite |> isNull then failwith "Handler method not found"
 
-        let ctx = BusContext(busSender, headers)
+        let flowHeaders () = 
+            defaultHeaders |> Map.add "fbus:message-id" (Guid.NewGuid().ToString())
+                           |> Map.add "fbus:conversation-id" (headers |> Map.find "fbus:conversation-id")
+
+        let ctx = { new IContext with
+                        member _.ConversationId: string = headers |> Map.find "fbus:conversation-id"
+                        member _.MessageId: string = headers |> Map.find "fbus:message-id"
+                        member _.Sender: string = headers |> Map.find "fbus:sender"
+                        member this.Reply msg = flowHeaders() |> send this.Sender msg
+                        member _.Publish msg = flowHeaders() |> publish msg
+                        member _.Send client msg = flowHeaders() |> send client msg }
+
         let msg = busBuilder.Serializer.Deserialize handlerInfo.MessageType content
         callsite.Invoke(handler, [| ctx; msg |]) |> ignore
 
-    interface IBusSender with
-        member _.Publish (msg: 't) = 
-            match busTransport with
-            | None -> failwith "Bus is not started"
-            | Some busTransport -> busBuilder.Serializer.Serialize msg |> busTransport.Publish defaultContext (msg.GetType())
+    let startHeaders () =
+        defaultHeaders |> Map.add "fbus:conversation-id" (Guid.NewGuid().ToString())
+                       |> Map.add "fbus:message-id" (Guid.NewGuid().ToString())
 
-        member _.Send (busName: string) (msg: 't) = 
-            match busTransport with
-            | None -> failwith "Bus is not started"
-            | Some busTransport -> busBuilder.Serializer.Serialize msg |> busTransport.Send defaultContext busName (msg.GetType())
+    interface IBusSender with
+        member _.Publish msg = 
+            startHeaders() |> publish msg
+
+        member _.Send client msg = 
+            startHeaders() |> send client msg
 
     interface IBusControl with
-        member this.Start (activationContext: obj) =
+        member this.Start activationContext =
             match busTransport with
             | Some _ -> failwith "Bus is already started"
-            | None -> busTransport <- Some (busBuilder.Transport busBuilder (msgCallback this activationContext))
+            | None -> busTransport <- Some (busBuilder.Transport busBuilder (msgCallback activationContext))
                       this :> IBusSender
 
         member _.Stop() = 
@@ -109,7 +117,6 @@ type BusControl(busBuilder: BusBuilder) =
             | Some dispose -> dispose.Dispose()
                               busTransport <- None
 
-    interface IDisposable with
         member _.Dispose() =
             match busTransport with
             | None -> ()
