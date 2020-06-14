@@ -29,6 +29,4 @@ jobs:
 
         steps:
         - name: publish nuget
-          run: env; echo ${GITHUB_REF#refs/tags/}; echo ${{secrets.NUGET_KEY}}
-          
-          # make nuget config=Release version=${GITHUB_REF#refs/tags/} nugetkey=${{secrets.NUGET_KEY}}
+          run: make nuget config=Release version=${GITHUB_REF#refs/tags/} nugetkey=${{secrets.NUGET_KEY}}

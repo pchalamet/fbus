@@ -18,12 +18,15 @@
     <PackageReference Include="TaskBuilder.fs" Version="2.1.0" />
   </ItemGroup>
   <PropertyGroup>
+    <!-- https://docs.microsoft.com/en-us/nuget/reference/msbuild-targets#packing-using-a-nuspec -->
     <PackageId>FBus</PackageId>
     <Authors>Pierre Chalamet</Authors>
     <Title>FBus</Title>
     <Description>FBus is a lightweight service-bus implementation written in F#.</Description>
     <Copyright>Copyright 2020 Pierre Chalamet</Copyright>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
-    <RepositoryUrl>https://github.com/pchalamet/fbus</RepositoryUrl>
+    <PackageProjectUrl>https://github.com/pchalamet/fbus</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/pchalamet/fbus.git</RepositoryUrl>
+    <PackageTags>service;bus;service-bus</PackageTags>
   </PropertyGroup>
 </Project>
