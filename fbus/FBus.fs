@@ -29,7 +29,8 @@ type IBusContainer =
     abstract Resolve: obj -> HandlerInfo -> obj
 
 type IContext =
-    inherit IBusSender
+    abstract Publish: msg:'t -> unit
+    abstract Send: string -> 't -> unit
     abstract Reply: msg:'t -> unit
     abstract Sender: string
     abstract ConversationId: string

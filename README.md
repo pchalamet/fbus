@@ -76,14 +76,14 @@ Prior using the bus, a configuration must be built:
 
 | FBus.Builder | Description | Default |
 |--------------|-------------|---------|
-| init | Create default configuration | |
-| withName | Change service name. Used to identify an endpoint (see `IBusSender.Send`) | Name based on computer name, pid and random number |
-| withTransport | Transport to use. | RabbitMQ |
-| withEndpoint | Transport endpoint | amqp://guest:guest@localhost |
-| withContainer | Container to use | System.Activator
-| withSerializer | Serializer to use | System.Text.Json with [FSharp.SystemTextJson](https://github.com/Tarmil/FSharp.SystemTextJson) |
-| withConsumer | Add message consumer | None |
-| build | Create a bus instance based on configuration | | 
+| `init` | Create default configuration | |
+| `withName` | Change service name. Used to identify an endpoint (see `IBusSender.Send`) | Name based on computer name, pid and random number |
+| `withTransport` | Transport to use. | RabbitMQ |
+| `withEndpoint` | Transport endpoint | amqp://guest:guest@localhost |
+| `withContainer` | Container to use | System.Activator
+| `withSerializer` | Serializer to use | System.Text.Json with [FSharp.SystemTextJson](https://github.com/Tarmil/FSharp.SystemTextJson) |
+| `withConsumer` | Add message consumer | None |
+| `build` | Create a bus instance based on configuration | | 
 
 Note: bus client is ephemeral by default (hence no traces left upon exit) - this is useful if you just want to connect to the bus for spying for eg :-) Assigning a name (see `withName`) makes the client public so no queues are not deleted upon exit.
 
@@ -92,8 +92,8 @@ Note: bus client is ephemeral by default (hence no traces left upon exit) - this
 
 | IBusControl | Description | Comments |
 |-------------|-------------|----------|
-| Start | Start the bus. Returns `IBusSender` | Must be called before sending messages. |
-| Stop | Stop the bus. | |
+| `Start` | Start the bus. Returns `IBusSender` | Must be called before sending messages. |
+| `Stop` | Stop the bus. | |
 
 Once bus is started, `IBusSender` is available:
 
@@ -101,6 +101,8 @@ Once bus is started, `IBusSender` is available:
 |------------|-------------|
 | `Publish` | Broadcast the message to all subscribers |
 | `Send` | Send only the message to given client |
+
+Note: a new conversation is started when using this interface.
 
 ## Consumer
 `withConsumer` registers an handler - which will be able to process a message. Note exact type must match handler signature. A new instance is created each time a message has to be processed.
@@ -110,12 +112,14 @@ type IBusConsumer<'t> =
     abstract Handle: IContext -> 't -> unit
 ```
 
-`IContext` inherits from `IBusSender` and provides some information to handler:
+`IContext` provides information to handlers and means to interact with the bus:
 | IContext | Description |
 |------------|-------------|
-| Sender | Name of the client |
-| ConversationId | Id of the conversation (identifier is flowing from initiator to subsequent consumers) |
-| MessageId | Id the this message |
-| Reply | Provide a shortcut to reply to sender |
-| Publish | see `IBusSender` |
-| Send | see `IBusSender` |
+| `Sender` | Name of the client |
+| `ConversationId` | Id of the conversation (identifier is flowing from initiator to subsequent consumers) |
+| `MessageId` | Id the this message |
+| `Reply` | Provide a shortcut to reply to sender |
+| `Publish` | Broadcast the message to all subscribers |
+| `Send` | Send only the message to given client |
+
+Note: the current conversation is used when using this interface.
