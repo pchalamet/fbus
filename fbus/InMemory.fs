@@ -5,7 +5,7 @@ open FBus
 type Transport(name, msgCallback) =
     static let initLock = obj()
     static let doExclusive = lock initLock
-    static let mutable transports: Map<string, Transport> = Map.empty
+    static let mutable transports = Map.empty
 
     static member Create (busBuilder: BusBuilder) msgCallback =
         let transport = new Transport(busBuilder.Name, msgCallback)
