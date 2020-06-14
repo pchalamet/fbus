@@ -33,8 +33,8 @@ type IServiceCollection with
                                         |> Builder.withContainer (AspNetCoreContainer(services))
                                         |> Builder.build
 
-        let busSender = busControl :?> IBusInitiator
+        let busInitiator = busControl :?> IBusInitiator
 
         services.AddSingleton(busControl)
-                .AddSingleton(busSender)
+                .AddSingleton(busInitiator)
                 .AddHostedService<BusService>() |> ignore

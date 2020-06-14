@@ -76,7 +76,7 @@ Prior using the bus, a configuration must be built:
 | FBus.Builder | Description | Default |
 |--------------|-------------|---------|
 | `init` | Create default configuration | |
-| `withName` | Change service name. Used to identify an endpoint (see `IBusSender.Send`) | Name based on computer name, pid and random number |
+| `withName` | Change service name. Used to identify a bus client (see `IBusInitiator.Send` and `IBusConversation.Send`) | Name based on computer name, pid and random number |
 | `withTransport` | Transport to use. | RabbitMQ |
 | `withEndpoint` | Transport endpoint | amqp://guest:guest@localhost |
 | `withContainer` | Container to use | System.Activator
