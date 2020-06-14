@@ -51,7 +51,7 @@ bus.Start() |> ignore
 ...
 let configureBus builder =
     builder |> withName "server"
-            |> withHandler<MessageConsumer> 
+            |> withConsumer<MessageConsumer> 
 
 Host.CreateDefaultBuilder(argv)
     .ConfigureServices(fun services -> services.AddFBus(configureBus) |> ignore)
