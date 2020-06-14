@@ -17,4 +17,8 @@
     <PackageReference Include="RabbitMQ.Client" Version="6.1.0" />
     <PackageReference Include="TaskBuilder.fs" Version="2.1.0" />
   </ItemGroup>
+  <PropertyGroup>
+    <PackageId>FBus</PackageId>
+    <Authors>Pierre Chalamet</Authors>
+  </PropertyGroup>
 </Project>
