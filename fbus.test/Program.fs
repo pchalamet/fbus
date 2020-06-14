@@ -1,5 +1,5 @@
 module Program
 
 let [<EntryPoint>] main _ =
-    fbus.test.BusControl.``Test bus control``()
+    // FBus.Test.BusControl.``Test bus control``()
     0

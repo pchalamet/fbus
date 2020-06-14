@@ -1,4 +1,4 @@
-module fbus.test.Json
+module FBus.Test.Json
 open NUnit.Framework
 open FsUnit
 open FBus
