@@ -18,7 +18,7 @@ jobs:
           dotnet-version: 3.1.100
 
       - name: Build
-        run: make nuget config=Release
+        run: make nuget config=Release version=${GITHUB_REF#refs/tags/} 
 
       - name: Test
         run: make test config=Release
@@ -44,4 +44,4 @@ jobs:
             name: nuget
 
       - name: publish nuget
-        run: make publish config=Release version=${GITHUB_REF#refs/tags/} nugetkey=${{secrets.NUGET_KEY}}
+        run: make publish nugetkey=${{secrets.NUGET_KEY}}
