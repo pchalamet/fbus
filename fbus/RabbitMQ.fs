@@ -5,13 +5,11 @@ open RabbitMQ.Client.Events
 
 let getClientQueue name = sprintf "fbus:client:%s" name
 
-let getMsgType (t: System.Type) = t.FullName
-
-let getExchangeName (t: System.Type) = t |> getMsgType |> sprintf "fbus:type:%s"
+let getExchangeName (msgType: string) = msgType |> sprintf "fbus:type:%s"
 
 type RabbitMQ(conn: IConnection, channel: IModel) =
     let send headers xchgName routingKey msgType body =
-        let headers = headers |> Map.map (fun _ v -> v :> obj) |> Map.add "fbus:msgtype" (msgType |> getMsgType :> obj)
+        let headers = headers |> Map.map (fun _ v -> v :> obj) |> Map.add "fbus:msgtype" (msgType :> obj)
         let props = channel.CreateBasicProperties(Headers = headers )
         channel.BasicPublish(exchange = xchgName,
                              routingKey = routingKey,
@@ -71,7 +69,7 @@ type RabbitMQ(conn: IConnection, channel: IModel) =
             channel.QueueBind(queue = queueName, exchange = xchgName, routingKey = "")
 
         let subscribeMessages () =
-            busBuilder.Handlers |> Map.iter (fun k v -> v.MessageType |> getExchangeName |> bindExchangeAndQueue)
+            busBuilder.Handlers |> Map.iter (fun msgType _ -> msgType |> bindExchangeAndQueue)
 
 
         let listenMessages () =

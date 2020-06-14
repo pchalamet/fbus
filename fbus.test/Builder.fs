@@ -1,4 +1,4 @@
-module fbus.test
+module fbus.test.Builder
 open System
 open NUnit.Framework
 open FsUnit
@@ -23,8 +23,8 @@ let ``withEndpoint set new uri`` () =
 let ``withContainer set container builder`` () =
     let expectedContainer = {
         new IBusContainer with
-        member this.Register handlerInfo = failwith "Not Implemented"
-        member this.Resolve activationContext handlerInfo = failwith "Not Implemented"
+            member this.Register handlerInfo = failwith "Not Implemented"
+            member this.Resolve activationContext handlerInfo = failwith "Not Implemented"
     }
 
     let builder = init() |> withContainer expectedContainer
@@ -38,13 +38,24 @@ let ``withTransport set transport builder`` () =
     let builder = init() |> withTransport expectedTransportBuilder
     builder.Transport |> should equal expectedTransportBuilder
 
+[<Test>]
+let ``withSerializer set serializer`` () =
+    let expectedSerializer = {
+        new IBusSerializer with
+            member this.Deserialize msgType body = failwith "Not Implemented"
+            member this.Serialize msg = failwith "Not Implemented"
+    }
 
-type MyConsumer1 =
+    let builder = init() |> withSerializer expectedSerializer
+    builder.Serializer |> should equal expectedSerializer
+
+
+type MyConsumer1() =
     interface IBusConsumer<string> with
         member this.Handle context msg = 
             failwith "Not Implemented"
 
-type MyConsumer2 =
+type MyConsumer2() =
     interface IBusConsumer<int> with
         member this.Handle context msg = 
             failwith "Not Implemented"

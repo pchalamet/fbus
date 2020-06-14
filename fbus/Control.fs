@@ -6,15 +6,18 @@ type BusControl(busBuilder: BusBuilder) =
     let mutable busTransport : IBusTransport option = None
     let defaultHeaders = Map [ "fbus:sender", busBuilder.Name ]
 
+    let getMsgType (t: obj) =
+        t.GetType().FullName
+
     let publish msg headers =
         match busTransport with
         | None -> failwith "Bus is not started"
-        | Some busTransport -> busBuilder.Serializer.Serialize msg |> busTransport.Publish headers (msg.GetType())
+        | Some busTransport -> busBuilder.Serializer.Serialize msg |> busTransport.Publish headers (msg |> getMsgType)
 
     let send client msg headers =
         match busTransport with
         | None -> failwith "Bus is not started"
-        | Some busTransport -> busBuilder.Serializer.Serialize msg |> busTransport.Send headers client (msg.GetType())
+        | Some busTransport -> busBuilder.Serializer.Serialize msg |> busTransport.Send headers client (msg |> getMsgType)
 
     let msgCallback activationContext headers msgType content =
         let handlerInfo = match busBuilder.Handlers |> Map.tryFind msgType with

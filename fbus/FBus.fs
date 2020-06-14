@@ -32,8 +32,8 @@ type IBusContainer =
 
 type IBusTransport =
     inherit IDisposable
-    abstract Publish: headers:Map<string, string> -> msgType:Type -> body:ReadOnlyMemory<byte> -> unit
-    abstract Send: headers:Map<string, string> -> target:string -> msgType:Type -> body:ReadOnlyMemory<byte> -> unit
+    abstract Publish: headers:Map<string, string> -> msgType:string -> body:ReadOnlyMemory<byte> -> unit
+    abstract Send: headers:Map<string, string> -> target:string -> msgType:string -> body:ReadOnlyMemory<byte> -> unit
 
 type IBusSerializer =
     abstract Serialize: obj -> ReadOnlyMemory<byte>
