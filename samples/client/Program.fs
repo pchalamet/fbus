@@ -18,10 +18,10 @@ let main argv =
                  |> withConsumer<ResponseConsumer>
                  |> build
  
-    let busSender = bus.Start()
+    let busInitiator = bus.Start()
     
     let helloWorld = { Common.HelloWorld.Message = "Hello from FBus !" }
-    busSender.Publish helloWorld
+    busInitiator.Publish helloWorld
 
     printfn "Press ENTER to exit"
     Console.ReadLine() |> ignore

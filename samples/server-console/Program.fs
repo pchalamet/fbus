@@ -1,11 +1,9 @@
 ﻿open FBus.Builder
-open FBus.Hosting
-open Microsoft.Extensions.Hosting
 
 
 type HelloWorldConsumer() =
     interface FBus.IBusConsumer<Common.HelloWorld> with
-        member this.Handle ctx (msg: Common.HelloWorld) = 
+        member this.Handle ctx msg = 
             printfn "Received HelloWorld message [%A] from [%s]" msg ctx.Sender
             printfn "-> sender = %s" ctx.Sender
             printfn "-> conversation-id = %s" ctx.ConversationId

@@ -6,13 +6,13 @@ type IBusTransport =
     abstract Publish: headers:Map<string, string> -> msgType:Type -> body:ReadOnlyMemory<byte> -> unit
     abstract Send: headers:Map<string, string> -> target:string -> msgType:Type -> body:ReadOnlyMemory<byte> -> unit
 
-type IBusSender =
+type IBusInitiator =
     abstract Publish: msg:'t -> unit
     abstract Send: string -> 't -> unit
 
 type IBusControl =
     inherit IDisposable
-    abstract Start: obj -> IBusSender
+    abstract Start: obj -> IBusInitiator
     abstract Stop: unit -> unit
 
 type IBusSerializer =
@@ -28,7 +28,7 @@ type IBusContainer =
     abstract Register: HandlerInfo -> unit
     abstract Resolve: obj -> HandlerInfo -> obj
 
-type IContext =
+type IBusConversation =
     abstract Publish: msg:'t -> unit
     abstract Send: string -> 't -> unit
     abstract Reply: msg:'t -> unit
@@ -37,7 +37,7 @@ type IContext =
     abstract MessageId: string
 
 type IBusConsumer<'t> =
-    abstract Handle: IContext -> 't -> unit
+    abstract Handle: IBusConversation -> 't -> unit
 
 
 type BusBuilder =
@@ -83,7 +83,7 @@ type BusControl(busBuilder: BusBuilder) =
             defaultHeaders |> Map.add "fbus:message-id" (Guid.NewGuid().ToString())
                            |> Map.add "fbus:conversation-id" (headers |> Map.find "fbus:conversation-id")
 
-        let ctx = { new IContext with
+        let ctx = { new IBusConversation with
                         member _.ConversationId: string = headers |> Map.find "fbus:conversation-id"
                         member _.MessageId: string = headers |> Map.find "fbus:message-id"
                         member _.Sender: string = headers |> Map.find "fbus:sender"
@@ -98,7 +98,7 @@ type BusControl(busBuilder: BusBuilder) =
         defaultHeaders |> Map.add "fbus:conversation-id" (Guid.NewGuid().ToString())
                        |> Map.add "fbus:message-id" (Guid.NewGuid().ToString())
 
-    interface IBusSender with
+    interface IBusInitiator with
         member _.Publish msg = 
             startHeaders() |> publish msg
 
@@ -110,7 +110,7 @@ type BusControl(busBuilder: BusBuilder) =
             match busTransport with
             | Some _ -> failwith "Bus is already started"
             | None -> busTransport <- Some (busBuilder.Transport busBuilder (msgCallback activationContext))
-                      this :> IBusSender
+                      this :> IBusInitiator
 
         member _.Stop() = 
             match busTransport with

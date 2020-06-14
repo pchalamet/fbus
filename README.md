@@ -26,8 +26,8 @@ open FBus.Builder
 
 use bus = init() |> build
 
-let busSender = bus.Start()
-busSender.Send "hello from FBus !"
+let busInitiator = bus.Start()
+busInitiator.Send "hello from FBus !"
 ```
 
 ## server (console)
@@ -37,7 +37,7 @@ open FBus.Builder
 
 type MessageConsumer() =
     interface IConsumer<string> with
-        member this.Handle(msg: string) = 
+        member this.Handle context msg = 
             printfn "Received message: %A" msg
 
 use bus = init() |> withConsumer<MessageConsumer> 
@@ -50,7 +50,7 @@ bus.Start() |> ignore
 ...
 let configureBus builder =
     builder |> withName "server"
-            |> withHandler<HelloWorldConsumer> 
+            |> withHandler<MessageConsumer> 
 
 Host.CreateDefaultBuilder(argv)
     .ConfigureServices(fun services -> services.AddFBus(configureBus) |> ignore)
@@ -73,7 +73,6 @@ Support for Generic Host is available alongside dependencies injection. See `Add
 
 ## Builder
 Prior using the bus, a configuration must be built:
-
 | FBus.Builder | Description | Default |
 |--------------|-------------|---------|
 | `init` | Create default configuration | |
@@ -85,19 +84,17 @@ Prior using the bus, a configuration must be built:
 | `withConsumer` | Add message consumer | None |
 | `build` | Create a bus instance based on configuration | | 
 
-Note: bus client is ephemeral by default (hence no traces left upon exit) - this is useful if you just want to connect to the bus for spying for eg :-) Assigning a name (see `withName`) makes the client public so no queues are not deleted upon exit.
+Note: bus clients are ephemeral by default - this is useful if you just want to connect to the bus for spying or sending commands for eg :-) Assigning a name (see `withName`) makes the client public so no queues are deleted upon exit.
 
 ## Bus
 `IBusControl` is the primary interface to control the bus:
-
 | IBusControl | Description | Comments |
 |-------------|-------------|----------|
-| `Start` | Start the bus. Returns `IBusSender` | Must be called before sending messages. |
+| `Start` | Start the bus. Returns `IBusInitiator` | Must be called before sending messages. |
 | `Stop` | Stop the bus. | |
 
-Once bus is started, `IBusSender` is available:
-
-| IBusSender | Description |
+Once bus is started, `IBusInitiator` is available:
+| IBusInitiator | Description |
 |------------|-------------|
 | `Publish` | Broadcast the message to all subscribers |
 | `Send` | Send only the message to given client |
@@ -109,11 +106,11 @@ Note: a new conversation is started when using this interface.
 
 ```
 type IBusConsumer<'t> =
-    abstract Handle: IContext -> 't -> unit
+    abstract Handle: IBusConversation -> 't -> unit
 ```
 
-`IContext` provides information to handlers and means to interact with the bus:
-| IContext | Description |
+`IBusConversation` provides information to handlers and means to interact with the bus:
+| IBusConversation | Description |
 |------------|-------------|
 | `Sender` | Name of the client |
 | `ConversationId` | Id of the conversation (identifier is flowing from initiator to subsequent consumers) |
