@@ -8,10 +8,10 @@ test:
 	dotnet test -c $(config)
 
 nuget:
-	dotnet pack -c $(config) /p:Version=$(version) -o out fbus/fbus.fsproj
+	dotnet pack -c $(config) /p:Version=$(version) -o out
 
 publish: nuget
-	dotnet nuget push out/fbus.$(version).nupkg -k $NUGET_KEY -s https://api.nuget.org/v3/index.json
+	dotnet nuget push out/*.nupkg -k $NUGET_KEY -s https://api.nuget.org/v3/index.json
 
 client:
 	cd samples/client; dotnet run -c $(config)

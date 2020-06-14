@@ -5,4 +5,7 @@
   <ItemGroup>
     <Compile Include="HelloWorld.fs" />
   </ItemGroup>
+  <PropertyGroup>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>  
 </Project>

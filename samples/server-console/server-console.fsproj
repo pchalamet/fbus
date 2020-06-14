@@ -13,5 +13,9 @@
   <ItemGroup>
     <Compile Include="Program.fs" />
   </ItemGroup>
+  
+  <PropertyGroup>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
 
 </Project>
