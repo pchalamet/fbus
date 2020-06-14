@@ -32,7 +32,7 @@ type RabbitMQ(conn: IConnection, channel: IModel) =
             channel.Dispose()
             conn.Dispose()
 
-    static member TryCreate (conn: IConnection) (channel: IModel) (busBuilder: BusBuilder) msgCallback =
+    static member private TryCreate (conn: IConnection) (channel: IModel) (busBuilder: BusBuilder) msgCallback =
         let configureAck () =
             channel.BasicQos(prefetchSize = 0ul, prefetchCount = 1us, ``global`` = false)
             channel.ConfirmSelect()
