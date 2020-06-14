@@ -27,7 +27,7 @@ jobs:
         uses: actions/upload-artifact@v1
         with:
             name: nuget
-            path: ./out
+            path: ./nuget
 
   publish:
     if: contains(github.ref, 'refs/tags/')
@@ -35,6 +35,8 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - uses: actions/checkout@v1
+
       # first download artifacts
       - name: Download nuget artifact
         uses: actions/download-artifact@v1
