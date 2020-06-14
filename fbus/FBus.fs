@@ -3,7 +3,7 @@ open System
 
 type IBusInitiator =
     abstract Publish: msg:'t -> unit
-    abstract Send: string -> 't -> unit
+    abstract Send: client:string -> msg:'t -> unit
 
 type IBusControl =
     inherit IDisposable
@@ -12,14 +12,14 @@ type IBusControl =
 
 type IBusConversation =
     abstract Publish: msg:'t -> unit
-    abstract Send: string -> 't -> unit
+    abstract Send: client:string -> msg:'t -> unit
     abstract Reply: msg:'t -> unit
     abstract Sender: string
     abstract ConversationId: string
     abstract MessageId: string
 
 type IBusConsumer<'t> =
-    abstract Handle: IBusConversation -> 't -> unit
+    abstract Handle: IBusConversation -> msg:'t -> unit
 
 type HandlerInfo =
     { MessageType: Type
@@ -28,7 +28,7 @@ type HandlerInfo =
 
 type IBusContainer =
     abstract Register: HandlerInfo -> unit
-    abstract Resolve: obj -> HandlerInfo -> obj
+    abstract Resolve: context:obj -> HandlerInfo -> obj
 
 type IBusTransport =
     inherit IDisposable
@@ -36,7 +36,7 @@ type IBusTransport =
     abstract Send: headers:Map<string, string> -> target:string -> msgType:string -> body:ReadOnlyMemory<byte> -> unit
 
 type IBusSerializer =
-    abstract Serialize: obj -> ReadOnlyMemory<byte>
+    abstract Serialize: msg:obj -> ReadOnlyMemory<byte>
     abstract Deserialize: Type -> ReadOnlyMemory<byte> -> obj
 
 type BusBuilder =
