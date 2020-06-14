@@ -3,6 +3,7 @@ FBus is a lightweight service-bus implementation written in F#.
 
 It comes with default implementation for:
 * RabbitMQ (with dead-letter support)
+* In-memory transport for testing
 * Publish (broadcast), Send (direct) and Reply (direct)
 * Conversation follow-up using headers (ConversationId and MessageId)
 * Persistent queue/buffering across activation
@@ -65,6 +66,11 @@ Following extension points are supported:
 * Serialization: default is System.Text.Json. Serialization can be changed using `withSerialization`.
 * Container: default is none. Container can be changed using `withContainer`.
 * Hosting: no hosting by default. GenericHost can be configured using `AddFBus`.
+
+## Transports
+Two transports are available out of the box:
+* RabbitMQ: this is the default.
+* InMemory: this can be used for testing. See sample `samples/in-memory`.
 
 ## Generic Host
 Support for Generic Host is available alongside dependencies injection. See `AddFBus` and samples for more details.

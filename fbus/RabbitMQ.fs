@@ -8,29 +8,7 @@ let getClientQueue name = sprintf "fbus:client:%s" name
 let getExchangeName (msgType: string) = msgType |> sprintf "fbus:type:%s"
 
 type Transport(conn: IConnection, channel: IModel) =
-    let send headers xchgName routingKey msgType body =
-        let headers = headers |> Map.map (fun _ v -> v :> obj) |> Map.add "fbus:msgtype" (msgType :> obj)
-        let props = channel.CreateBasicProperties(Headers = headers )
-        channel.BasicPublish(exchange = xchgName,
-                             routingKey = routingKey,
-                             basicProperties = props,
-                             body = body)
-
-    interface IBusTransport with
-        member _.Publish headers msgType body =
-            let xchgName = getExchangeName msgType
-            send headers xchgName "" msgType body
-
-        member _.Send headers client msgType body =
-            let routingKey = getClientQueue client
-            send headers "" routingKey msgType body
-
-    interface System.IDisposable with
-        member _.Dispose() =
-            channel.Dispose()
-            conn.Dispose()
-
-    static member private TryCreate (conn: IConnection) (channel: IModel) (busBuilder: BusBuilder) msgCallback =
+    static let tryCreate (conn: IConnection) (channel: IModel) (busBuilder: BusBuilder) msgCallback =
         let configureAck () =
             channel.BasicQos(prefetchSize = 0ul, prefetchCount = 1us, ``global`` = false)
             channel.ConfirmSelect()
@@ -98,8 +76,29 @@ type Transport(conn: IConnection, channel: IModel) =
         configureDeadLettersQueues() |> configureQueues
         subscribeMessages ()
         listenMessages()
-
         new Transport(conn, channel) :> IBusTransport
+
+    let send headers xchgName routingKey msgType body =
+        let headers = headers |> Map.map (fun _ v -> v :> obj) |> Map.add "fbus:msgtype" (msgType :> obj)
+        let props = channel.CreateBasicProperties(Headers = headers )
+        channel.BasicPublish(exchange = xchgName,
+                             routingKey = routingKey,
+                             basicProperties = props,
+                             body = body)
+
+    interface IBusTransport with
+        member _.Publish headers msgType body =
+            let xchgName = getExchangeName msgType
+            send headers xchgName "" msgType body
+
+        member _.Send headers client msgType body =
+            let routingKey = getClientQueue client
+            send headers "" routingKey msgType body
+
+        member _.Dispose() =
+            channel.Dispose()
+            conn.Dispose()
+
 
     static member Create (busBuilder: BusBuilder) msgCallback =
         let factory = ConnectionFactory(Uri = busBuilder.Uri)
@@ -107,7 +106,7 @@ type Transport(conn: IConnection, channel: IModel) =
         try
             let channel = conn.CreateModel()
             try
-                Transport.TryCreate conn channel busBuilder msgCallback
+                tryCreate conn channel busBuilder msgCallback
             with
                 | _ -> channel.Dispose()
                        reraise()
