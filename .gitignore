@@ -433,4 +433,4 @@ $RECYCLE.BIN/
 !.vscode/extensions.json
 
 .ionide
-nuget
+out

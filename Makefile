@@ -8,10 +8,10 @@ test:
 	dotnet test -c $(config)
 
 nuget:
-	dotnet pack -c $(config) /p:Version=$(version) -o nuget
+	dotnet pack -c $(config) /p:Version=$(version) -o out
 
 publish:
-	dotnet nuget push nuget/*.nupkg -k $(nugetkey) -s https://api.nuget.org/v3/index.json --skip-duplicate
+	dotnet nuget push out/*.nupkg -k $(nugetkey) -s https://api.nuget.org/v3/index.json --skip-duplicate
 
 client:
 	cd samples/client; dotnet run -c $(config)
