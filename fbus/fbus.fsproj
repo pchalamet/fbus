@@ -4,6 +4,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="FBus.fs" />
+    <Compile Include="Control.fs" />
     <Compile Include="Container.fs" />
     <Compile Include="RabbitMQ.fs" />
     <Compile Include="Json.fs" />

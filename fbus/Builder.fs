@@ -51,4 +51,4 @@ let inline withConsumer<'t> busBuilder =
 
 
 let build (busBuilder : BusBuilder) =
-    new BusControl(busBuilder) :> IBusControl
+    new Control.BusControl(busBuilder) :> IBusControl
