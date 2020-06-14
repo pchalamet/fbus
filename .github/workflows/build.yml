@@ -1,0 +1,32 @@
+name: build
+
+on: [push]
+
+jobs:
+    build:
+        runs-on: ubuntu-latest
+
+        steps:
+        # setup build environment
+        - name: info
+          run: echo 'Building ${{ github.ref }}'
+
+        - uses: actions/checkout@v1
+
+        - name: Setup .NET Core
+          uses: actions/setup-dotnet@v1
+          with:
+              dotnet-version: 3.1.100
+
+        # build
+        - name: Build
+          run: make test config=Release
+
+    publish:
+        if: contains(github.ref, 'refs/tags/')
+        needs: build
+        runs-on: ubuntu-latest
+
+        steps:
+        - name: publish nuget
+          run: make nuget config=Release version=${GITHUB_REF#refs/tags/} nugetkey=${{secrets.NUGET_KEY}}

@@ -1,5 +1,5 @@
 # fbus
-small service-bus in F# for (mainly) F#.
+FBus is a lightweight service-bus implementation written in F#.
 
 It comes with default implementation for:
 * RabbitMQ (with dead-letter support)
