@@ -3,30 +3,43 @@ name: build
 on: [push]
 
 jobs:
-    build:
-        runs-on: ubuntu-latest
+  build:
+    runs-on: ubuntu-latest
 
-        steps:
-        # setup build environment
-        - name: info
-          run: echo 'Building ${{ github.ref }}'
+    steps:
+      - name: Info
+        run: echo 'Building ${{ github.ref }}'
 
-        - uses: actions/checkout@v1
+      - uses: actions/checkout@v1
 
-        - name: Setup .NET Core
-          uses: actions/setup-dotnet@v1
-          with:
-              dotnet-version: 3.1.100
+      - name: Setup .NET Core
+        uses: actions/setup-dotnet@v1
+        with:
+          dotnet-version: 3.1.100
 
-        # build
-        - name: Build
-          run: make test config=Release
+      - name: Build
+        run: make nuget config=Release
 
-    publish:
-        if: contains(github.ref, 'refs/tags/')
-        needs: build
-        runs-on: ubuntu-latest
+      - name: Test
+        run: make test config=Release
 
-        steps:
-        - name: publish nuget
-          run: make publish config=Release version=${GITHUB_REF#refs/tags/} nugetkey=${{secrets.NUGET_KEY}}
+      - name: Upload nuget
+        uses: actions/upload-artifact@v1
+        with:
+            name: nuget
+            path: ./out/*.nupkg
+
+  publish:
+    if: contains(github.ref, 'refs/tags/')
+    needs: build
+    runs-on: ubuntu-latest
+
+    steps:
+      # first download artifacts
+      - name: Download nuget artifact
+        uses: actions/download-artifact@v1
+        with:
+            name: nuget
+
+      - name: publish nuget
+        run: make publish config=Release version=${GITHUB_REF#refs/tags/} nugetkey=${{secrets.NUGET_KEY}}
