@@ -6,6 +6,8 @@
     <ProjectReference Include="..\fbus\fbus.fsproj" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Serializer.fs" />
+    <Compile Include="Container.fs" />
     <Compile Include="BusControl.fs" />
     <Compile Include="Builder.fs" />
     <Compile Include="Program.fs" />
