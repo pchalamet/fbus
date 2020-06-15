@@ -14,7 +14,7 @@ let init () =
       IsEphemeral = true
       Uri = Uri("amqp://guest:guest@localhost")
       Container = Container.Activator()
-      Transport = RabbitMQ.Transport.Create
+      Transport = RabbitMQ.Create
       Serializer = Json.Serializer() :> IBusSerializer
       Handlers = Map.empty }
 
