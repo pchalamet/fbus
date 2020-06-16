@@ -3,6 +3,12 @@ open FBus
 open RabbitMQ.Client
 open RabbitMQ.Client.Events
 
+type IBasicProperties with
+    member props.TryGetHeaderAsString (key: string) =
+        match props.Headers.TryGetValue key with
+        | true, (:? (byte[]) as s) -> Some (System.Text.Encoding.UTF8.GetString(s))
+        | _ -> None
+
 type Transport(busBuilder: BusBuilder, msgCallback) =
     let channelLock = obj()
     let factory = ConnectionFactory(Uri = busBuilder.Uri)
@@ -80,11 +86,11 @@ type Transport(busBuilder: BusBuilder, msgCallback) =
         let consumer = EventingBasicConsumer(channel)
         let consumerCallback msgCallback (ea: BasicDeliverEventArgs) =
             try
-                let msgType = match ea.BasicProperties.Headers.TryGetValue "fbus:msgtype" with
-                              | true, (:? (byte[]) as msgType) -> System.Text.Encoding.UTF8.GetString(msgType)
+                let msgType = match ea.BasicProperties.TryGetHeaderAsString "fbus:msgtype" with
+                              | Some msgType -> msgType
                               | _ -> failwithf "Missing header fbus:msgtype"
 
-                let headers = ea.BasicProperties.Headers |> Seq.map (fun kvp -> kvp.Key, System.Text.Encoding.UTF8.GetString(kvp.Value :?> byte[]))
+                let headers = ea.BasicProperties.Headers |> Seq.choose (fun kvp -> ea.BasicProperties.TryGetHeaderAsString kvp.Key |> Option.map (fun s -> kvp.Key, s))
                                                          |> Map
 
                 msgCallback headers msgType ea.Body
