@@ -74,7 +74,8 @@ type Transport(busBuilder: BusBuilder, msgCallback) =
                              durable = true, exclusive = false, autoDelete = busBuilder.IsEphemeral,
                              arguments = queueArgs) |> ignore
 
-    let bindExchangeAndQueue xchgName =
+    let bindExchangeAndQueue msgType =
+        let xchgName = getExchangeName msgType
         channel.ExchangeDeclare(exchange = xchgName, ``type`` = ExchangeType.Fanout, 
                                 durable = true, autoDelete = false)
         channel.QueueBind(queue = queueName, exchange = xchgName, routingKey = "")
