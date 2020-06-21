@@ -4,15 +4,19 @@ open System
 open System.Text.Json
 open System.Text.Json.Serialization
 
-type Serializer() =
+type Serializer(?options: JsonSerializerOptions) =
+
+    let defaultOptions =
+        let options = JsonSerializerOptions()
+        options.Converters.Add(JsonFSharpConverter())
+        options
+
+    let options = defaultArg options defaultOptions
+
     interface IBusSerializer with
         member _.Serialize (v: obj) =
-            let options = JsonSerializerOptions()
-            options.Converters.Add(JsonFSharpConverter())
             let body = JsonSerializer.SerializeToUtf8Bytes(v, options)
             ReadOnlyMemory(body)
 
         member _.Deserialize (t: System.Type) (body: ReadOnlyMemory<byte>) =
-            let options = JsonSerializerOptions()
-            options.Converters.Add(JsonFSharpConverter())
             JsonSerializer.Deserialize(body.Span, t, options)
