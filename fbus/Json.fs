@@ -2,6 +2,7 @@ module FBus.Json
 open FBus
 open System
 open System.Text.Json
+open System.Text.Json.Serialization
 
 type Serializer(?initOptions: JsonSerializerOptions -> unit) =
 
@@ -9,6 +10,7 @@ type Serializer(?initOptions: JsonSerializerOptions -> unit) =
 
     let options =
         let options = JsonSerializerOptions()
+        options.Converters.Add(JsonFSharpConverter())
         options |> initOptions
         options
 
