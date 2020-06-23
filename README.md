@@ -1,7 +1,7 @@
 # fbus
-FBus is a lightweight service-bus implementation written in F#.
+[![Build status](https://github.com/pchalamet/fbus/workflows/build/badge.svg)](https://github.com/pchalamet/fbus/actions?query=workflow%3Abuild) [![Nuget](https://img.shields.io/nuget/v/FBus?logo=nuget)](https://nuget.org/packages/FBus)
 
-![GitHub Workflow Status](https://img.shields.io/github/workflow/status/pchalamet/fbus/build) ![Nuget](https://img.shields.io/nuget/v/FBus)
+FBus is a lightweight service-bus implementation written in F#.
 
 It comes with default implementation for:
 * RabbitMQ (with dead-letter support)
