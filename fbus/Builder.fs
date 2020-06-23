@@ -34,7 +34,7 @@ let withContainer container busBuilder =
 let withSerializer serializer busBuilder =
     { busBuilder with Serializer = serializer }
 
-let inline withConsumer<'t> busBuilder =
+let withConsumer<'t> busBuilder =
     let findMessageHandler (t: System.Type) =
         if t.IsGenericType && t.GetGenericTypeDefinition() = typedefof<IBusConsumer<_>> then 
             let msgType = t.GetGenericArguments().[0]

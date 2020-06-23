@@ -22,7 +22,7 @@ type Transport(busBuilder: BusBuilder, msgCallback) =
         let headers = headers |> Map.map (fun _ v -> v :> obj) |> Map.add "fbus:msgtype" (msgType :> obj)
 
         let send () =
-            let props = channel.CreateBasicProperties(Headers = headers )
+            let props = channel.CreateBasicProperties(Headers = headers, Persistent = true)
             channel.BasicPublish(exchange = xchgName,
                                  routingKey = routingKey,
                                  basicProperties = props,
@@ -98,10 +98,8 @@ type Transport(busBuilder: BusBuilder, msgCallback) =
 
                 safeAck ea
             with
-                | exn -> safeNack ea 
-                         // TODO: report exception to someone
-                         printfn "Failed to process message %A" exn
-                         
+                | _ -> safeNack ea
+
         consumer.Received.Add (consumerCallback msgCallback)
         channel.BasicConsume(queue = queueName, autoAck = false, consumer = consumer) |> ignore
 

@@ -12,13 +12,24 @@ It comes with default implementation for:
 * Generic Host support with dependency injection
 * System.Text.Json serialization
 
-Following features will appear in future revisions:
-* Logger extension point
-* Handlers using pure function
+Following features might appear in future revisions:
 * Parallelism support via sharding
 
 Features that won't be implemented in FBus:
 * Sagas: coordination is big topic by itself - technically, everything required to handle this is available (ConversationId and MessageId). This can be handled outside of a service-bus.
+
+# Thread safety
+FBus is thread-safe but that's not necessarily the case of the transports.
+
+## RabbitMQ transport
+The default transport implementation for RabbitMQ supports only a simple concurrency model:
+* no concurrency at bus level for receive. This does not mean you can't have concurrency, you just have to handle it explicitely: you have to create multiple bus instances in-process and it's up to you to synchronize correctly among threads if required.
+* Sending is a thread safe operation - but locking happens behind the scene to access underlying connection.
+
+The default implementation use following settings:
+* messages are sent as persistent
+* a consumer fetches one message at a time and ack/nack accordingly
+* message goes to dead-letter on error
 
 # how to use it ?
 
