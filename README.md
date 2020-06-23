@@ -128,3 +128,10 @@ type IBusConsumer<'t> =
 | `Send` | Send only the message to given client. |
 
 Note: the current conversation is used when using this interface.
+
+# how to build it ?
+A makefile is available:
+* make [build]: build FBus
+* make test: build and test FBus
+
+If you prefer to build using your IDE, solution file is named `fbus.sln`.
