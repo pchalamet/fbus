@@ -81,11 +81,11 @@ Support for Generic Host is available alongside dependencies injection. See `Add
 Prior using the bus, a configuration must be built:
 | FBus.Builder | Description | Default |
 |--------------|-------------|---------|
-| `init` | Create default configuration | |
-| `withName` | Change service name. Used to identify a bus client (see `IBusInitiator.Send` and `IBusConversation.Send`) | Name based on computer name, pid and random number |
-| `withTransport` | Transport to use. | RabbitMQ |
-| `withEndpoint` | Transport endpoint | amqp://guest:guest@localhost |
-| `withContainer` | Container to use | System.Activator
+| `init` | Create default configuration. | |
+| `withName` | Change service name. Used to identify a bus client (see `IBusInitiator.Send` and `IBusConversation.Send`) | Name based on computer name, pid and random number. |
+| `withTransport` | Transport to use. | `RabbitMQ` |
+| `withEndpoint` | Transport endpoint | `amqp://guest:guest@localhost` |
+| `withContainer` | Container to use | `Activator` |
 | `withSerializer` | Serializer to use | System.Text.Json with [FSharp.SystemTextJson](https://github.com/Tarmil/FSharp.SystemTextJson) |
 | `withConsumer` | Add message consumer | None |
 | `build` | Create a bus instance based on configuration | | 
@@ -96,14 +96,14 @@ Note: bus clients are ephemeral by default - this is useful if you just want to 
 `IBusControl` is the primary interface to control the bus:
 | IBusControl | Description | Comments |
 |-------------|-------------|----------|
-| `Start` | Start the bus. Returns `IBusInitiator` | Must be called before sending messages. |
+| `Start` | Start the bus. Returns `IBusInitiator` | Must be called before sending messages. Start accepts a resolve context which can be used by the container. |
 | `Stop` | Stop the bus. | |
 
 Once bus is started, `IBusInitiator` is available:
 | IBusInitiator | Description |
 |------------|-------------|
-| `Publish` | Broadcast the message to all subscribers |
-| `Send` | Send only the message to given client |
+| `Publish` | Broadcast the message to all subscribers. |
+| `Send` | Send only the message to given client. |
 
 Note: a new conversation is started when using this interface.
 
@@ -118,11 +118,11 @@ type IBusConsumer<'t> =
 `IBusConversation` provides information to handlers and means to interact with the bus:
 | IBusConversation | Description |
 |------------|-------------|
-| `Sender` | Name of the client |
-| `ConversationId` | Id of the conversation (identifier is flowing from initiator to subsequent consumers) |
-| `MessageId` | Id the this message |
-| `Reply` | Provide a shortcut to reply to sender |
-| `Publish` | Broadcast the message to all subscribers |
-| `Send` | Send only the message to given client |
+| `Sender` | Name of the client. |
+| `ConversationId` | Id of the conversation (identifier is flowing from initiator to subsequent consumers). |
+| `MessageId` | Id the this message. |
+| `Reply` | Provide a shortcut to reply to sender. |
+| `Publish` | Broadcast the message to all subscribers. |
+| `Send` | Send only the message to given client. |
 
 Note: the current conversation is used when using this interface.
