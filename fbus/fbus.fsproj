@@ -16,7 +16,6 @@
     <PackageReference Include="FSharp.SystemTextJson" Version="0.11.13" />
     <PackageReference Include="Microsoft.Extensions.Hosting" Version="3.1.4" />
     <PackageReference Include="RabbitMQ.Client" Version="6.1.0" />
-    <PackageReference Include="TaskBuilder.fs" Version="2.1.0" />
   </ItemGroup>
   <PropertyGroup>
     <!-- https://docs.microsoft.com/en-us/nuget/reference/msbuild-targets#packing-using-a-nuspec -->
