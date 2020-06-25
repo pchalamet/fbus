@@ -12,6 +12,7 @@ let init () =
 
     { Name = generateClientName()
       IsEphemeral = true
+      IsRecovery = false
       Uri = Uri("amqp://guest:guest@localhost")
       Container = Container.Activator()
       Transport = RabbitMQ.Create
@@ -52,6 +53,14 @@ let withConsumer<'t> busBuilder =
     if handlers = List.empty then failwith "No handler implemented"
     { busBuilder with Handlers = handlers |> List.fold (fun acc h -> acc |> Map.add h.MessageType.FullName h) busBuilder.Handlers }
 
+let withRecovery busBuilder =
+    { busBuilder with IsRecovery = true }
 
 let build (busBuilder : BusBuilder) =
+    let busBuilder = if busBuilder.IsRecovery then
+                        { busBuilder with Name = busBuilder.Name + ":dead-letter"
+                                          IsEphemeral = true }
+                     else
+                        busBuilder
+
     new Control.Bus(busBuilder) :> IBusControl

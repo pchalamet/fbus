@@ -101,6 +101,7 @@ Prior using the bus, a configuration must be built:
 | `withContainer` | Container to use | `Activator` |
 | `withSerializer` | Serializer to use | System.Text.Json with [FSharp.SystemTextJson](https://github.com/Tarmil/FSharp.SystemTextJson) |
 | `withConsumer` | Add message consumer | None |
+| `withRecovery` | Connect to dead letter for recovery only | |
 | `build` | Create a bus instance based on configuration | | 
 
 Note: bus clients are ephemeral by default - this is useful if you just want to connect to the bus for spying or sending commands for eg :-) Assigning a name (see `withName`) makes the client public so no queues are deleted upon exit.

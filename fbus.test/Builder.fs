@@ -68,3 +68,9 @@ let ``withConsumer add consumers`` () =
                                  "System.Int32", { MessageType = typeof<int>; InterfaceType = typeof<IBusConsumer<int>>; ImplementationType = typeof<MyConsumer2> } ]
 
     build.Handlers |> should equal expectedHandlers
+
+
+[<Test>]
+let ``withRecovery set recovery flag`` () =
+    let builder = init() |> withRecovery
+    builder.IsRecovery |> should equal true

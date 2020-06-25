@@ -42,6 +42,7 @@ type IBusSerializer =
 type BusBuilder =
     { Name: string
       IsEphemeral: bool
+      IsRecovery: bool
       Uri: Uri
       Container: IBusContainer
       Serializer: IBusSerializer
