@@ -3,7 +3,11 @@ open System
 
 type Bus(busBuilder: BusBuilder) =
     do busBuilder.Handlers |> Map.iter (fun _ v -> busBuilder.Container.Register v)
+
+    let initLock = obj()
+    let doExclusive = lock initLock
     let mutable busTransport : IBusTransport option = None
+
     let defaultHeaders = Map [ "fbus:sender", busBuilder.Name ]
 
     let getMsgType (t: obj) =
@@ -48,25 +52,34 @@ type Bus(busBuilder: BusBuilder) =
         defaultHeaders |> Map.add "fbus:conversation-id" (Guid.NewGuid().ToString())
                        |> Map.add "fbus:message-id" (Guid.NewGuid().ToString())
 
+    let start activationContext =
+        match busTransport with
+        | Some _ -> failwith "Bus is already started"
+        | None -> busTransport <- Some (busBuilder.Transport busBuilder (msgCallback activationContext))
+
+    let stop () =
+        match busTransport with
+        | None -> failwith "Bus is already stopped"
+        | Some dispose -> dispose.Dispose()
+                          busTransport <- None
+
+    let dispose () =
+        match busTransport with
+        | None -> ()
+        | Some transport -> transport.Dispose()
+                            busTransport <- None
+
     interface IBusInitiator with
         member _.Publish msg = newConversationHeaders() |> publish msg
         member _.Send client msg = newConversationHeaders() |> send client msg
 
     interface IBusControl with
         member this.Start activationContext =
-            match busTransport with
-            | Some _ -> failwith "Bus is already started"
-            | None -> busTransport <- Some (busBuilder.Transport busBuilder (msgCallback activationContext))
-                      this :> IBusInitiator
+            doExclusive (fun() -> start activationContext)
+            this :> IBusInitiator
 
         member _.Stop() = 
-            match busTransport with
-            | None -> failwith "Bus is already stopped"
-            | Some dispose -> dispose.Dispose()
-                              busTransport <- None
+            doExclusive stop
 
         member _.Dispose() =
-            match busTransport with
-            | None -> ()
-            | Some transport -> transport.Dispose()
-                                busTransport <- None
+            doExclusive dispose
