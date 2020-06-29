@@ -83,7 +83,7 @@ Following extension points are supported:
 ## Transports
 Two transports are available out of the box:
 * RabbitMQ: this is the default.
-* InMemory: this can be used for testing. See sample `samples/in-memory`.
+* InMemory: this can be used for testing. See sample `samples/in-memory` or unit-tests.
 
 ## Generic Host
 Support for Generic Host is available alongside dependencies injection. See `AddFBus` and samples for more details.
