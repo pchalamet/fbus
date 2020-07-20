@@ -13,6 +13,10 @@ let ``withName set permanent client`` () =
     builder.IsEphemeral |> should equal false
 
 [<Test>]
+let ``Invalid withName raises an error `` () =
+    (fun () -> init() |> withName "   " |> ignore) |> should (throwWithMessage "Invalid bus name") typeof<Exception>
+
+[<Test>]
 let ``withEndpoint set new uri`` () =
     let expectedUri = Uri("amqp://my-rabbitmq-server")
     let builder = init() |> withEndpoint expectedUri

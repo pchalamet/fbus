@@ -20,6 +20,7 @@ let init () =
       Handlers = Map.empty }
 
 let withName name busBuilder =
+    if name |> String.IsNullOrWhiteSpace then failwith "Invalid bus name"
     { busBuilder with Name = name 
                       IsEphemeral = false }
 
