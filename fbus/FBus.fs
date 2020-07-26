@@ -46,5 +46,6 @@ type BusBuilder =
       Uri: Uri
       Container: IBusContainer
       Serializer: IBusSerializer
+      ExceptionHandler: IBusConversation -> obj -> Exception -> unit
       Transport: BusBuilder -> (Map<string,string> -> string -> ReadOnlyMemory<byte> -> unit) -> IBusTransport
       Handlers : Map<string, HandlerInfo> }

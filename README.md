@@ -101,6 +101,7 @@ Prior using the bus, a configuration must be built:
 | `withContainer` | Container to use | `Activator` |
 | `withSerializer` | Serializer to use | System.Text.Json with [FSharp.SystemTextJson](https://github.com/Tarmil/FSharp.SystemTextJson) |
 | `withConsumer` | Add message consumer | None |
+| `withExceptionHandler` | Handle consumer failure | None |
 | `withRecovery` | Connect to dead letter for recovery only | |
 | `build` | Create a bus instance based on configuration | | 
 

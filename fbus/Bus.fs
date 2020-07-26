@@ -37,6 +37,7 @@ type Bus(busBuilder: BusBuilder) =
             defaultHeaders |> Map.add "fbus:message-id" (Guid.NewGuid().ToString())
                            |> Map.add "fbus:conversation-id" (headers |> Map.find "fbus:conversation-id")
 
+        let msg = busBuilder.Serializer.Deserialize handlerInfo.MessageType content
         let ctx = { new IBusConversation with
                         member _.ConversationId: string = headers |> Map.find "fbus:conversation-id"
                         member _.MessageId: string = headers |> Map.find "fbus:message-id"
@@ -45,8 +46,13 @@ type Bus(busBuilder: BusBuilder) =
                         member _.Publish msg = conversationHeaders() |> publish msg
                         member _.Send client msg = conversationHeaders() |> send client msg }
 
-        let msg = busBuilder.Serializer.Deserialize handlerInfo.MessageType content
-        callsite.Invoke(handler, [| ctx; msg |]) |> ignore
+        try
+            callsite.Invoke(handler, [| ctx; msg |]) |> ignore
+        with
+            exn -> try
+                       busBuilder.ExceptionHandler ctx msg exn
+                   with
+                       exn2 -> printfn "Exception handler failed for messageId [%A]:\n%A" ctx.MessageId exn2
 
     let newConversationHeaders () =
         defaultHeaders |> Map.add "fbus:conversation-id" (Guid.NewGuid().ToString())

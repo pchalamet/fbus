@@ -31,6 +31,7 @@ let mutable transportDisposedCalls = 0
 let buildUri = Uri("amqp://build-uri")
 
 let msgString = "test message"
+let fatalString = "fatal message"
 let msgInt = 42
 let client = "test-client"
 let target = "test-target"
@@ -40,7 +41,9 @@ let mutable latestConversationId = ""
 
 let consumerStringCallback (context: IBusConversation) (msg: string) =
     Interlocked.Increment(&consumerActivation) |> ignore
-    msg |> should equal msg
+    if msg = fatalString then failwithf "Fatal !"
+
+    msg |> should equal msgString
     context.Sender |> should equal client
     latestConversationId <- context.ConversationId
     context.Reply msgInt
@@ -115,6 +118,12 @@ let buildTransportBuilder (busBuilder: BusBuilder) (callback: Map<string, string
 
 [<Test>]
 let ``Test bus control`` () =
+    let mutable exceptionHandlerTriggered = false
+    let exceptionHandler ctx (msg: obj) exn =
+        match msg with
+        | :? string as s when s = fatalString -> exceptionHandlerTriggered <- true
+        | _ -> ()
+
     let bus = init() |> withName client
                      |> withEndpoint buildUri
                      |> withConsumer<StringConsumer>
@@ -122,18 +131,21 @@ let ``Test bus control`` () =
                      |> withContainer buildContainer
                      |> withTransport buildTransportBuilder
                      |> withSerializer buildSerializer
+                     |> withExceptionHandler exceptionHandler
                      |> build
 
     let busInitiator = bus.Start activationContext
     busInitiator.Publish msgString
     busInitiator.Send target msgString
+    busInitiator.Send target fatalString
     bus.Dispose()
 
     registerCalls |> should equal 2 // 2 consumers
-    serializeCalls |> should equal 4 // 1 publish, 1 reply (from publish), 1 send, 1 reply (from send)
+    serializeCalls |> should equal 5 // 1 publish, 1 reply (from publish), 1 send, 1 reply (from send) 1 failure
     publishCalls |> should equal 1 // 1 publish
-    resolveCalls |> should equal 4 // 1 publish, 1 reply (from publish), 1 send, 1 reply (from send)
-    deserializeCalls |> should equal 4 // 1 publish, 1 reply (from publish), 1 send, 1 reply (from send)
-    consumerActivation |> should equal 4 // 1 publish, 1 reply (from publish), 1 send, 1 reply (from send)
-    sendCalls |> should equal 3 // 1 reply (from publish), 1 send, 1 reply (from send)
+    resolveCalls |> should equal 5 // 1 publish, 1 reply (from publish), 1 send, 1 reply (from send) 1 failure
+    deserializeCalls |> should equal 5 // 1 publish, 1 reply (from publish), 1 send, 1 reply (from send) 1 failure
+    consumerActivation |> should equal 5 // 1 publish, 1 reply (from publish), 1 send, 1 reply (from send) 1 failure
+    sendCalls |> should equal 4 // 1 reply (from publish), 1 send, 1 reply (from send) 1 failure
     transportDisposedCalls |> should equal 1 // tear down
+    exceptionHandlerTriggered |> should equal true
