@@ -17,7 +17,7 @@ let init () =
       Container = Container.Activator()
       Transport = RabbitMQ.Create
       Serializer = Json.Serializer() :> IBusSerializer
-      ExceptionHandler = fun _ _ _ -> ()
+      Hook = None
       Handlers = Map.empty }
 
 let withName name busBuilder =
@@ -58,8 +58,8 @@ let withConsumer<'t> busBuilder =
 let withRecovery busBuilder =
     { busBuilder with IsRecovery = true }
 
-let withExceptionHandler cb busBuilder =
-    { busBuilder with ExceptionHandler = cb }
+let withHook hook busBuilder =
+    { busBuilder with Hook = Some hook }
 
 let build (busBuilder : BusBuilder) =
     let busBuilder = if busBuilder.IsRecovery then

@@ -47,10 +47,12 @@ type Bus(busBuilder: BusBuilder) =
                         member _.Send client msg = conversationHeaders() |> send client msg }
 
         try
+            busBuilder.Hook |> Option.iter (fun hook -> hook.BeforeHandle ctx msg)
             callsite.Invoke(handler, [| ctx; msg |]) |> ignore
+            busBuilder.Hook |> Option.iter (fun hook -> hook.AfterHandle ctx msg None)
         with
             exn -> try
-                       busBuilder.ExceptionHandler ctx msg exn
+                       busBuilder.Hook |> Option.iter (fun hook -> hook.AfterHandle ctx msg (Some exn))
                    with
                        exn2 -> printfn "Exception handler failed for messageId [%A]:\n%A" ctx.MessageId exn2
 

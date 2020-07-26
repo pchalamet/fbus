@@ -10,13 +10,16 @@ type IBusControl =
     abstract Start: obj -> IBusInitiator
     abstract Stop: unit -> unit
 
-type IBusConversation =
-    abstract Publish: msg:'t -> unit
-    abstract Send: client:string -> msg:'t -> unit
-    abstract Reply: msg:'t -> unit
+type IBusConversationContext =
     abstract Sender: string
     abstract ConversationId: string
     abstract MessageId: string
+
+type IBusConversation =
+    inherit IBusConversationContext
+    abstract Publish: msg:'t -> unit
+    abstract Send: client:string -> msg:'t -> unit
+    abstract Reply: msg:'t -> unit
 
 type IBusConsumer<'t> =
     abstract Handle: IBusConversation -> msg:'t -> unit
@@ -39,6 +42,10 @@ type IBusSerializer =
     abstract Serialize: msg:obj -> ReadOnlyMemory<byte>
     abstract Deserialize: Type -> ReadOnlyMemory<byte> -> obj
 
+type IBusHook =
+    abstract BeforeHandle: ctx:IBusConversationContext -> msg:obj -> unit
+    abstract AfterHandle: ctx:IBusConversationContext -> msg:obj -> exn:Exception option -> unit
+
 type BusBuilder =
     { Name: string
       IsEphemeral: bool
@@ -46,6 +53,6 @@ type BusBuilder =
       Uri: Uri
       Container: IBusContainer
       Serializer: IBusSerializer
-      ExceptionHandler: IBusConversation -> obj -> Exception -> unit
+      Hook: IBusHook option
       Transport: BusBuilder -> (Map<string,string> -> string -> ReadOnlyMemory<byte> -> unit) -> IBusTransport
       Handlers : Map<string, HandlerInfo> }
