@@ -24,20 +24,10 @@ type Bus(busBuilder: BusBuilder) =
         | Some busTransport -> busBuilder.Serializer.Serialize msg |> busTransport.Send headers client (msg |> getMsgType)
 
     let msgCallback activationContext headers msgType content =
-        let handlerInfo = match busBuilder.Handlers |> Map.tryFind msgType with
-                          | Some handlerInfo -> handlerInfo
-                          | _ -> failwithf "Unknown message type [%s]" msgType
-        let handler = busBuilder.Container.Resolve activationContext handlerInfo
-        if handler |> isNull then failwith "No handler found"
-
-        let callsite = handlerInfo.InterfaceType.GetMethod("Handle")
-        if callsite |> isNull then failwith "Handler method not found"
-
         let conversationHeaders () = 
             defaultHeaders |> Map.add "fbus:message-id" (Guid.NewGuid().ToString())
                            |> Map.add "fbus:conversation-id" (headers |> Map.find "fbus:conversation-id")
 
-        let msg = busBuilder.Serializer.Deserialize handlerInfo.MessageType content
         let ctx = { new IBusConversation with
                         member _.ConversationId: string = headers |> Map.find "fbus:conversation-id"
                         member _.MessageId: string = headers |> Map.find "fbus:message-id"
@@ -47,12 +37,25 @@ type Bus(busBuilder: BusBuilder) =
                         member _.Send client msg = conversationHeaders() |> send client msg }
 
         try
+            busBuilder.Hook |> Option.iter (fun hook -> hook.BeforeDeserialization ctx)
+            let handlerInfo = match busBuilder.Handlers |> Map.tryFind msgType with
+                              | Some handlerInfo -> handlerInfo
+                              | _ -> failwithf "Unknown message type [%s]" msgType
+            let handler = busBuilder.Container.Resolve activationContext handlerInfo
+            if handler |> isNull then failwith "No handler found"
+
+            let callsite = handlerInfo.InterfaceType.GetMethod("Handle")
+            if callsite |> isNull then failwith "Handler method not found"
+
+            let msg = busBuilder.Serializer.Deserialize handlerInfo.MessageType content
+
             busBuilder.Hook |> Option.iter (fun hook -> hook.BeforeHandle ctx msg)
             callsite.Invoke(handler, [| ctx; msg |]) |> ignore
-            busBuilder.Hook |> Option.iter (fun hook -> hook.AfterHandle ctx msg None)
+
+            busBuilder.Hook |> Option.iter (fun hook -> hook.AfterHandle ctx msg)
         with
             exn -> try
-                       busBuilder.Hook |> Option.iter (fun hook -> hook.AfterHandle ctx msg (Some exn))
+                       busBuilder.Hook |> Option.iter (fun hook -> hook.OnException ctx exn)
                    with
                        exn2 -> printfn "Exception handler failed for messageId [%A]:\n%A" ctx.MessageId exn2
 

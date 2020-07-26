@@ -119,18 +119,23 @@ let buildTransportBuilder (busBuilder: BusBuilder) (callback: Map<string, string
 [<Test>]
 let ``Test bus control`` () =
     let mutable exceptionHandlerTriggered = false
+    let mutable beforeDeserialization = 0
     let mutable beforeHandleCalled = 0
     let mutable afterHandleCalled = 0
+    let mutable onExceptionCalled = 0
 
     let hook = { new FBus.IBusHook with
+                    member this.BeforeDeserialization ctx = 
+                        beforeDeserialization <- beforeDeserialization + 1
+
                     member this.BeforeHandle ctx msg = 
                         beforeHandleCalled <- beforeHandleCalled + 1
 
-                    member this.AfterHandle ctx msg exn =
+                    member this.AfterHandle ctx msg = 
                         afterHandleCalled <- afterHandleCalled + 1
-                        match msg with
-                        | :? string as s when s = fatalString && exn.IsSome -> exceptionHandlerTriggered <- true
-                        | _ -> ()
+
+                    member this.OnException ctx exn = 
+                        onExceptionCalled <- onExceptionCalled + 1
     }
 
     let bus = init() |> withName client
@@ -158,6 +163,7 @@ let ``Test bus control`` () =
     sendCalls |> should equal 4 // 1 reply (from publish), 1 send, 1 reply (from send) 1 failure
     transportDisposedCalls |> should equal 1 // tear down
 
-    exceptionHandlerTriggered |> should equal true
+    onExceptionCalled |> should equal 1
+    beforeDeserialization |> should equal 5
     beforeHandleCalled |> should equal 5
-    afterHandleCalled |> should equal 5
+    afterHandleCalled |> should equal 4
