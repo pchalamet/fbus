@@ -24,20 +24,21 @@ type Bus(busBuilder: BusBuilder) =
         | Some busTransport -> busBuilder.Serializer.Serialize msg |> busTransport.Send headers client (msg |> getMsgType)
 
     let msgCallback activationContext headers msgType content =
-        let conversationHeaders () = 
-            defaultHeaders |> Map.add "fbus:message-id" (Guid.NewGuid().ToString())
-                           |> Map.add "fbus:conversation-id" (headers |> Map.find "fbus:conversation-id")
-
-        let ctx = { new IBusConversation with
-                        member _.ConversationId: string = headers |> Map.find "fbus:conversation-id"
-                        member _.MessageId: string = headers |> Map.find "fbus:message-id"
-                        member _.Sender: string = headers |> Map.find "fbus:sender"
-                        member this.Reply msg = conversationHeaders() |> send this.Sender msg
-                        member _.Publish msg = conversationHeaders() |> publish msg
-                        member _.Send client msg = conversationHeaders() |> send client msg }
-
+        let mutable ctx: IBusConversation option = None
+        let mutable msg: obj = null
         try
-            busBuilder.Hook |> Option.iter (fun hook -> hook.BeforeDeserialization ctx)
+            let conversationHeaders () = 
+                defaultHeaders |> Map.add "fbus:message-id" (Guid.NewGuid().ToString())
+                               |> Map.add "fbus:conversation-id" (headers |> Map.find "fbus:conversation-id")
+
+            ctx <- Some { new IBusConversation with
+                            member _.ConversationId: string = headers |> Map.find "fbus:conversation-id"
+                            member _.MessageId: string = headers |> Map.find "fbus:message-id"
+                            member _.Sender: string = headers |> Map.find "fbus:sender"
+                            member this.Reply msg = conversationHeaders() |> send this.Sender msg
+                            member _.Publish msg = conversationHeaders() |> publish msg
+                            member _.Send client msg = conversationHeaders() |> send client msg }
+
             let handlerInfo = match busBuilder.Handlers |> Map.tryFind msgType with
                               | Some handlerInfo -> handlerInfo
                               | _ -> failwithf "Unknown message type [%s]" msgType
@@ -47,17 +48,11 @@ type Bus(busBuilder: BusBuilder) =
             let callsite = handlerInfo.InterfaceType.GetMethod("Handle")
             if callsite |> isNull then failwith "Handler method not found"
 
-            let msg = busBuilder.Serializer.Deserialize handlerInfo.MessageType content
-
-            busBuilder.Hook |> Option.iter (fun hook -> hook.BeforeHandle ctx msg)
-            callsite.Invoke(handler, [| ctx; msg |]) |> ignore
-
-            busBuilder.Hook |> Option.iter (fun hook -> hook.AfterHandle ctx msg)
+            msg <- busBuilder.Serializer.Deserialize handlerInfo.MessageType content
+            callsite.Invoke(handler, [| ctx.Value; msg |]) |> ignore
         with
-            exn -> try
-                       busBuilder.Hook |> Option.iter (fun hook -> hook.OnException ctx exn)
-                   with
-                       exn2 -> printfn "Exception handler failed for messageId [%A]:\n%A" ctx.MessageId exn2
+            exn -> let ctx = ctx |> Option.map (fun ctx -> ctx :> IBusConversationContext)
+                   busBuilder.Hook |> Option.iter (fun hook -> hook.OnError ctx msg exn)
 
     let newConversationHeaders () =
         defaultHeaders |> Map.add "fbus:conversation-id" (Guid.NewGuid().ToString())
