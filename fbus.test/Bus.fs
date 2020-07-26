@@ -112,7 +112,10 @@ let buildTransportBuilder (busBuilder: BusBuilder) (callback: Map<string, string
         member this.Send headers target msgType body = 
             Interlocked.Increment(&sendCalls) |> ignore
             target |> should equal target
-            callback headers msgType body
+            try
+                callback headers msgType body
+            with
+                _ -> ()
     }
 
 

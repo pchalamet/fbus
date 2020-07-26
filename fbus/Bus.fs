@@ -52,8 +52,10 @@ type Bus(busBuilder: BusBuilder) =
                 callsite.Invoke(handler, [| ctx; msg |]) |> ignore
             with
                 exn -> busBuilder.Hook |> Option.iter (fun hook -> hook.OnError ctx msg exn)
+                       reraise()
         with
             exn -> printfn "General failure in message callback %A" exn
+                   reraise()
 
     let newConversationHeaders () =
         defaultHeaders |> Map.add "fbus:conversation-id" (Guid.NewGuid().ToString())
