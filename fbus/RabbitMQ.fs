@@ -11,7 +11,7 @@ type IBasicProperties with
 
 type Transport(busBuilder: BusBuilder, msgCallback) =
     let channelLock = obj()
-    let factory = ConnectionFactory(Uri = busBuilder.Uri)
+    let factory = ConnectionFactory(Uri = busBuilder.Uri, AutomaticRecoveryEnabled = true)
     let conn = factory.CreateConnection()
     let channel = conn.CreateModel()
 
