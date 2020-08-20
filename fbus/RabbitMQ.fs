@@ -14,6 +14,7 @@ type Transport(busBuilder: BusBuilder, msgCallback) =
     let factory = ConnectionFactory(Uri = busBuilder.Uri, AutomaticRecoveryEnabled = true)
     let conn = factory.CreateConnection()
     let channel = conn.CreateModel()
+    let mutable sendChannel = conn.CreateModel()
 
     // ========================================================================================================
     // WARNING: IModel is not thread safe: https://www.rabbitmq.com/dotnet-api-guide.html#concurrency
@@ -22,19 +23,29 @@ type Transport(busBuilder: BusBuilder, msgCallback) =
         let headers = headers |> Map.map (fun _ v -> v :> obj) |> Map.add "fbus:msgtype" (msgType :> obj)
 
         let send () =
+            if sendChannel.IsClosed then
+                sendChannel.Dispose()
+                sendChannel <- conn.CreateModel()
+
             let props = channel.CreateBasicProperties(Headers = headers, Persistent = true)
-            channel.BasicPublish(exchange = xchgName,
-                                 routingKey = routingKey,
-                                 basicProperties = props,
-                                 body = body)
+            sendChannel.BasicPublish(exchange = xchgName,
+                                     routingKey = routingKey,
+                                     basicProperties = props,
+                                     body = body)
 
         lock channelLock send
 
     let safeAck (ea: BasicDeliverEventArgs) =
-        lock channelLock (fun () -> channel.BasicAck(deliveryTag = ea.DeliveryTag, multiple = false))
+        let ack () =
+            channel.BasicAck(deliveryTag = ea.DeliveryTag, multiple = false)
+
+        lock channelLock ack
 
     let safeNack (ea: BasicDeliverEventArgs) =
-        lock channelLock (fun () -> channel.BasicNack(deliveryTag = ea.DeliveryTag, multiple = false, requeue = false))
+        let nack() =
+            channel.BasicNack(deliveryTag = ea.DeliveryTag, multiple = false, requeue = false)
+
+        lock channelLock nack
     // ========================================================================================================
 
 
@@ -119,6 +130,7 @@ type Transport(busBuilder: BusBuilder, msgCallback) =
             safeSend headers "" routingKey msgType body
 
         member _.Dispose() =
+            sendChannel.Dispose()
             channel.Dispose()
             conn.Dispose()
 

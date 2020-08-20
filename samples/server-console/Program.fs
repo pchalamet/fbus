@@ -9,7 +9,10 @@ type HelloWorldConsumer() =
             printfn "-> conversation-id = %s" ctx.ConversationId
             printfn "-> message-id = %s" ctx.MessageId
 
-            { Common.HelloWorld.Message = ctx.Sender |> sprintf "Hello %s" } |> ctx.Reply
+            for idx in [1..10] do
+                { Common.HelloWorld2.Message2 = sprintf "Hello %s (%d)" ctx.Sender idx } |> ctx.Reply
+
+            printfn "HelloWorldConsumer done"
 
 
 [<EntryPoint>]
