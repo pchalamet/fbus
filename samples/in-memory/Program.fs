@@ -1,6 +1,10 @@
 ﻿open System
 open FBus.Builder
 
+type HelloMessage =
+    { Msg: string }
+    interface FBus.IMessageEvent
+
 type Consumer1() =
     interface FBus.IBusConsumer<string> with
         member this.Handle ctx (msg: string) = 
@@ -17,7 +21,7 @@ type Consumer2() =
             printfn "-> conversation-id = %s" ctx.ConversationId
             printfn "-> message-id = %s" ctx.MessageId
 
-            ctx.Sender |> sprintf "Hello %s" |> ctx.Reply
+            { Msg = ctx.Sender |> sprintf "Hello %s" } |> ctx.Reply
 
 [<EntryPoint>]
 let main argv =
@@ -34,7 +38,7 @@ let main argv =
                  |> build
     let busInitiator2 = bus2.Start()
 
-    busInitiator1.Publish "Hello in-memory !"
+    busInitiator1.Publish { Msg = "Hello in-memory !" }
 
     printfn "Press ENTER to exit"
     Console.ReadLine() |> ignore

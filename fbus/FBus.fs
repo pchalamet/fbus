@@ -1,9 +1,12 @@
 namespace FBus
 open System
 
+type IMessageCommand = interface end
+type IMessageEvent = IMessageCommand
+
 type IBusInitiator =
-    abstract Publish: msg:'t -> unit
-    abstract Send: client:string -> msg:'t -> unit
+    abstract Publish<'t when 't :> IMessageEvent> : msg:'t -> unit
+    abstract Send<'t when 't :> IMessageCommand> : client:string -> msg:'t -> unit
 
 type IBusControl =
     inherit IDisposable
@@ -17,9 +20,9 @@ type IBusConversationContext =
 
 type IBusConversation =
     inherit IBusConversationContext
-    abstract Publish: msg:'t -> unit
-    abstract Send: client:string -> msg:'t -> unit
-    abstract Reply: msg:'t -> unit
+    abstract Publish<'t when 't :> IMessageEvent> : msg:'t -> unit
+    abstract Send<'t when 't :> IMessageCommand> : client:string -> msg:'t -> unit
+    abstract Reply<'t when 't :> IMessageCommand> : msg:'t -> unit
 
 type IBusConsumer<'t> =
     abstract Handle: IBusConversation -> msg:'t -> unit

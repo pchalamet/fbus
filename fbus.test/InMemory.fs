@@ -8,9 +8,9 @@ open FBus.Builder
 open Microsoft.Extensions.DependencyInjection
 
 
-type InMemoryMessage = {
-    Content: string
-}
+type InMemoryMessage =
+    { Content: string } 
+    interface FBus.IMessageCommand
 
 
 type IHandlerInvoked =

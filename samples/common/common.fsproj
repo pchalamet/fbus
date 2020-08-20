@@ -3,6 +3,10 @@
     <TargetFramework>netcoreapp3.1</TargetFramework>
   </PropertyGroup>
   <ItemGroup>
+    <ProjectReference Include="..\..\fbus\fbus.fsproj" />
+  </ItemGroup>
+
+  <ItemGroup>
     <Compile Include="HelloWorld.fs" />
   </ItemGroup>
   <PropertyGroup>

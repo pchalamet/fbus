@@ -33,6 +33,27 @@ The default implementation use following settings:
 
 # how to use it ?
 
+## messages
+There are 2 types of messages:
+* events: messages that are broadcasted
+* commands: messages that are sent to one client
+
+In order to avoid sending anything over the wire and avoid mistakes, messages are marked with a dummy interface:
+
+For events:
+```
+type EventMessage =
+    { msg: string }
+    interface FBus.IMessageEvent
+````
+
+For commands:
+```
+type CommandMessage =
+    { msg: string }
+    interface FBus.IMessageEvent
+```
+
 ## client (console)
 ```
 open FBus
@@ -50,7 +71,7 @@ open FBus
 open FBus.Builder
 
 type MessageConsumer() =
-    interface IConsumer<string> with
+    interface IConsumer<Message> with
         member this.Handle context msg = 
             printfn "Received message: %A" msg
 

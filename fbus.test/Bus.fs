@@ -8,15 +8,23 @@ open FBus
 open FBus.Builder
 
 
+type StringMessage =
+    { String: string } 
+    interface FBus.IMessageEvent
+
+type IntMessage =
+    { Int: int }
+    interface FBus.IMessageEvent
+
 type StringConsumer(callback: IBusConversation -> string -> unit) =
-    interface IBusConsumer<string> with
+    interface IBusConsumer<StringMessage> with
         member this.Handle context msg = 
-            callback context msg
+            callback context msg.String
 
 type IntConsumer(callback: IBusConversation -> int -> unit) =
-    interface IBusConsumer<int> with
+    interface IBusConsumer<IntMessage> with
         member this.Handle context msg = 
-            callback context msg
+            callback context msg.Int
 
 
 let mutable registerCalls = 0
@@ -46,7 +54,7 @@ let consumerStringCallback (context: IBusConversation) (msg: string) =
     msg |> should equal msgString
     context.Sender |> should equal client
     latestConversationId <- context.ConversationId
-    context.Reply msgInt
+    { Int = msgInt } |> context.Reply
 
 let consumerIntCallback (context: IBusConversation) (msg: int) =
     Interlocked.Increment(&consumerActivation) |> ignore
@@ -59,42 +67,42 @@ let buildContainer = {
         member this.Register handlerInfo = 
             Interlocked.Increment(&registerCalls) |> ignore
 
-            [typeof<string>; typeof<int>] |> List.contains  handlerInfo.MessageType |> should be True
-            if handlerInfo.MessageType = typeof<string> then
-                handlerInfo.InterfaceType |> should equal typeof<IBusConsumer<string>>
+            [typeof<StringMessage>; typeof<IntMessage>] |> List.contains  handlerInfo.MessageType |> should be True
+            if handlerInfo.MessageType = typeof<StringMessage> then
+                handlerInfo.InterfaceType |> should equal typeof<IBusConsumer<StringMessage>>
                 handlerInfo.ImplementationType |> should equal typeof<StringConsumer>
             else
-                handlerInfo.InterfaceType |> should equal typeof<IBusConsumer<int>>
+                handlerInfo.InterfaceType |> should equal typeof<IBusConsumer<IntMessage>>
                 handlerInfo.ImplementationType |> should equal typeof<IntConsumer>
 
         member this.Resolve ctx handlerInfo =
             Interlocked.Increment(&resolveCalls) |> ignore
             ctx |> should equal activationContext
 
-            [typeof<string>; typeof<int>] |> List.contains  handlerInfo.MessageType |> should be True
-            if handlerInfo.MessageType = typeof<string> then
-                handlerInfo.InterfaceType |> should equal typeof<IBusConsumer<string>>
+            [typeof<StringMessage>; typeof<IntMessage>] |> List.contains  handlerInfo.MessageType |> should be True
+            if handlerInfo.MessageType = typeof<StringMessage> then
+                handlerInfo.InterfaceType |> should equal typeof<IBusConsumer<StringMessage>>
                 handlerInfo.ImplementationType |> should equal typeof<StringConsumer>
                 StringConsumer(consumerStringCallback) :> obj
             else
-                handlerInfo.InterfaceType |> should equal typeof<IBusConsumer<int>>
+                handlerInfo.InterfaceType |> should equal typeof<IBusConsumer<IntMessage>>
                 handlerInfo.ImplementationType |> should equal typeof<IntConsumer>
                 IntConsumer(consumerIntCallback) :> obj
 }
+
+let serializer = FBus.Json.Serializer() :> IBusSerializer
 
 let buildSerializer = {
     new IBusSerializer with
         member this.Deserialize msgType body = 
             Interlocked.Increment(&deserializeCalls) |> ignore
-            [typeof<string>; typeof<int>] |> List.contains  msgType |> should be True
-            if msgType = typeof<string> then System.Text.Encoding.UTF8.GetString(body.ToArray()) :> obj
-            else System.BitConverter.ToInt32(body.ToArray(), 0) :> obj
+            [typeof<StringMessage>; typeof<IntMessage>] |> List.contains  msgType |> should be True
+            serializer.Deserialize msgType body
 
         member this.Serialize msg =
             Interlocked.Increment(&serializeCalls) |> ignore
-            [typeof<string>; typeof<int>] |> List.contains (msg.GetType()) |> should be True
-            if msg.GetType() = typeof<string> then (msg :?> string) |> System.Text.Encoding.UTF8.GetBytes |> ReadOnlyMemory
-            else (msg :?> int) |> System.BitConverter.GetBytes |> ReadOnlyMemory
+            [typeof<StringMessage>; typeof<IntMessage>] |> List.contains (msg.GetType()) |> should be True
+            serializer.Serialize msg
 }
 
 
@@ -126,7 +134,7 @@ let ``Test bus control`` () =
     let hook = { new FBus.IBusHook with
                     member this.OnError ctx msg exn =
                         match msg with
-                        | :? string as s when s = fatalString -> onError <- onError + 1
+                        | :? StringMessage as s when s.String = fatalString -> onError <- onError + 1
                         | _ -> ()
     }
 
@@ -141,9 +149,9 @@ let ``Test bus control`` () =
                      |> build
 
     let busInitiator = bus.Start activationContext
-    busInitiator.Publish msgString
-    busInitiator.Send target msgString
-    busInitiator.Send target fatalString
+    { String = msgString } |> busInitiator.Publish 
+    { String = msgString } |> busInitiator.Send target
+    { String = fatalString } |> busInitiator.Send target 
     bus.Dispose()
 
     registerCalls |> should equal 2 // 2 consumers
