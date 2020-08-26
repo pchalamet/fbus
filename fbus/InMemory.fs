@@ -2,7 +2,7 @@ module FBus.InMemory
 open FBus
 
 
-type Transport(name, msgCallback) =
+type Transport(busBuilder, msgCallback) =
     static let initLock = obj()
     static let doExclusive = lock initLock
     static let mutable transports = Map.empty
@@ -11,12 +11,15 @@ type Transport(name, msgCallback) =
 
     static member Create (busBuilder: BusBuilder) msgCallback =
         doneHandle.Reset() |> ignore
-        let transport = new Transport(busBuilder.Name, msgCallback)
+        let transport = new Transport(busBuilder, msgCallback)
         doExclusive (fun () -> transports <- transports |> Map.add busBuilder.Name transport)
         transport :> IBusTransport
 
     static member WaitForCompletion() =
         doneHandle.WaitOne() |> ignore
+
+    member private _.Accept msgType =
+        busBuilder.Handlers |> Map.containsKey msgType
 
     member private _.Dispatch headers msgType body =
         async { 
@@ -27,9 +30,9 @@ type Transport(name, msgCallback) =
 
     interface IBusTransport with
         member _.Publish headers msgType body =
-            doExclusive (fun () -> transports |> Map.iter (fun client transport -> if client <> name then 
-                                                                                        msgInFlight <- msgInFlight + 1
-                                                                                        transport.Dispatch headers msgType body))
+            doExclusive (fun () -> transports |> Map.filter (fun _ transport -> transport.Accept msgType)
+                                              |> Map.iter (fun _ transport -> msgInFlight <- msgInFlight + 1
+                                                                              transport.Dispatch headers msgType body))
 
         member _.Send headers client msgType body =
             doExclusive (fun () -> transports |> Map.tryFind client 
@@ -37,4 +40,4 @@ type Transport(name, msgCallback) =
                                                                                transport.Dispatch headers msgType body))
 
         member _.Dispose() =
-            doExclusive (fun () -> transports <- transports |> Map.remove name)
+            doExclusive (fun () -> transports <- transports |> Map.remove busBuilder.Name)

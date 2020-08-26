@@ -8,32 +8,40 @@ open FBus.Builder
 open Microsoft.Extensions.DependencyInjection
 
 
-type InMemoryMessage =
-    { Content: string } 
+type InMemoryMessage1 =
+    { Content1: string } 
     interface FBus.IMessageCommand
 
+type InMemoryMessage2 =
+    { Content2: string } 
+    interface FBus.IMessageCommand
 
 type IHandlerInvoked =
     abstract HasBeenInvoked: unit -> unit
 
 type InMemoryHandler1(handlerInvoked: IHandlerInvoked) =
-    interface FBus.IBusConsumer<InMemoryMessage> with
+    interface FBus.IBusConsumer<InMemoryMessage1> with
         member this.Handle ctx msg = 
-            ctx.Send "InMemoryHandler2" msg
+            { Content2 = msg.Content1 } |> ctx.Send "InMemoryHandler2"
             handlerInvoked.HasBeenInvoked()
 
 type InMemoryHandler2(handlerInvoked: IHandlerInvoked) =
-    interface FBus.IBusConsumer<InMemoryMessage> with
+    interface FBus.IBusConsumer<InMemoryMessage2> with
         member this.Handle ctx msg = 
             handlerInvoked.HasBeenInvoked()
-
 
 let startServer<'t> name callback =
     let handledInvoked = {
         new IHandlerInvoked with
-        member this.HasBeenInvoked(): unit = 
-            printfn "Handler invoked on server [%s]" name
-            callback()
+            member this.HasBeenInvoked(): unit = 
+                printfn "Handler invoked on server [%s]" name
+                callback()
+    }
+
+    let checkErrorHook = {
+        new IBusHook with
+            member this.OnError ctx msg exn =
+                failwithf "No error shall be raised: %A" exn
     }
 
     let svcCollection = ServiceCollection() :> IServiceCollection
@@ -42,6 +50,7 @@ let startServer<'t> name callback =
                                          |> withContainer (FBus.Hosting.AspNetCoreContainer(svcCollection))
                                          |> withTransport FBus.InMemory.Transport.Create
                                          |> withConsumer<'t>
+                                         |> withHook checkErrorHook
                                          |> FBus.Builder.build
     svcCollection.BuildServiceProvider() |> serverBus.Start |> ignore
     serverBus
@@ -56,7 +65,7 @@ let ``check inmemory message exchange`` () =
     use clientBus = FBus.Builder.init() |> withTransport FBus.InMemory.Transport.Create |> FBus.Builder.build
     let clientInitiator = clientBus.Start() 
 
-    { Content = "Hello InMemory" } |> clientInitiator.Send "InMemoryHandler1"
+    { Content1 = "Hello InMemory" } |> clientInitiator.Publish
 
     FBus.InMemory.Transport.WaitForCompletion()
 
@@ -73,7 +82,7 @@ let ``check inmemory message exchange again`` () =
     use clientBus = FBus.Builder.init() |> withTransport FBus.InMemory.Transport.Create |> FBus.Builder.build
     let clientInitiator = clientBus.Start() 
 
-    { Content = "Hello InMemory" } |> clientInitiator.Send "InMemoryHandler1"
+    { Content1 = "Hello InMemory" } |> clientInitiator.Publish
 
     FBus.InMemory.Transport.WaitForCompletion()
 
