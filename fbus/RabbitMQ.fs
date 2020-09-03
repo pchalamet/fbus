@@ -27,7 +27,7 @@ type Transport(busBuilder: BusBuilder, msgCallback) =
                 sendChannel.Dispose()
                 sendChannel <- conn.CreateModel()
 
-            let props = channel.CreateBasicProperties(Headers = headers, Persistent = true)
+            let props = sendChannel.CreateBasicProperties(Headers = headers, Persistent = true)
             sendChannel.BasicPublish(exchange = xchgName,
                                      routingKey = routingKey,
                                      basicProperties = props,
