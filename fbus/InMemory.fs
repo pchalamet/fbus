@@ -7,18 +7,24 @@ type private ProcessingAgentMessage =
 
 type Transport(busBuilder, msgCallback) =
     static let initLock = obj()
-    static let doExclusive = lock initLock
     static let mutable transports = Map.empty
     static let mutable msgInFlight = 0
     static let doneHandle = new System.Threading.ManualResetEvent(false)
+
+    static let newMsgInFlight() =
+        let msgInFlight = System.Threading.Interlocked.Increment(&msgInFlight)
+        if msgInFlight = 1 then doneHandle.Reset() |> ignore
+
+    static let doneMsgInFlight() =
+        let msgInFlight = System.Threading.Interlocked.Decrement(&msgInFlight)
+        if msgInFlight = 0 then doneHandle.Set() |> ignore
 
     let processingAgent = MailboxProcessor.Start (fun inbox ->
         let rec messageLoop() = async {
             let! msg = inbox.Receive()
             match msg with
             | Message (headers, msgType, body) -> msgCallback headers msgType body
-                                                  doExclusive (fun () -> msgInFlight <- msgInFlight - 1
-                                                                         if msgInFlight = 0 then doneHandle.Set() |> ignore)
+                                                  doneMsgInFlight()
                                                   return! messageLoop() 
             | Exit -> ()
         }
@@ -29,7 +35,7 @@ type Transport(busBuilder, msgCallback) =
     static member Create (busBuilder: BusBuilder) msgCallback =
         doneHandle.Reset() |> ignore
         let transport = new Transport(busBuilder, msgCallback)
-        doExclusive (fun () -> transports <- transports |> Map.add busBuilder.Name transport)
+        lock initLock (fun () -> transports <- transports |> Map.add busBuilder.Name transport)
         transport :> IBusTransport
 
     static member WaitForCompletion() =
@@ -43,17 +49,15 @@ type Transport(busBuilder, msgCallback) =
 
     interface IBusTransport with
         member _.Publish headers msgType body =
-            doExclusive (fun () -> transports |> Map.filter (fun _ transport -> transport.Accept msgType)
-                                              |> Map.iter (fun _ transport -> msgInFlight <- msgInFlight + 1
-                                                                              doneHandle.Reset() |> ignore
-                                                                              transport.Dispatch headers msgType body))
+            transports |> Map.filter (fun _ transport -> transport.Accept msgType)
+                       |> Map.iter (fun _ transport -> newMsgInFlight()
+                                                       transport.Dispatch headers msgType body)
 
         member _.Send headers client msgType body =
-            doExclusive (fun () -> transports |> Map.tryFind client 
-                                              |> Option.iter (fun transport -> msgInFlight <- msgInFlight + 1
-                                                                               doneHandle.Reset() |> ignore
-                                                                               transport.Dispatch headers msgType body))
+            transports |> Map.tryFind client 
+                       |> Option.iter (fun transport -> newMsgInFlight()
+                                                        transport.Dispatch headers msgType body)
 
         member _.Dispose() =
-            doExclusive (fun () -> transports <- transports |> Map.remove busBuilder.Name)
+            lock initLock (fun () -> transports <- transports |> Map.remove busBuilder.Name)
             Exit |> processingAgent.Post
