@@ -434,3 +434,4 @@ $RECYCLE.BIN/
 
 .ionide
 out
+BenchmarkDotNet.Artifacts

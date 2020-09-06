@@ -7,6 +7,9 @@ build:
 test:
 	dotnet test -c $(config)
 
+perf:
+	dotnet run -c Release --project fbus.performance
+
 nuget:
 	dotnet pack -c $(config) /p:Version=$(version) -o out
 
