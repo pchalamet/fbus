@@ -6,7 +6,7 @@ open System
 
 
 type Serializer() =
-    let refs = ConcurrentDictionary<Guid, obj>()
+    static let refs = ConcurrentDictionary<Guid, obj>()
 
     interface IBusSerializer with
         member _.Serialize (v: obj) =
