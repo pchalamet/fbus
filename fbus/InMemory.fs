@@ -1,5 +1,26 @@
 module FBus.InMemory
 open FBus
+open System.Collections.Concurrent
+open System
+
+
+
+type Serializer() =
+    let refs = ConcurrentDictionary<Guid, obj>()
+
+    interface IBusSerializer with
+        member _.Serialize (v: obj) =
+            let id = Guid.NewGuid()
+            let body = id.ToByteArray() |> ReadOnlyMemory
+            if refs.TryAdd(id, v) |> not then failwith "Failed to store object"
+            body
+
+        member _.Deserialize (t: System.Type) (body: ReadOnlyMemory<byte>) =
+            let id = Guid(body.ToArray())
+            match refs.TryRemove(id) with
+            | true, v -> v
+            | _ -> failwith "Failed to retrieve object"
+
 
 type private ProcessingAgentMessage =
     | Message of (Map<string, string> * string * System.ReadOnlyMemory<byte>)
