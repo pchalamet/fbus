@@ -1,4 +1,4 @@
-module FBus.Test.Builder
+module FBus.Builder.Tests
 open System
 open NUnit.Framework
 open FsUnit

@@ -1,4 +1,4 @@
-module FBus.InMemory.Test
+module FBus.InMemory.Tests
 open System
 open NUnit.Framework
 open FsUnit

@@ -1,4 +1,4 @@
-module FBus.Test.Container
+module FBus.Container.Tests
 open NUnit.Framework
 open FsUnit
 open FBus
