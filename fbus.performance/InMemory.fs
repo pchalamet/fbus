@@ -1,4 +1,4 @@
-namespace FBus.Performance
+namespace FBus.InMemory.Performance
 open FBus
 open BenchmarkDotNet.Attributes
 open System
