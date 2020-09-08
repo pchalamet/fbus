@@ -26,6 +26,7 @@ type IntConsumer(callback: IBusConversation -> int -> unit) =
         member this.Handle context msg = 
             callback context msg.Int
 
+exception TestBusException of string
 
 let mutable registerCalls = 0
 let mutable serializeCalls = 0
@@ -47,9 +48,10 @@ let activationContext = "activationContext" :> obj
 
 let mutable latestConversationId = ""
 
+
 let consumerStringCallback (context: IBusConversation) (msg: string) =
     Interlocked.Increment(&consumerActivation) |> ignore
-    if msg = fatalString then failwithf "Fatal !"
+    if msg = fatalString then TestBusException "Fatal !" |> raise
 
     msg |> should equal msgString
     context.Sender |> should equal client
@@ -134,7 +136,9 @@ let ``Test bus control`` () =
     let hook = { new FBus.IBusHook with
                     member this.OnError ctx msg exn =
                         match msg with
-                        | :? StringMessage as s when s.String = fatalString -> onError <- onError + 1
+                        | :? StringMessage as s when s.String = fatalString -> match exn with
+                                                                               | :? TestBusException -> onError <- onError + 1
+                                                                               | _ -> ()
                         | _ -> ()
     }
 

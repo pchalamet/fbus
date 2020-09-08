@@ -51,8 +51,10 @@ type Bus(busBuilder: BusBuilder) =
                 msg <- busBuilder.Serializer.Deserialize handlerInfo.MessageType content
                 callsite.Invoke(handler, [| ctx; msg |]) |> ignore
             with
-                exn -> busBuilder.Hook |> Option.iter (fun hook -> hook.OnError ctx msg exn)
-                       reraise()
+                | :? Reflection.TargetInvocationException as tie -> busBuilder.Hook |> Option.iter (fun hook -> hook.OnError ctx msg tie.InnerException)
+                                                                    reraise()
+                | exn -> busBuilder.Hook |> Option.iter (fun hook -> hook.OnError ctx msg exn)
+                         reraise()
         with
             exn -> printfn "General failure in message callback %A" exn
                    reraise()
