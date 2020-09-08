@@ -20,8 +20,7 @@ type IBusConversationContext =
 
 type IBusConversation =
     inherit IBusConversationContext
-    abstract Publish<'t when 't :> IMessageEvent> : msg:'t -> unit
-    abstract Send<'t when 't :> IMessageCommand> : client:string -> msg:'t -> unit
+    inherit IBusInitiator
     abstract Reply<'t when 't :> IMessageCommand> : msg:'t -> unit
 
 type IBusConsumer<'t> =
