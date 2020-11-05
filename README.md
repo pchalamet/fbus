@@ -51,7 +51,7 @@ For commands:
 ```
 type CommandMessage =
     { msg: string }
-    interface FBus.IMessageEvent
+    interface FBus.IMessageCommand
 ```
 
 ## client (console)
