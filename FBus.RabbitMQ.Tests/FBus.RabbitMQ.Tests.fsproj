@@ -4,7 +4,7 @@
     <GenerateProgramFile>false</GenerateProgramFile>
   </PropertyGroup>
   <ItemGroup>
-    <ProjectReference Include="..\FBus\FBus.fsproj" />
+    <ProjectReference Include="..\FBus.RabbitMQ\FBus.RabbitMQ.fsproj" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Program.fs" />

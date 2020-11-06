@@ -5,8 +5,12 @@
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\FBus\FBus.fsproj" />
+    <ProjectReference Include="..\FBus.Core\FBus.Core.fsproj" />
+    <ProjectReference Include="..\FBus.Json\FBus.Json.fsproj" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Bus.fs" />
+    <Compile Include="Builder.fs" />
     <Compile Include="Program.fs" />
   </ItemGroup>
   <ItemGroup>

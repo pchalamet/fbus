@@ -4,9 +4,10 @@
     <GenerateProgramFile>false</GenerateProgramFile>
   </PropertyGroup>
   <ItemGroup>
-    <ProjectReference Include="..\FBus\FBus.fsproj" />
+    <ProjectReference Include="..\FBus.Json\FBus.Json.fsproj" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Json.fs" />
     <Compile Include="Program.fs" />
   </ItemGroup>
   <ItemGroup>

@@ -3,12 +3,17 @@
     <TargetFramework>netcoreapp3.1</TargetFramework>
     <GenerateProgramFile>false</GenerateProgramFile>
   </PropertyGroup>
+  
   <ItemGroup>
-    <ProjectReference Include="..\FBus\FBus.fsproj" />
+    <ProjectReference Include="..\FBus.GenericHost\FBus.GenericHost.fsproj" />
+    <ProjectReference Include="..\FBus.InMemory\FBus.InMemory.fsproj" />
   </ItemGroup>
+
   <ItemGroup>
+    <Compile Include="Hosting.fs" />
     <Compile Include="Program.fs" />
   </ItemGroup>
+
   <ItemGroup>
     <PackageReference Include="FsUnit" Version="3.8.1" />
     <PackageReference Include="nunit" Version="3.12.0" />
