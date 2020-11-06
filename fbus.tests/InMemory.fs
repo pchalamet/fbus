@@ -6,7 +6,6 @@ open FsUnit
 open FBus
 open FBus.Builder
 open Microsoft.Extensions.DependencyInjection
-open System.Runtime.InteropServices
 
 
 type InMemoryMessage1 =
@@ -48,11 +47,13 @@ let startServer<'t> name callback =
     let svcCollection = ServiceCollection() :> IServiceCollection
     svcCollection.AddSingleton(handledInvoked) |> ignore
     let serverBus = FBus.Builder.init() |> withName name
-                                         |> withContainer (FBus.Hosting.AspNetCoreContainer(svcCollection))
-                                         |> withTransport FBus.InMemory.Transport.Create
-                                         |> withConsumer<'t>
-                                         |> withHook checkErrorHook
-                                         |> FBus.Builder.build
+                                        |> withContainer (FBus.Hosting.AspNetCoreContainer(svcCollection))
+                                        |> FBus.InMemory.useTransport
+                                        |> FBus.InMemory.useSerializer
+                                        |> FBus.InMemory.useContainer
+                                        |> withConsumer<'t>
+                                        |> withHook checkErrorHook
+                                        |> FBus.Builder.build
     svcCollection.BuildServiceProvider() |> serverBus.Start |> ignore
     serverBus
 
@@ -63,7 +64,10 @@ let ``check inmemory message exchange`` () =
     use bus1 = startServer<InMemoryHandler1> "InMemoryHandler1" (fun () -> serverHasBeenInvoked1 <- true)
     use bus2 = startServer<InMemoryHandler2> "InMemoryHandler2" (fun () -> serverHasBeenInvoked2 <- true)
 
-    use clientBus = FBus.Builder.init() |> withTransport FBus.InMemory.Transport.Create |> FBus.Builder.build
+    use clientBus = FBus.Builder.init() |> FBus.InMemory.useTransport
+                                        |> FBus.InMemory.useSerializer
+                                        |> FBus.InMemory.useContainer
+                                        |> FBus.Builder.build
     let clientInitiator = clientBus.Start() 
 
     { Content1 = "Hello InMemory" } |> clientInitiator.Publish
@@ -80,7 +84,10 @@ let ``check inmemory message exchange again`` () =
     use bus1 = startServer<InMemoryHandler1> "InMemoryHandler1" (fun () -> serverHasBeenInvoked1 <- true)
     use bus2 = startServer<InMemoryHandler2> "InMemoryHandler2" (fun () -> serverHasBeenInvoked2 <- true)
 
-    use clientBus = FBus.Builder.init() |> withTransport FBus.InMemory.Transport.Create |> FBus.Builder.build
+    use clientBus = FBus.Builder.init() |> FBus.InMemory.useTransport 
+                                        |> FBus.InMemory.useSerializer
+                                        |> FBus.InMemory.useContainer
+                                        |> FBus.Builder.build
     let clientInitiator = clientBus.Start() 
 
     { Content1 = "Hello InMemory" } |> clientInitiator.Publish

@@ -2,21 +2,18 @@
   <PropertyGroup>
     <TargetFramework>netcoreapp3.1</TargetFramework>
   </PropertyGroup>
+
   <ItemGroup>
-    <Compile Include="FBus.fs" />
-    <Compile Include="Bus.fs" />
-    <Compile Include="Activator.fs" />
-    <Compile Include="RabbitMQ.fs" />
-    <Compile Include="InMemory.fs" />
-    <Compile Include="Json.fs" />
-    <Compile Include="Builder.fs" />
-    <Compile Include="Hosting.fs" />
+    <ProjectReference Include="../FBus.Core/FBus.Core.fsproj" />
+    <ProjectReference Include="../FBus.RabbitMQ/FBus.RabbitMQ.fsproj" />
+    <ProjectReference Include="../FBus.Json/FBus.Json.fsproj" />
+    <ProjectReference Include="../FBus.GenericHost/FBus.GenericHost.fsproj" />
   </ItemGroup>
+
   <ItemGroup>
-    <PackageReference Include="FSharp.SystemTextJson" Version="0.11.13" />
-    <PackageReference Include="Microsoft.Extensions.Hosting" Version="3.1.4" />
-    <PackageReference Include="RabbitMQ.Client" Version="6.2.1" />
+    <Compile Include="Configuration.fs" />
   </ItemGroup>
+
   <PropertyGroup>
     <!-- https://docs.microsoft.com/en-us/nuget/reference/msbuild-targets#packing-using-a-nuspec -->
     <PackageId>FBus</PackageId>

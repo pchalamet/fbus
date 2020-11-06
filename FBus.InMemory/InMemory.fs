@@ -1,8 +1,16 @@
 module FBus.InMemory
 open FBus
+open FBus.Builder
 open System.Collections.Concurrent
 open System
 
+
+type Activator() =
+    interface IBusContainer with
+        member _.Register handlerInfo = ()
+
+        member _.Resolve activationContext handlerInfo =
+            System.Activator.CreateInstance(handlerInfo.ImplementationType)
 
 
 type Serializer() =
@@ -26,7 +34,7 @@ type private ProcessingAgentMessage =
     | Message of (Map<string, string> * string * System.ReadOnlyMemory<byte>)
     | Exit
 
-type Transport(busBuilder, msgCallback) =
+type Transport(busConfig, msgCallback) =
     static let initLock = obj()
     static let mutable transports = Map.empty
     static let mutable msgInFlight = 0
@@ -53,17 +61,17 @@ type Transport(busBuilder, msgCallback) =
         messageLoop()
     )
 
-    static member Create (busBuilder: BusBuilder) msgCallback =
+    static member Create (busConfig: BusConfiguration) msgCallback =
         doneHandle.Reset() |> ignore
-        let transport = new Transport(busBuilder, msgCallback)
-        lock initLock (fun () -> transports <- transports |> Map.add busBuilder.Name transport)
+        let transport = new Transport(busConfig, msgCallback)
+        lock initLock (fun () -> transports <- transports |> Map.add busConfig.Name transport)
         transport :> IBusTransport
 
     static member WaitForCompletion() =
         doneHandle.WaitOne() |> ignore
 
     member private _.Accept msgType =
-        busBuilder.Handlers |> Map.containsKey msgType
+        busConfig.Handlers |> Map.containsKey msgType
 
     member private _.Dispatch headers msgType body =
         (headers, msgType, body) |> Message |> processingAgent.Post 
@@ -80,5 +88,24 @@ type Transport(busBuilder, msgCallback) =
                                                         transport.Dispatch headers msgType body)
 
         member _.Dispose() =
-            lock initLock (fun () -> transports <- transports |> Map.remove busBuilder.Name)
+            lock initLock (fun () -> transports <- transports |> Map.remove busConfig.Name)
             Exit |> processingAgent.Post
+
+let private defaultUri = Uri("inmemory://")
+
+let private defaultTransport (busConfig: BusConfiguration) msgCallback =
+    new Transport(busConfig, msgCallback) :> IBusTransport
+
+let private defaultSerializer = Serializer() :> IBusSerializer
+
+let private defaultContainer = Activator() :> IBusContainer
+
+let useTransport (busBuilder: BusBuilder) =
+    busBuilder |> withEndpoint defaultUri
+               |> withTransport defaultTransport
+
+let useSerializer (busBuilder: BusBuilder) =
+    busBuilder |> withSerializer defaultSerializer
+
+let useContainer (busBuilder: BusBuilder) =
+    busBuilder |> withContainer defaultContainer

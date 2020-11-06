@@ -47,7 +47,8 @@ type IBusSerializer =
 type IBusHook =
     abstract OnError: ctx:IBusConversation -> msg:obj -> exn: Exception -> unit
 
-type BusBuilder =
+
+type BusConfiguration =
     { Name: string
       IsEphemeral: bool
       IsRecovery: bool
@@ -55,5 +56,17 @@ type BusBuilder =
       Container: IBusContainer
       Serializer: IBusSerializer
       Hook: IBusHook option
-      Transport: BusBuilder -> (Map<string,string> -> string -> ReadOnlyMemory<byte> -> unit) -> IBusTransport
+      Transport: BusConfiguration -> (Map<string,string> -> string -> ReadOnlyMemory<byte> -> unit) -> IBusTransport
+      Handlers : Map<string, HandlerInfo> }
+
+[<RequireQualifiedAccessAttribute>]
+type BusBuilder =
+    { Name: string
+      IsEphemeral: bool
+      IsRecovery: bool
+      Uri: Uri option
+      Container: IBusContainer option
+      Serializer: IBusSerializer option
+      Hook: IBusHook option
+      Transport: (BusConfiguration -> (Map<string,string> -> string -> ReadOnlyMemory<byte> -> unit) -> IBusTransport) option
       Handlers : Map<string, HandlerInfo> }

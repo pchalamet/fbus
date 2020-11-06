@@ -1,5 +1,6 @@
 module FBus.RabbitMQ
 open FBus
+open FBus.Builder
 open RabbitMQ.Client
 open RabbitMQ.Client.Events
 
@@ -9,9 +10,9 @@ type IBasicProperties with
         | true, (:? (byte[]) as s) -> Some (System.Text.Encoding.UTF8.GetString(s))
         | _ -> None
 
-type Transport(busBuilder: BusBuilder, msgCallback) =
+type Transport(busConfig: BusConfiguration, msgCallback) =
     let channelLock = obj()
-    let factory = ConnectionFactory(Uri = busBuilder.Uri, AutomaticRecoveryEnabled = true)
+    let factory = ConnectionFactory(Uri = busConfig.Uri, AutomaticRecoveryEnabled = true)
     let conn = factory.CreateConnection()
     let channel = conn.CreateModel()
     let mutable sendChannel = conn.CreateModel()
@@ -57,7 +58,7 @@ type Transport(busBuilder: BusBuilder, msgCallback) =
         channel.BasicQos(prefetchSize = 0ul, prefetchCount = 1us, ``global`` = false)
         channel.ConfirmSelect()
 
-    let queueName = getClientQueue busBuilder.Name
+    let queueName = getClientQueue busConfig.Name
 
     let configureDeadLettersQueues() =
        // ===============================================================================================
@@ -65,7 +66,7 @@ type Transport(busBuilder: BusBuilder, msgCallback) =
         // ===============================================================================================
         let xchgDeadLetter = "fbus:dead-letter"
         let deadLetterQueueName = queueName + ":dead-letter"
-        if busBuilder.IsEphemeral then Map.empty
+        if busConfig.IsEphemeral then Map.empty
         else
             channel.ExchangeDeclare(exchange = xchgDeadLetter,
                                     ``type`` = ExchangeType.Direct,
@@ -82,7 +83,7 @@ type Transport(busBuilder: BusBuilder, msgCallback) =
         // message queues are bound to an exchange (fanout) - all bound subscribers receive messages
         // =========================================================================================
         channel.QueueDeclare(queueName,
-                             durable = true, exclusive = false, autoDelete = busBuilder.IsEphemeral,
+                             durable = true, exclusive = false, autoDelete = busConfig.IsEphemeral,
                              arguments = queueArgs) |> ignore
 
     let bindExchangeAndQueue msgType =
@@ -92,7 +93,7 @@ type Transport(busBuilder: BusBuilder, msgCallback) =
         channel.QueueBind(queue = queueName, exchange = xchgName, routingKey = "")
 
     let subscribeMessages () =
-        busBuilder.Handlers |> Map.iter (fun msgType _ -> msgType |> bindExchangeAndQueue)
+        busConfig.Handlers |> Map.iter (fun msgType _ -> msgType |> bindExchangeAndQueue)
 
     let listenMessages () =
         let consumer = EventingBasicConsumer(channel)
@@ -134,5 +135,11 @@ type Transport(busBuilder: BusBuilder, msgCallback) =
             channel.Dispose()
             conn.Dispose()
 
-let  Create (busBuilder: BusBuilder) msgCallback =
-    new Transport(busBuilder, msgCallback) :> IBusTransport
+let private defaultUri = System.Uri("amqp://guest:guest@localhost")
+
+let private defaultTransport (busConfig: BusConfiguration) msgCallback =
+    new Transport(busConfig, msgCallback) :> IBusTransport
+
+let useTransport (busBuilder: BusBuilder) =
+    busBuilder |> withEndpoint defaultUri
+               |> withTransport defaultTransport

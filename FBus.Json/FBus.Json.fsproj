@@ -1,21 +1,19 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <OutputType>Exe</OutputType>
     <TargetFramework>netcoreapp3.1</TargetFramework>
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\fbus\fbus.fsproj" />
-  </ItemGroup>
-  
-  <ItemGroup>
-    <Compile Include="InMemory.fs" />
-    <Compile Include="Program.fs" />
+    <ProjectReference Include="../FBus.Core/FBus.Core.fsproj" />
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="BenchmarkDotNet" Version="0.12.1" />
+    <PackageReference Include="FSharp.SystemTextJson" Version="0.11.13" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="Json.fs" />
   </ItemGroup>
 
 </Project>

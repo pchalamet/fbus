@@ -1,5 +1,6 @@
 module FBus.Json
 open FBus
+open FBus.Builder
 open System
 open System.Text.Json
 open System.Text.Json.Serialization
@@ -21,3 +22,8 @@ type Serializer(?initOptions: JsonSerializerOptions -> unit) =
 
         member _.Deserialize (t: System.Type) (body: ReadOnlyMemory<byte>) =
             JsonSerializer.Deserialize(body.Span, t, options)
+
+let private defaultSerializer = Serializer() :> IBusSerializer
+
+let useSerializer busBuilder =
+    busBuilder |> withSerializer defaultSerializer

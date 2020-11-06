@@ -8,7 +8,7 @@ test:
 	dotnet test -c $(config)
 
 perf:
-	dotnet run -c Release --project fbus.performance
+	dotnet run -c Release --project FBus.PerformanceTests
 
 nuget:
 	dotnet pack -c $(config) /p:Version=$(version) -o out

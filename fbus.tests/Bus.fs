@@ -108,8 +108,8 @@ let buildSerializer = {
 }
 
 
-let buildTransportBuilder (busBuilder: BusBuilder) (callback: Map<string, string> -> string -> ReadOnlyMemory<byte> -> unit): IBusTransport =
-    busBuilder.Uri |> should equal buildUri
+let buildTransportBuilder (busConfig: BusConfiguration) (callback: Map<string, string> -> string -> ReadOnlyMemory<byte> -> unit): IBusTransport =
+    busConfig.Uri |> should equal buildUri
 
     { new IBusTransport with
         member this.Dispose(): unit =

@@ -8,19 +8,19 @@ open FBus.Builder
 
 [<Test>]
 let ``withName set permanent client`` () =
-    let builder = init() |> withName "new-client-name"
+    let builder = FBus.Configuration.defaultConfig |> withName "new-client-name"
     builder.Name |> should equal "new-client-name"
     builder.IsEphemeral |> should equal false
 
 [<Test>]
 let ``Invalid withName raises an error `` () =
-    (fun () -> init() |> withName "   " |> ignore) |> should (throwWithMessage "Invalid bus name") typeof<Exception>
+    (fun () -> FBus.Configuration.defaultConfig |> withName "   " |> ignore) |> should (throwWithMessage "Invalid bus name") typeof<Exception>
 
 [<Test>]
 let ``withEndpoint set new uri`` () =
     let expectedUri = Uri("amqp://my-rabbitmq-server")
-    let builder = init() |> withEndpoint expectedUri
-    builder.Uri |> should equal expectedUri
+    let builder = FBus.Configuration.defaultConfig |> withEndpoint expectedUri
+    builder.Uri |> should equal (Some expectedUri)
 
 
 [<Test>]
@@ -31,16 +31,16 @@ let ``withContainer set container builder`` () =
             member this.Resolve activationContext handlerInfo = failwith "Not Implemented"
     }
 
-    let builder = init() |> withContainer expectedContainer
-    builder.Container |> should equal expectedContainer
+    let builder = FBus.Configuration.defaultConfig |> withContainer expectedContainer
+    builder.Container |> should equal (Some expectedContainer)
 
 [<Test>]
 let ``withTransport set transport builder`` () =
-    let expectedTransportBuilder (busBuilder: BusBuilder) (callback: Map<string, string> -> string -> ReadOnlyMemory<byte> -> unit): IBusTransport =
+    let expectedTransportBuilder (busConfig: BusConfiguration) (callback: Map<string, string> -> string -> ReadOnlyMemory<byte> -> unit): IBusTransport =
         failwith "Not implemented"
 
-    let builder = init() |> withTransport expectedTransportBuilder
-    builder.Transport |> should equal expectedTransportBuilder
+    let builder = FBus.Configuration.defaultConfig |> withTransport expectedTransportBuilder
+    builder.Transport |> should equal (Some expectedTransportBuilder)
 
 [<Test>]
 let ``withSerializer set serializer`` () =
@@ -50,8 +50,8 @@ let ``withSerializer set serializer`` () =
             member this.Serialize msg = failwith "Not Implemented"
     }
 
-    let builder = init() |> withSerializer expectedSerializer
-    builder.Serializer |> should equal expectedSerializer
+    let builder = FBus.Configuration.defaultConfig |> withSerializer expectedSerializer
+    builder.Serializer |> should equal (Some expectedSerializer)
 
 
 type MyConsumer1() =
@@ -66,7 +66,7 @@ type MyConsumer2() =
 
 [<Test>]
 let ``withConsumer add consumers`` () =
-    let build = init() |> withConsumer<MyConsumer1> |> withConsumer<MyConsumer2>
+    let build = FBus.Configuration.defaultConfig |> withConsumer<MyConsumer1> |> withConsumer<MyConsumer2>
 
     let expectedHandlers = Map [ "System.String", { MessageType = typeof<string>; InterfaceType = typeof<IBusConsumer<string>>; ImplementationType = typeof<MyConsumer1> }
                                  "System.Int32", { MessageType = typeof<int>; InterfaceType = typeof<IBusConsumer<int>>; ImplementationType = typeof<MyConsumer2> } ]
@@ -76,5 +76,5 @@ let ``withConsumer add consumers`` () =
 
 [<Test>]
 let ``withRecovery set recovery flag`` () =
-    let builder = init() |> withRecovery
+    let builder = FBus.Configuration.defaultConfig |> withRecovery
     builder.IsRecovery |> should equal true

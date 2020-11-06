@@ -15,7 +15,7 @@ type StringConsumer() =
 
 [<Test>]
 let ``Activator Resolve is no-op`` () =
-    let activator = Container.Activator() :> FBus.IBusContainer
+    let activator = InMemory.Activator() :> FBus.IBusContainer
     let handlerInfo = { MessageType = typeof<string>
                         InterfaceType = typeof<IBusConsumer<string>>
                         ImplementationType = typeof<StringConsumer> }
@@ -24,7 +24,7 @@ let ``Activator Resolve is no-op`` () =
 
 [<Test>]
 let ``Activator create type with default constructor`` () =
-    let activator = Container.Activator() :> FBus.IBusContainer
+    let activator = InMemory.Activator() :> FBus.IBusContainer
     let handlerInfo = { MessageType = typeof<string>
                         InterfaceType = typeof<IBusConsumer<string>>
                         ImplementationType = typeof<StringConsumer> }

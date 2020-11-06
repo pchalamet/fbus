@@ -27,13 +27,13 @@ type Consumer2() =
 let main argv =
 
     use bus1 = FBus.Builder.init()
-                 |> withTransport FBus.InMemory.Transport.Create
+                 |> FBus.InMemory.useTransport
                  |> withConsumer<Consumer1>
                  |> build
     let busInitiator1 = bus1.Start()
     
     use bus2 = FBus.Builder.init()
-                 |> withTransport FBus.InMemory.Transport.Create
+                 |> FBus.InMemory.useTransport
                  |> withConsumer<Consumer2>
                  |> build
     let busInitiator2 = bus2.Start()

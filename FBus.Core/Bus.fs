@@ -1,14 +1,14 @@
 module FBus.Control
 open System
 
-type Bus(busBuilder: BusBuilder) =
-    do busBuilder.Handlers |> Map.iter (fun _ v -> busBuilder.Container.Register v)
+type Bus(busConfig: BusConfiguration) =
+    do busConfig.Handlers |> Map.iter (fun _ v -> busConfig.Container.Register v)
 
     let initLock = obj()
     let doExclusive = lock initLock
     let mutable busTransport : IBusTransport option = None
 
-    let defaultHeaders = Map [ "fbus:sender", busBuilder.Name ]
+    let defaultHeaders = Map [ "fbus:sender", busConfig.Name ]
 
     let getMsgType (t: obj) =
         t.GetType().FullName
@@ -16,12 +16,12 @@ type Bus(busBuilder: BusBuilder) =
     let publish msg headers =
         match busTransport with
         | None -> failwith "Bus is not started"
-        | Some busTransport -> busBuilder.Serializer.Serialize msg |> busTransport.Publish headers (msg |> getMsgType)
+        | Some busTransport -> busConfig.Serializer.Serialize msg |> busTransport.Publish headers (msg |> getMsgType)
 
     let send client msg headers =
         match busTransport with
         | None -> failwith "Bus is not started"
-        | Some busTransport -> busBuilder.Serializer.Serialize msg |> busTransport.Send headers client (msg |> getMsgType)
+        | Some busTransport -> busConfig.Serializer.Serialize msg |> busTransport.Send headers client (msg |> getMsgType)
 
     let msgCallback activationContext headers msgType content =
         try
@@ -39,21 +39,21 @@ type Bus(busBuilder: BusBuilder) =
 
             let mutable msg: obj = null
             try
-                let handlerInfo = match busBuilder.Handlers |> Map.tryFind msgType with
+                let handlerInfo = match busConfig.Handlers |> Map.tryFind msgType with
                                   | Some handlerInfo -> handlerInfo
                                   | _ -> failwithf "Unknown message type [%s]" msgType
-                let handler = busBuilder.Container.Resolve activationContext handlerInfo
+                let handler = busConfig.Container.Resolve activationContext handlerInfo
                 if handler |> isNull then failwith "No handler found"
 
                 let callsite = handlerInfo.InterfaceType.GetMethod("Handle")
                 if callsite |> isNull then failwith "Handler method not found"
 
-                msg <- busBuilder.Serializer.Deserialize handlerInfo.MessageType content
+                msg <- busConfig.Serializer.Deserialize handlerInfo.MessageType content
                 callsite.Invoke(handler, [| ctx; msg |]) |> ignore
             with
-                | :? Reflection.TargetInvocationException as tie -> busBuilder.Hook |> Option.iter (fun hook -> hook.OnError ctx msg tie.InnerException)
+                | :? Reflection.TargetInvocationException as tie -> busConfig.Hook |> Option.iter (fun hook -> hook.OnError ctx msg tie.InnerException)
                                                                     reraise()
-                | exn -> busBuilder.Hook |> Option.iter (fun hook -> hook.OnError ctx msg exn)
+                | exn -> busConfig.Hook |> Option.iter (fun hook -> hook.OnError ctx msg exn)
                          reraise()
         with
             exn -> printfn "General failure in message callback %A" exn
@@ -66,7 +66,7 @@ type Bus(busBuilder: BusBuilder) =
     let start activationContext =
         match busTransport with
         | Some _ -> failwith "Bus is already started"
-        | None -> busTransport <- Some (busBuilder.Transport busBuilder (msgCallback activationContext))
+        | None -> busTransport <- Some (busConfig.Transport busConfig (msgCallback activationContext))
 
     let stop () =
         match busTransport with
