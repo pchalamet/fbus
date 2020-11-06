@@ -1,4 +1,4 @@
-module GenericHost
+module FBus.GenericHost
 open Microsoft.Extensions.DependencyInjection
 open FBus
 open FBus.Containers

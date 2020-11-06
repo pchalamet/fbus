@@ -1,8 +1,7 @@
-module Json
+module FBus.Json
 open FBus
 open FBus.Builder
 
-let private defaultSerializer = FBus.Serializers.Json() :> IBusSerializer
-
 let useSerializer busBuilder =
+    let defaultSerializer = FBus.Serializers.Json() :> IBusSerializer
     busBuilder |> withSerializer defaultSerializer

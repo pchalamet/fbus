@@ -5,7 +5,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Include="Activator.fs" />
+    <Compile Include="Container.fs" />
     <Compile Include="Serializer.fs" />
     <Compile Include="Transport.fs" />
     <Compile Include="InMemory.fs" />

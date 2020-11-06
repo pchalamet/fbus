@@ -1,4 +1,4 @@
-module InMemory
+module FBus.InMemory
 open FBus
 open FBus.Builder
 open System
