@@ -6,7 +6,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\FBus.Core\FBus.Core.fsproj" />
+    <ProjectReference Include="..\..\FBus\FBus.fsproj" />
     <ProjectReference Include="..\..\FBus.GenericHost\FBus.GenericHost.fsproj" />
     <ProjectReference Include="..\common\common.fsproj" />
   </ItemGroup>

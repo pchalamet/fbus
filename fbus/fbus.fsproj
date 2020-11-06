@@ -1,17 +1,13 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
   <PropertyGroup>
     <TargetFramework>netcoreapp3.1</TargetFramework>
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="../FBus.Core/FBus.Core.fsproj" />
-    <ProjectReference Include="../FBus.RabbitMQ/FBus.RabbitMQ.fsproj" />
-    <ProjectReference Include="../FBus.Json/FBus.Json.fsproj" />
-    <ProjectReference Include="../FBus.GenericHost/FBus.GenericHost.fsproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Compile Include="Configuration.fs" />
+    <Compile Include="FBus.fs" />
+    <Compile Include="Bus.fs" />
+    <Compile Include="Builder.fs" />
   </ItemGroup>
 
   <PropertyGroup>
@@ -19,11 +15,12 @@
     <PackageId>FBus</PackageId>
     <Authors>Pierre Chalamet</Authors>
     <Title>FBus</Title>
-    <Description>FBus is a lightweight service-bus implementation written in F#.</Description>
+    <Description>Core implementation for FBus - a lightweight service-bus implementation written in F#.</Description>
     <Copyright>Copyright 2020 Pierre Chalamet</Copyright>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageProjectUrl>https://github.com/pchalamet/fbus</PackageProjectUrl>
     <RepositoryUrl>https://github.com/pchalamet/fbus.git</RepositoryUrl>
     <PackageTags>service;bus;service-bus</PackageTags>
   </PropertyGroup>
+
 </Project>

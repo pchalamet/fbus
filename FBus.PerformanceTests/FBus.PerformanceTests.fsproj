@@ -9,6 +9,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\FBus\FBus.fsproj" />
+    <ProjectReference Include="..\FBus.Json\FBus.Json.fsproj" />
     <ProjectReference Include="..\FBus.InMemory\FBus.InMemory.fsproj" />
   </ItemGroup>
   

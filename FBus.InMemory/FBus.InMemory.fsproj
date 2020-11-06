@@ -12,7 +12,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="../FBus.Core/FBus.Core.fsproj" />
+    <ProjectReference Include="../FBus/FBus.fsproj" />
   </ItemGroup>
 
   <PropertyGroup>

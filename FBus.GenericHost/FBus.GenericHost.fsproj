@@ -5,7 +5,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="../FBus.Core/FBus.Core.fsproj" />
+    <ProjectReference Include="../FBus/FBus.fsproj" />
   </ItemGroup>
 
   <ItemGroup>
