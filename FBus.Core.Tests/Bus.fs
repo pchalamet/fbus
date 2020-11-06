@@ -92,7 +92,7 @@ let buildContainer = {
                 IntConsumer(consumerIntCallback) :> obj
 }
 
-let serializer = FBus.Json.Serializer() :> IBusSerializer
+let serializer = FBus.Serializers.Json() :> IBusSerializer
 
 let buildSerializer = {
     new IBusSerializer with

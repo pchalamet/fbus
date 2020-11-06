@@ -47,7 +47,7 @@ let startServer<'t> name callback =
     let svcCollection = ServiceCollection() :> IServiceCollection
     svcCollection.AddSingleton(handledInvoked) |> ignore
     let serverBus = FBus.Builder.init() |> withName name
-                                        |> withContainer (FBus.GenericHost.AspNetCoreContainer(svcCollection))
+                                        |> withContainer (FBus.Containers.GenericHost(svcCollection))
                                         |> InMemory.useTransport
                                         |> InMemory.useSerializer
                                         |> withConsumer<'t>

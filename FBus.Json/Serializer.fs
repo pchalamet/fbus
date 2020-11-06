@@ -1,10 +1,10 @@
-namespace FBus.Json
+namespace FBus.Serializers
 open FBus
 open System
 open System.Text.Json
 open System.Text.Json.Serialization
 
-type Serializer(?initOptions: JsonSerializerOptions -> unit) =
+type Json(?initOptions: JsonSerializerOptions -> unit) =
 
     let initOptions = defaultArg initOptions ignore
 

@@ -10,7 +10,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Compile Include="Hosting.fs" />
+    <Compile Include="Container.fs" />
     <Compile Include="Program.fs" />
   </ItemGroup>
 

@@ -1,4 +1,4 @@
-namespace FBus.InMemory
+namespace FBus.Transports
 open FBus
 
 
@@ -6,7 +6,7 @@ type private ProcessingAgentMessage =
     | Message of (Map<string, string> * string * System.ReadOnlyMemory<byte>)
     | Exit
 
-type Transport(busConfig, msgCallback) =
+type InMemory(busConfig, msgCallback) =
     static let initLock = obj()
     static let mutable transports = Map.empty
     static let mutable msgInFlight = 0
@@ -35,7 +35,7 @@ type Transport(busConfig, msgCallback) =
 
     static member Create (busConfig: BusConfiguration) msgCallback =
         doneHandle.Reset() |> ignore
-        let transport = new Transport(busConfig, msgCallback)
+        let transport = new InMemory(busConfig, msgCallback)
         lock initLock (fun () -> transports <- transports |> Map.add busConfig.Name transport)
         transport :> IBusTransport
 

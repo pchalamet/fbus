@@ -16,6 +16,6 @@ let ``Json roundtrip`` () =
                  Map = Map [ "toto", None
                              "titi", Some 42 ] }
     
-    let json = Json.Serializer() :> IBusSerializer
+    let json = Serializers.Json() :> IBusSerializer
     
     data |> json.Serialize |> json.Deserialize typeof<MyType> |> should equal data

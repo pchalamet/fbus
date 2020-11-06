@@ -1,7 +1,7 @@
-namespace FBus.InMemory
+namespace FBus.Containers
 open FBus
 
-type Activator() =
+type InMemory() =
     interface IBusContainer with
         member _.Register handlerInfo = ()
 

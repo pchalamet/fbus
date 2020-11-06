@@ -1,9 +1,9 @@
-namespace FBus.InMemory
+namespace FBus.Serializers
 open System
 open FBus
 open System.Collections.Concurrent
 
-type Serializer() =
+type InMemory() =
     static let refs = ConcurrentDictionary<Guid, obj>()
 
     interface IBusSerializer with

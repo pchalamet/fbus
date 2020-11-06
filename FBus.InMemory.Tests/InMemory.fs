@@ -23,7 +23,7 @@ let ``InMemory serializer roundtrip`` () =
                  Map = Map [ "toto", None
                              "titi", Some 42 ] }
     
-    let serializer = Serializer() :> IBusSerializer
+    let serializer = Serializers.InMemory() :> IBusSerializer
     
     let body = data |> serializer.Serialize
     let newData = body |> serializer.Deserialize typeof<MyType>

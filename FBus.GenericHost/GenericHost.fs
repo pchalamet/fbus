@@ -1,12 +1,12 @@
 module GenericHost
 open Microsoft.Extensions.DependencyInjection
 open FBus
-open FBus.GenericHost
+open FBus.Containers
 
 type IServiceCollection with
     member services.AddFBus(configurator: BusBuilder -> BusBuilder) =
         let busControl = Builder.init() |> configurator
-                                        |> Builder.withContainer (AspNetCoreContainer(services))
+                                        |> Builder.withContainer (GenericHost(services))
                                         |> Builder.build
 
         let busInitiator = busControl :?> IBusInitiator

@@ -1,5 +1,6 @@
-module FBus.Control
+namespace FBus.Control
 open System
+open FBus
 
 type Bus(busConfig: BusConfiguration) =
     do busConfig.Handlers |> Map.iter (fun _ v -> busConfig.Container.Register v)

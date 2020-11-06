@@ -1,11 +1,11 @@
-namespace FBus.GenericHost
+namespace FBus.Containers
 open System
 open System.Threading.Tasks
 open Microsoft.Extensions.Hosting
 open Microsoft.Extensions.DependencyInjection
 open FBus
 
-type BusService(busControl: IBusControl, serviceProvider: IServiceProvider) =
+type internal BusService(busControl: IBusControl, serviceProvider: IServiceProvider) =
     interface IHostedService with
         member _.StartAsync cancellationToken =
             busControl.Start serviceProvider |> ignore
@@ -16,7 +16,7 @@ type BusService(busControl: IBusControl, serviceProvider: IServiceProvider) =
             Task.CompletedTask
 
 
-type AspNetCoreContainer(services: IServiceCollection) =
+type GenericHost(services: IServiceCollection) =
     interface IBusContainer with
         member _.Register (handlerInfo: HandlerInfo) =
             services.AddTransient(handlerInfo.InterfaceType, handlerInfo.ImplementationType) |> ignore

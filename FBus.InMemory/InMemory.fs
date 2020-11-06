@@ -1,19 +1,17 @@
 module InMemory
 open FBus
-open FBus.InMemory
 open FBus.Builder
-open System.Collections.Concurrent
 open System
 
 let private defaultUri = Uri("inmemory://")
 
-let private defaultSerializer = Serializer() :> IBusSerializer
+let private defaultSerializer = FBus.Serializers.InMemory() :> IBusSerializer
 
-let private defaultContainer = Activator() :> IBusContainer
+let private defaultContainer = FBus.Containers.InMemory() :> IBusContainer
 
 let useTransport (busBuilder: BusBuilder) =
     busBuilder |> withEndpoint defaultUri
-               |> withTransport Transport.Create
+               |> withTransport FBus.Transports.InMemory.Create
 
 let useSerializer (busBuilder: BusBuilder) =
     busBuilder |> withSerializer defaultSerializer
@@ -21,4 +19,4 @@ let useSerializer (busBuilder: BusBuilder) =
 let useContainer (busBuilder: BusBuilder) =
     busBuilder |> withContainer defaultContainer
 
-let waitForCompletion = FBus.InMemory.Transport.WaitForCompletion
+let waitForCompletion = FBus.Transports.InMemory.WaitForCompletion

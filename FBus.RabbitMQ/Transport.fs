@@ -1,10 +1,10 @@
-namespace FBus.RabbitMQ
+namespace FBus.Transports
 open FBus
 open FBus.Builder
 open RabbitMQ.Client
 open RabbitMQ.Client.Events
 
-type Transport(busConfig: BusConfiguration, msgCallback) =
+type RabbitMQ(busConfig: BusConfiguration, msgCallback) =
     let channelLock = obj()
     let factory = ConnectionFactory(Uri = busConfig.Uri, AutomaticRecoveryEnabled = true)
     let conn = factory.CreateConnection()
