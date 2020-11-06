@@ -3,6 +3,8 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
 VisualStudioVersion = 15.0.26124.0
 MinimumVisualStudioVersion = 15.0.26124.0
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "FBus", "FBus\FBus.fsproj", "{989CEDE9-9735-4F7E-91BC-826524D5068D}"
+EndProject
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "FBus.Tests", "FBus.Tests\FBus.Tests.fsproj", "{BCF0DB34-12ED-4FEF-AD2B-5423D123897C}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "samples", "samples", "{676221DE-F0BE-4D9E-9329-28DEF7BD900E}"
@@ -254,6 +256,18 @@ Global
 		{9929CAE2-E2EE-4B9B-BB4C-E5C2B0B789FD}.Release|x64.Build.0 = Release|Any CPU
 		{9929CAE2-E2EE-4B9B-BB4C-E5C2B0B789FD}.Release|x86.ActiveCfg = Release|Any CPU
 		{9929CAE2-E2EE-4B9B-BB4C-E5C2B0B789FD}.Release|x86.Build.0 = Release|Any CPU
+		{989CEDE9-9735-4F7E-91BC-826524D5068D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{989CEDE9-9735-4F7E-91BC-826524D5068D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{989CEDE9-9735-4F7E-91BC-826524D5068D}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{989CEDE9-9735-4F7E-91BC-826524D5068D}.Debug|x64.Build.0 = Debug|Any CPU
+		{989CEDE9-9735-4F7E-91BC-826524D5068D}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{989CEDE9-9735-4F7E-91BC-826524D5068D}.Debug|x86.Build.0 = Debug|Any CPU
+		{989CEDE9-9735-4F7E-91BC-826524D5068D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{989CEDE9-9735-4F7E-91BC-826524D5068D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{989CEDE9-9735-4F7E-91BC-826524D5068D}.Release|x64.ActiveCfg = Release|Any CPU
+		{989CEDE9-9735-4F7E-91BC-826524D5068D}.Release|x64.Build.0 = Release|Any CPU
+		{989CEDE9-9735-4F7E-91BC-826524D5068D}.Release|x86.ActiveCfg = Release|Any CPU
+		{989CEDE9-9735-4F7E-91BC-826524D5068D}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{F18AD2B6-E3BB-4F2B-A0D4-A4593325EC7F} = {676221DE-F0BE-4D9E-9329-28DEF7BD900E}
