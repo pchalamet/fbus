@@ -13,7 +13,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Compile Include="Hosting.fs" />
+    <Compile Include="Container.fs" />
+    <Compile Include="GenericHost.fs" />
   </ItemGroup>
 
 </Project>

@@ -21,8 +21,9 @@ type InMemoryBenchmark() =
 
     [<GlobalSetup>]
     member _.GlobalSetup() =
-        bus <- Builder.init() |> FBus.InMemory.useTransport
-                              |> FBus.InMemory.useSerializer
+        bus <- Builder.init() |> InMemory.useTransport
+                              |> InMemory.useSerializer
+                              |> InMemory.useContainer
                               |> Builder.withConsumer<InMemoryHandler>
                               |> Builder.build
 
@@ -36,7 +37,7 @@ type InMemoryBenchmark() =
     [<Benchmark>]
     member _.Post () =
         busInitiator.Publish msg
-        InMemory.Transport.WaitForCompletion()
+        InMemory.waitForCompletion()
 
 
 type InMemoryWithJsonBenchmark() =
@@ -47,8 +48,9 @@ type InMemoryWithJsonBenchmark() =
 
     [<GlobalSetup>]
     member _.GlobalSetup() =
-        bus <- Builder.init() |> FBus.InMemory.useTransport
-                              |> FBus.InMemory.useSerializer
+        bus <- Builder.init() |> InMemory.useTransport
+                              |> InMemory.useSerializer
+                              |> InMemory.useContainer
                               |> Builder.build
 
         busInitiator <- bus.Start()
@@ -61,4 +63,4 @@ type InMemoryWithJsonBenchmark() =
     [<Benchmark>]
     member _.Post () =
         busInitiator.Publish msg
-        InMemory.Transport.WaitForCompletion()
+        InMemory.waitForCompletion()

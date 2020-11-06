@@ -1,4 +1,4 @@
-module FBus.Hosting
+namespace FBus.GenericHost
 open System
 open System.Threading.Tasks
 open Microsoft.Extensions.Hosting
@@ -25,16 +25,3 @@ type AspNetCoreContainer(services: IServiceCollection) =
             match ctx with
             | :? IServiceProvider as serviceProvider -> serviceProvider.GetService(handlerInfo.InterfaceType)
             | _ -> null
-
-
-type IServiceCollection with
-    member services.AddFBus(configurator: BusBuilder -> BusBuilder) =
-        let busControl = Builder.init() |> configurator
-                                        |> Builder.withContainer (AspNetCoreContainer(services))
-                                        |> Builder.build
-
-        let busInitiator = busControl :?> IBusInitiator
-
-        services.AddSingleton(busControl)
-                .AddSingleton(busInitiator)
-                .AddHostedService<BusService>() |> ignore

@@ -47,10 +47,9 @@ let startServer<'t> name callback =
     let svcCollection = ServiceCollection() :> IServiceCollection
     svcCollection.AddSingleton(handledInvoked) |> ignore
     let serverBus = FBus.Builder.init() |> withName name
-                                        |> withContainer (FBus.Hosting.AspNetCoreContainer(svcCollection))
-                                        |> FBus.InMemory.useTransport
-                                        |> FBus.InMemory.useSerializer
-                                        |> FBus.InMemory.useContainer
+                                        |> withContainer (FBus.GenericHost.AspNetCoreContainer(svcCollection))
+                                        |> InMemory.useTransport
+                                        |> InMemory.useSerializer
                                         |> withConsumer<'t>
                                         |> withHook checkErrorHook
                                         |> FBus.Builder.build
@@ -64,38 +63,19 @@ let ``check inmemory message exchange`` () =
     use bus1 = startServer<InMemoryHandler1> "InMemoryHandler1" (fun () -> serverHasBeenInvoked1 <- true)
     use bus2 = startServer<InMemoryHandler2> "InMemoryHandler2" (fun () -> serverHasBeenInvoked2 <- true)
 
-    use clientBus = FBus.Builder.init() |> FBus.InMemory.useTransport
-                                        |> FBus.InMemory.useSerializer
-                                        |> FBus.InMemory.useContainer
+    use clientBus = FBus.Builder.init() |> InMemory.useTransport
+                                        |> InMemory.useSerializer
+                                        |> InMemory.useContainer
                                         |> FBus.Builder.build
     let clientInitiator = clientBus.Start() 
 
     { Content1 = "Hello InMemory" } |> clientInitiator.Publish
 
-    FBus.InMemory.Transport.WaitForCompletion()
+    InMemory.waitForCompletion()
 
     serverHasBeenInvoked1 |> should equal true
     serverHasBeenInvoked2 |> should equal true
 
 [<Test>]
 let ``check inmemory message exchange again`` () =
-    let mutable serverHasBeenInvoked1 = false
-    let mutable serverHasBeenInvoked2 = false
-    use bus1 = startServer<InMemoryHandler1> "InMemoryHandler1" (fun () -> serverHasBeenInvoked1 <- true)
-    use bus2 = startServer<InMemoryHandler2> "InMemoryHandler2" (fun () -> serverHasBeenInvoked2 <- true)
-
-    use clientBus = FBus.Builder.init() |> FBus.InMemory.useTransport 
-                                        |> FBus.InMemory.useSerializer
-                                        |> FBus.InMemory.useContainer
-                                        |> FBus.Builder.build
-    let clientInitiator = clientBus.Start() 
-
-    { Content1 = "Hello InMemory" } |> clientInitiator.Publish
-
-    FBus.InMemory.Transport.WaitForCompletion()
-
-    serverHasBeenInvoked1 |> should equal true
-    serverHasBeenInvoked2 |> should equal true
-
-
-
+    ``check inmemory message exchange`` ()

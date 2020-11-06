@@ -2,5 +2,5 @@
 open System
 
 let defaultConfig =
-    FBus.Builder.init () |> FBus.RabbitMQ.useTransport
-                         |> FBus.Json.useSerializer
+    FBus.Builder.init () |> RabbitMQ.useTransport
+                         |> Json.useSerializer
