@@ -19,13 +19,13 @@
     <!-- https://docs.microsoft.com/en-us/nuget/reference/msbuild-targets#packing-using-a-nuspec -->
     <PackageId>FBus.InMemory</PackageId>
     <Authors>Pierre Chalamet</Authors>
-    <Title>FBus</Title>
-    <Description>InMemory connector for FBus - a lightweight service-bus implementation written in F#.</Description>
+    <Title>FBus.InMemory</Title>
+    <Description>Testing infrastructure for FBus - a lightweight service-bus implementation written in F#.</Description>
     <Copyright>Copyright 2020 Pierre Chalamet</Copyright>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageProjectUrl>https://github.com/pchalamet/fbus</PackageProjectUrl>
     <RepositoryUrl>https://github.com/pchalamet/fbus.git</RepositoryUrl>
-    <PackageTags>service;bus;service-bus;test</PackageTags>
+    <PackageTags>service;bus;service-bus;testing</PackageTags>
   </PropertyGroup>
 
 </Project>
