@@ -3,6 +3,5 @@ open BenchmarkDotNet.Running
 
 [<EntryPoint>]
 let main argv =
-    BenchmarkRunner.Run<FBus.InMemory.Performance.InMemoryBenchmark>() |> ignore
-    BenchmarkRunner.Run<FBus.InMemory.Performance.InMemoryWithJsonBenchmark>() |> ignore
+    BenchmarkRunner.Run<FBus.PerformanceTests.Serializer.SerializerBenchmark>() |> ignore
     0
