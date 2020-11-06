@@ -1,0 +1,25 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
+    <GenerateProgramFile>false</GenerateProgramFile>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\FBus\FBus.fsproj" />
+    <ProjectReference Include="..\FBus.Json\FBus.Json.fsproj" />
+    <ProjectReference Include="..\FBus.InMemory\FBus.InMemory.fsproj" />
+  </ItemGroup>
+  
+  <ItemGroup>
+    <Compile Include="SerializerBenchmark.fs" />
+    <Compile Include="Program.fs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="BenchmarkDotNet" Version="0.12.1" />
+  </ItemGroup>
+
+</Project>

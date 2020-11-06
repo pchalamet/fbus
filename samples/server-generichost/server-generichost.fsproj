@@ -5,10 +5,11 @@
     <TargetFramework>netcoreapp3.1</TargetFramework>
   </PropertyGroup>
 
-    <ItemGroup>
-        <ProjectReference Include="..\..\fbus\fbus.fsproj" />
-        <ProjectReference Include="..\common\common.fsproj" />
-    </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\FBus\FBus.fsproj" />
+    <ProjectReference Include="..\..\FBus.GenericHost\FBus.GenericHost.fsproj" />
+    <ProjectReference Include="..\common\common.fsproj" />
+  </ItemGroup>
 
   <ItemGroup>
     <Compile Include="Program.fs" />

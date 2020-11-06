@@ -1,0 +1,20 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\FBus\FBus.fsproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="FSharp.SystemTextJson" Version="0.11.13" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="Serializer.fs" />
+    <Compile Include="Json.fs" />
+  </ItemGroup>
+
+</Project>
