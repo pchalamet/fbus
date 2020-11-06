@@ -15,7 +15,7 @@ nuget:
 
 publish: out/*.nupkg
 	@for file in $^ ; do \
-		dotnet nuget push $file -k $(nugetkey) -s https://api.nuget.org/v3/index.json --skip-duplicate ; \
+		dotnet nuget push $$file -k $(nugetkey) -s https://api.nuget.org/v3/index.json --skip-duplicate ; \
     done
 
 client:
