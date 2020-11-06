@@ -1,4 +1,4 @@
-module FBus.BusControl.Tests
+module FBus.Control.Tests
 open System
 open NUnit.Framework
 open FsUnit

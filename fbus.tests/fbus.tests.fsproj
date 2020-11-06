@@ -10,8 +10,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Compile Include="Control.fs" />
     <Compile Include="Builder.fs" />
+    <Compile Include="Control.fs" />
     <Compile Include="Program.fs" />
   </ItemGroup>
 
