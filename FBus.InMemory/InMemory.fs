@@ -7,16 +7,13 @@ open System
 
 let private defaultUri = Uri("inmemory://")
 
-let private defaultTransport (busConfig: BusConfiguration) msgCallback =
-    new Transport(busConfig, msgCallback) :> IBusTransport
-
 let private defaultSerializer = Serializer() :> IBusSerializer
 
 let private defaultContainer = Activator() :> IBusContainer
 
 let useTransport (busBuilder: BusBuilder) =
     busBuilder |> withEndpoint defaultUri
-               |> withTransport defaultTransport
+               |> withTransport Transport.Create
 
 let useSerializer (busBuilder: BusBuilder) =
     busBuilder |> withSerializer defaultSerializer

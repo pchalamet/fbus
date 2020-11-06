@@ -16,6 +16,17 @@
             "console": "internalConsole"
         },
         {
+            "name": "Launch generichost tests",
+            "type": "coreclr",
+            "request": "launch",
+            "preLaunchTask": "build",
+            "program": "${workspaceFolder}/FBus.GenericHost.Tests/bin/Debug/netcoreapp3.1/FBus.GenericHost.Tests.dll",
+            "args": [],
+            "cwd": "${workspaceFolder}",
+            "stopAtEntry": false,
+            "console": "internalConsole"
+        },
+        {
             "name": "launch client",
             "type": "coreclr",
             "request": "launch",
