@@ -2,8 +2,6 @@ module FBus.RabbitMQ
 open FBus
 open FBus.Builder
 
-
-
 let private createTransport (busConfig: BusConfiguration) msgCallback =
     new Transports.RabbitMQ(busConfig, msgCallback) :> IBusTransport
 

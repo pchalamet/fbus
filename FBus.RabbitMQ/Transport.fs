@@ -1,6 +1,5 @@
 namespace FBus.Transports
 open FBus
-open FBus.Builder
 open RabbitMQ.Client
 open RabbitMQ.Client.Events
 
