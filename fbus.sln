@@ -5,7 +5,7 @@ VisualStudioVersion = 15.0.26124.0
 MinimumVisualStudioVersion = 15.0.26124.0
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "FBus", "FBus\FBus.fsproj", "{153527B9-00A6-4C99-B1AF-27C02E4D559A}"
 EndProject
-Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "FBus.Tests", "fbus.tests\fbus.tests.fsproj", "{BCF0DB34-12ED-4FEF-AD2B-5423D123897C}"
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "FBus.Tests", "FBus.Tests\FBus.Tests.fsproj", "{BCF0DB34-12ED-4FEF-AD2B-5423D123897C}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "samples", "samples", "{676221DE-F0BE-4D9E-9329-28DEF7BD900E}"
 EndProject

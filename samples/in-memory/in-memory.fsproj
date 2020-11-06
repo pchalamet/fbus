@@ -4,8 +4,8 @@
         <TargetFramework>netcoreapp3.1</TargetFramework>
     </PropertyGroup>
     <ItemGroup>
-        <ProjectReference Include="..\..\FBus\FBus.fsproj" />
-        <ProjectReference Include="..\..\FBus.InMemory\FBus.InMemory.fsproj" />
+        <ProjectReference Include="../../FBus/FBus.fsproj" />
+        <ProjectReference Include="../../FBus.InMemory/FBus.InMemory.fsproj" />
     </ItemGroup>
     <ItemGroup>
         <Compile Include="Program.fs" />
