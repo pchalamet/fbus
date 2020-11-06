@@ -28,6 +28,7 @@ FBus.RabbitMQ | [![Nuget](https://img.shields.io/nuget/v/FBus.RabbitMQ?logo=nuge
 FBus.Json | [![Nuget](https://img.shields.io/nuget/v/FBus.Json?logo=nuget)](https://nuget.org/packages/FBus.Json) | System.Text.Json serializer
 FBus.GenericHost | [![Nuget](https://img.shields.io/nuget/v/FBus.GenericHost?logo=nuget)](https://nuget.org/packages/FBus.GenericHost) | Generic Host support
 FBus.InMemory | [![Nuget](https://img.shields.io/nuget/v/FBus.InMemory?logo=nuget)](https://nuget.org/packages/FBus.InMemory) | Transport, serializer and container for testing
+FBus.Dependencies | [![Nuget](https://img.shields.io/nuget/v/FBus.Dependencies?logo=nuget)](https://nuget.org/packages/FBus.Dependencies) | All FBus packages in a single reference package
 
 # Usage
 
