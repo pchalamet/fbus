@@ -3,8 +3,6 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
 VisualStudioVersion = 15.0.26124.0
 MinimumVisualStudioVersion = 15.0.26124.0
-Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "FBus", "FBus\FBus.fsproj", "{153527B9-00A6-4C99-B1AF-27C02E4D559A}"
-EndProject
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "FBus.Tests", "FBus.Tests\FBus.Tests.fsproj", "{BCF0DB34-12ED-4FEF-AD2B-5423D123897C}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "samples", "samples", "{676221DE-F0BE-4D9E-9329-28DEF7BD900E}"
@@ -36,6 +34,8 @@ EndProject
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "FBus.Json.Tests", "FBus.Json.Tests\FBus.Json.Tests.fsproj", "{2FB54F54-FB3C-4FC3-952D-F8A951DABE3C}"
 EndProject
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "FBus.RabbitMQ.Tests", "FBus.RabbitMQ.Tests\FBus.RabbitMQ.Tests.fsproj", "{9929CAE2-E2EE-4B9B-BB4C-E5C2B0B789FD}"
+EndProject
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "FBus.Dependencies", "FBus.Dependencies\FBus.Dependencies.fsproj", "{153527B9-00A6-4C99-B1AF-27C02E4D559A}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
