@@ -52,18 +52,19 @@ type CommandMessage =
     interface FBus.IMessageCommand
 ```
 
-## client (console)
+## In-Process console
+### Client
 ```
 open FBus
 open FBus.Builder
 
-use bus = FBus.Builder.configure() |> build
+use bus = FBus.Testing.configure() |> build
 
 let busInitiator = bus.Start()
 busInitiator.Send "hello from FBus !"
 ```
 
-## server (console)
+### Server
 ```
 open FBus
 open FBus.Builder
@@ -73,17 +74,19 @@ type MessageConsumer() =
         member this.Handle context msg = 
             printfn "Received message: %A" msg
 
-use bus = FBus.Builder.configure() |> withConsumer<MessageConsumer> 
+use bus = FBus.Testing.configure() |> withConsumer<MessageConsumer> 
                                    |> build
 bus.Start() |> ignore
 ```
 
-## server (generic host)
+## Server (generic host)
 ```
 ...
 let configureBus builder =
     builder |> withName "server"
-            |> withConsumer<MessageConsumer> 
+            |> withConsumer<MessageConsumer>
+            |> Json.useSerializer
+            |> RabbitMQ.useTransport
 
 Host.CreateDefaultBuilder(argv)
     .ConfigureServices(fun services -> services.AddFBus(configureBus) |> ignore)
@@ -100,10 +103,10 @@ FBus.Builder | Description | Default
 -------------|-------------|--------
 `configure` | Start configuration with default parameters. |
 `withName` | Change service name. Used to identify a bus client (see `IBusInitiator.Send` and `IBusConversation.Send`) | Name based on computer name, pid and random number.
-`withTransport` | Transport to use. | None - recommended RabbitMQ
+`withTransport` | Transport to use. | None
 `withEndpoint` | Transport endpoint | None
-`withContainer` | Container to use | None - recommended GenericHost
-`withSerializer` | Serializer to use | None - recommended System.Text.Json with [FSharp.SystemTextJson](https://github.com/Tarmil/FSharp.SystemTextJson)
+`withContainer` | Container to use | None
+`withSerializer` | Serializer to use | None
 `withConsumer` | Add message consumer | None
 `withHook` | Hook on consumer message processing | None
 `withRecovery` | Connect to dead letter for recovery only | false
@@ -117,7 +120,7 @@ FBus can work in-memory - this is especially useful when unit-testing.
 FBus.Testing | Description | Comments
 -------------|-------------|---------
 configure | Configure FBus for unit-testing | Configure transport, serializer and activator.
-waitForCompletion | Wait for all messages to be processed | This method is blocking.
+waitForCompletion | Wait for all messages to be processed | This method blocks until completion.
 
 ## Bus
 `IBusControl` is the primary interface to control the bus:
@@ -168,6 +171,7 @@ Two transports are available out of the box:
 
 See `FBus.IBusTransport`.
 
+
 ## Containers
 Support for Generic Host is available alongside dependencies injection. See `AddFBus` and samples for more details.
 
@@ -188,20 +192,41 @@ Allow one to observe errors while processing messages.
 
 See `FBus.IBusHook`.
 
+## Available extensions
+
+### RabbitMQ (package FBus.RabbitMQ)
+
+FBus.RabbitMQ | Description | Comments
+--------------|-------------|---------
+useTransport | Configure RabbitMQ as transport | Endpoint is set to `amqp://guest:guest@localhost`.
+
+### Json (package FBus.Json)
+
+FBus.Json | Description | Comments
+----------|-------------|---------
+useSerializer | Configure System.Text.Json as serializer | FSharp.SystemTextJson](https://github.com/Tarmil/FSharp.SystemTextJson) is used to deal with F# types.
+
+### GenericHost
+
+FBus.GenericHost | Description | Comments
+-----------------|-------------|---------
+AddFBus | Inject FBus in GenericHost container | `FBus.IBusControl` and `FBus.IBusInitiator` are available in injection context. 
+
 # Thread safety
 FBus is thread-safe. Plugin implementation shall be thread-safe as well.
 
 ## RabbitMQ transport
 `FBus.RabbitMQ` package implements a RabbitMQ transport. It supports only a simple concurrency model:
 * no concurrency at bus level for receive. This does not mean you can't have concurrency, you just have to handle it explicitely: you have to create multiple bus instances in-process and it's up to you to synchronize correctly among threads if required.
-* Sending is a thread safe operation - but locking happens behind the scene to access underlying connection.
+* Sending is a thread safe operation - but locking happens behind the scene to access underlying channel/connection.
+* Automatic recovery is configured on connection.
 
 The default implementation use following settings:
 * messages are sent as persistent
 * a consumer fetches one message at a time and ack/nack accordingly
 * message goes to dead-letter on error
 
-# how to build it ?
+# Build it
 A makefile is available:
 * make [build]: build FBus
 * make test: build and test FBus
