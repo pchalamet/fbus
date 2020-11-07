@@ -33,8 +33,8 @@ FBus.QuickStart | [![Nuget](https://img.shields.io/nuget/v/FBus.QuickStart?logo=
 
 ## Messages
 There are 2 types of messages:
-* events: messages that are broadcasted
-* commands: messages that are sent to one client
+* events: messages that are broadcasted (see `Publish`)
+* commands: messages that are sent to one client (understand `Send`)
 
 In order to avoid mistakes, messages are marked with a dummy interface:
 
@@ -132,8 +132,8 @@ IBusControl | Description | Comments
 Once bus is started, `IBusInitiator` is available:
 IBusInitiator | Description
 --------------|------------
-`Publish` | Broadcast the message to all subscribers.
-`Send` | Send only the message to given client.
+`Publish` | Broadcast an event message to all subscribers.
+`Send` | Send a command message to given client.
 
 Note: a new conversation is started when using this interface.
 
@@ -152,8 +152,8 @@ IBusConversation | Description
 `ConversationId` | Id of the conversation (identifier is flowing from initiator to subsequent consumers).
 `MessageId` | Id the this message.
 `Reply` | Provide a shortcut to reply to sender.
-`Publish` | Broadcast the message to all subscribers.
-`Send` | Send only the message to given client.
+`Publish` | Broadcast an event message to all subscribers.
+`Send` | Send a command message to given client.
 
 Note: the current conversation is used when using this interface.
 
