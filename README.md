@@ -127,7 +127,7 @@ There are 2 types of messages:
 * events: messages that are broadcasted (see `Publish`)
 * commands: messages that are sent to one client (understand `Send`)
 
-In order to avoid mistakes, messages are marked with a dummy interface:
+In order to avoid mistakes, messages are marked with a dummy interface.
 
 For events:
 ```
