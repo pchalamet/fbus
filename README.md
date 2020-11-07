@@ -17,7 +17,7 @@ Following features might appear in future revisions:
 * Parallelism support via sharding
 
 Features that won't be implemented in FBus:
-* Sagas: coordination is big topic by itself - technically, everything required to handle this is available (ConversationId and MessageId). This can be handled outside of a service-bus.
+* Sagas: coordination is a big topic by itself - technically, everything required to handle this is available (ConversationId and MessageId). This can be handled outside of a service-bus.
 
 ## Available packages
 
@@ -36,7 +36,7 @@ There are 2 types of messages:
 * events: messages that are broadcasted
 * commands: messages that are sent to one client
 
-In order to avoid sending anything over the wire and avoid mistakes, messages are marked with a dummy interface:
+In order to avoid mistakes mistakes, messages are marked with a dummy interface:
 
 For events:
 ```
