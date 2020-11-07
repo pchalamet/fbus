@@ -20,7 +20,7 @@
     <PackageId>FBus.QuickStart</PackageId>
     <Authors>Pierre Chalamet</Authors>
     <Title>FBus.QuickStart</Title>
-    <Description>FBus with all dependencies - a lightweight service-bus implementation written in F#.</Description>
+    <Description>FBus with all dependencies.</Description>
     <Copyright>Copyright 2020 Pierre Chalamet</Copyright>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageProjectUrl>https://github.com/pchalamet/fbus</PackageProjectUrl>

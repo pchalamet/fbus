@@ -20,7 +20,7 @@
     <PackageId>FBus</PackageId>
     <Authors>Pierre Chalamet</Authors>
     <Title>FBus</Title>
-    <Description>Core implementation for FBus - a lightweight service-bus implementation written in F#.</Description>
+    <Description>FBus - a lightweight service-bus implementation written in F#.</Description>
     <Copyright>Copyright 2020 Pierre Chalamet</Copyright>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageProjectUrl>https://github.com/pchalamet/fbus</PackageProjectUrl>

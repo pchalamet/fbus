@@ -22,7 +22,7 @@
     <PackageId>FBus.Json</PackageId>
     <Authors>Pierre Chalamet</Authors>
     <Title>FBus.Json</Title>
-    <Description>System.Text.Json serializer for FBus - a lightweight service-bus implementation written in F#.</Description>
+    <Description>System.Text.Json serializer for FBus.</Description>
     <Copyright>Copyright 2020 Pierre Chalamet</Copyright>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageProjectUrl>https://github.com/pchalamet/fbus</PackageProjectUrl>
