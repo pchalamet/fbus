@@ -5,7 +5,6 @@
     </PropertyGroup>
     <ItemGroup>
         <ProjectReference Include="..\..\FBus\FBus.fsproj" />
-        <ProjectReference Include="..\..\FBus.InMemory\FBus.InMemory.fsproj" />
     </ItemGroup>
     <ItemGroup>
         <Compile Include="Program.fs" />

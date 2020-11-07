@@ -5,11 +5,11 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Launch tests",
+            "name": "Launch fbus tests",
             "type": "coreclr",
             "request": "launch",
             "preLaunchTask": "build",
-            "program": "${workspaceFolder}/fbus.test/bin/Debug/netcoreapp3.1/fbus.test.dll",
+            "program": "${workspaceFolder}/FBus.Tests/bin/Debug/netcoreapp3.1/FBus.Tests.dll",
             "args": [],
             "cwd": "${workspaceFolder}",
             "stopAtEntry": false,

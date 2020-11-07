@@ -49,7 +49,7 @@ type SerializerBenchmark() =
 
     [<IterationCleanup>]
     member _.IterationCleanUp() =
-        InMemory.waitForCompletion()
+        Testing.waitForCompletion()
 
     [<Benchmark>]
     member _.Publish () =

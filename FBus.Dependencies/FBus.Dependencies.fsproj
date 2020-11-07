@@ -9,7 +9,6 @@
     <ProjectReference Include="..\FBus.RabbitMQ\FBus.RabbitMQ.fsproj" />
     <ProjectReference Include="..\FBus.GenericHost\FBus.GenericHost.fsproj" />
     <ProjectReference Include="..\FBus.Json\FBus.Json.fsproj" />
-    <ProjectReference Include="..\FBus.InMemory\FBus.InMemory.fsproj" />
   </ItemGroup>
 
   <ItemGroup>

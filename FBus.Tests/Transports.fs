@@ -1,11 +1,10 @@
-module FBus.Hosting.Tests
+module FBus.Transports.Tests
 open System
 open NUnit.Framework
 open FsUnit
 
 open FBus
 open FBus.Builder
-open Microsoft.Extensions.DependencyInjection
 
 
 type InMemoryMessage1 =
@@ -19,48 +18,46 @@ type InMemoryMessage2 =
 type IHandlerInvoked =
     abstract HasBeenInvoked: unit -> unit
 
-type InMemoryHandler1(handlerInvoked: IHandlerInvoked) =
+type InMemoryHandler1() =
+    static member val HandledInvoked: IHandlerInvoked option = None with get, set
+
     interface FBus.IBusConsumer<InMemoryMessage1> with
-        member this.Handle ctx msg = 
+        member _.Handle ctx msg = 
             { Content2 = msg.Content1 } |> ctx.Send "InMemoryHandler2"
-            handlerInvoked.HasBeenInvoked()
+            InMemoryHandler1.HandledInvoked |> Option.iter (fun callback -> callback.HasBeenInvoked())
 
-type InMemoryHandler2(handlerInvoked: IHandlerInvoked) =
+type InMemoryHandler2() =
+    static member val HandledInvoked: IHandlerInvoked option = None with get, set
+
     interface FBus.IBusConsumer<InMemoryMessage2> with
-        member this.Handle ctx msg = 
-            handlerInvoked.HasBeenInvoked()
+        member _.Handle ctx msg = 
+            InMemoryHandler2.HandledInvoked |> Option.iter (fun callback -> callback.HasBeenInvoked())
 
-let startServer<'t> name callback =
-    let handledInvoked = {
-        new IHandlerInvoked with
-            member this.HasBeenInvoked(): unit = 
-                printfn "Handler invoked on server [%s]" name
-                callback()
-    }
-
+let startServer<'t> name =
     let checkErrorHook = {
         new IBusHook with
-            member this.OnError ctx msg exn =
+            member _.OnError ctx msg exn =
                 failwithf "No error shall be raised: %A" exn
     }
 
-    let svcCollection = ServiceCollection() :> IServiceCollection
-    svcCollection.AddSingleton(handledInvoked) |> ignore
     let serverBus = FBus.Builder.init() |> withName name
                                         |> Testing.setup
-                                        |> withContainer (FBus.Containers.GenericHost(svcCollection))
                                         |> withConsumer<'t>
                                         |> withHook checkErrorHook
                                         |> FBus.Builder.build
-    svcCollection.BuildServiceProvider() |> serverBus.Start |> ignore
+    serverBus.Start() |> ignore
     serverBus
 
 [<Test>]
 let ``check inmemory message exchange`` () =
     let mutable serverHasBeenInvoked1 = false
     let mutable serverHasBeenInvoked2 = false
-    use bus1 = startServer<InMemoryHandler1> "InMemoryHandler1" (fun () -> serverHasBeenInvoked1 <- true)
-    use bus2 = startServer<InMemoryHandler2> "InMemoryHandler2" (fun () -> serverHasBeenInvoked2 <- true)
+    let callback1 = { new IHandlerInvoked with member _.HasBeenInvoked() = serverHasBeenInvoked1 <- true }
+    let callback2 = { new IHandlerInvoked with member _.HasBeenInvoked() = serverHasBeenInvoked2 <- true }
+    InMemoryHandler1.HandledInvoked <- Some callback1
+    InMemoryHandler2.HandledInvoked <- Some callback2
+    use bus1 = startServer<InMemoryHandler1> "InMemoryHandler1"
+    use bus2 = startServer<InMemoryHandler2> "InMemoryHandler2"
 
     use clientBus = FBus.Builder.init() |> Testing.setup
                                         |> FBus.Builder.build

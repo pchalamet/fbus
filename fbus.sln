@@ -23,15 +23,11 @@ Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "FBus.PerformanceTests", "FB
 EndProject
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "FBus.RabbitMQ", "FBus.RabbitMQ\FBus.RabbitMQ.fsproj", "{7C8E2B9B-0CAB-4E1B-BACA-59254487FC82}"
 EndProject
-Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "FBus.InMemory", "FBus.InMemory\FBus.InMemory.fsproj", "{C2AAD320-7636-4ABF-A974-0EB6ECDDD502}"
-EndProject
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "FBus.GenericHost", "FBus.GenericHost\FBus.GenericHost.fsproj", "{F7BF1405-2850-4581-94CD-77E92B05A187}"
 EndProject
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "FBus.Json", "FBus.Json\FBus.Json.fsproj", "{7226B684-5A39-46D3-9723-AAA1BBF5BD16}"
 EndProject
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "FBus.GenericHost.Tests", "FBus.GenericHost.Tests\FBus.GenericHost.Tests.fsproj", "{BACE0688-5B4C-4FAF-8DEC-B8ACCF8B5ADD}"
-EndProject
-Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "FBus.InMemory.Tests", "FBus.InMemory.Tests\FBus.InMemory.Tests.fsproj", "{1CC08561-312E-4E1D-8FD4-AC962D0CB6FB}"
 EndProject
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "FBus.Json.Tests", "FBus.Json.Tests\FBus.Json.Tests.fsproj", "{2FB54F54-FB3C-4FC3-952D-F8A951DABE3C}"
 EndProject
