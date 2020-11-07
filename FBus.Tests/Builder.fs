@@ -68,8 +68,14 @@ type MyConsumer2() =
 let ``withConsumer add consumers`` () =
     let build = FBus.Builder.configure() |> withConsumer<MyConsumer1> |> withConsumer<MyConsumer2>
 
-    let expectedHandlers = Map [ "System.String", { MessageType = typeof<string>; InterfaceType = typeof<IBusConsumer<string>>; ImplementationType = typeof<MyConsumer1> }
-                                 "System.Int32", { MessageType = typeof<int>; InterfaceType = typeof<IBusConsumer<int>>; ImplementationType = typeof<MyConsumer2> } ]
+    let expectedHandlers = Map [ "System.String", { MessageType = typeof<string>
+                                                    InterfaceType = typeof<IBusConsumer<string>>
+                                                    ImplementationType = typeof<MyConsumer1>
+                                                    CallSite = typeof<IBusConsumer<string>>.GetMethod("Handle") }
+                                 "System.Int32", { MessageType = typeof<int>
+                                                   InterfaceType = typeof<IBusConsumer<int>>
+                                                   ImplementationType = typeof<MyConsumer2>
+                                                   CallSite = typeof<IBusConsumer<int>>.GetMethod("Handle") } ]
 
     build.Handlers |> should equal expectedHandlers
 

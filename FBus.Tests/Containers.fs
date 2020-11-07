@@ -14,11 +14,12 @@ type StringConsumer() =
 
 
 [<Test>]
-let ``Activator Resolve is no-op`` () =
+let ``Activator Register is no-op`` () =
     let activator = Containers.Activator() :> FBus.IBusContainer
     let handlerInfo = { MessageType = typeof<string>
                         InterfaceType = typeof<IBusConsumer<string>>
-                        ImplementationType = typeof<StringConsumer> }
+                        ImplementationType = typeof<StringConsumer>
+                        CallSite = typeof<IBusConsumer<string>>.GetMethod("Handle") }
     activator.Register handlerInfo
 
 
@@ -27,6 +28,7 @@ let ``Activator create type with default constructor`` () =
     let activator = Containers.Activator() :> FBus.IBusContainer
     let handlerInfo = { MessageType = typeof<string>
                         InterfaceType = typeof<IBusConsumer<string>>
-                        ImplementationType = typeof<StringConsumer> }
+                        ImplementationType = typeof<StringConsumer>
+                        CallSite = typeof<IBusConsumer<string>>.GetMethod("Handle") }
     let consumer = activator.Resolve null handlerInfo
     consumer.GetType() |> should equal handlerInfo.ImplementationType

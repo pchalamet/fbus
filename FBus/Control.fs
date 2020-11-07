@@ -46,11 +46,8 @@ type Bus(busConfig: BusConfiguration) =
             let handler = busConfig.Container.Resolve activationContext handlerInfo
             if handler |> isNull then failwith "No handler found"
 
-            let callsite = handlerInfo.InterfaceType.GetMethod("Handle")
-            if callsite |> isNull then failwith "Handler method not found"
-
             msg <- busConfig.Serializer.Deserialize handlerInfo.MessageType content
-            callsite.Invoke(handler, [| ctx; msg |]) |> ignore
+            handlerInfo.CallSite.Invoke(handler, [| ctx; msg |]) |> ignore
         with
             | :? Reflection.TargetInvocationException as tie -> busConfig.Hook |> Option.iter (fun hook -> hook.OnError ctx msg tie.InnerException)
                                                                 reraise()

@@ -29,7 +29,8 @@ type IBusConsumer<'t> =
 type HandlerInfo =
     { MessageType: Type
       InterfaceType: Type
-      ImplementationType: Type }
+      ImplementationType: Type
+      CallSite: Reflection.MethodInfo }
 
 type IBusContainer =
     abstract Register: HandlerInfo -> unit

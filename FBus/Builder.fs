@@ -47,9 +47,12 @@ let withConsumer<'t> busBuilder =
 
     let findMessageHandlers (t: System.Type) =    
         t.GetInterfaces() |> Array.choose findMessageHandler
-                          |> Array.map (fun (msgType, itfType) -> { MessageType = msgType
+                          |> Array.map (fun (msgType, itfType) -> let callsite = itfType.GetMethod("Handle")
+                                                                  if callsite |> isNull then failwith "Handler method not found"
+                                                                  { MessageType = msgType
                                                                     InterfaceType = itfType
-                                                                    ImplementationType = t })
+                                                                    ImplementationType = t
+                                                                    CallSite = callsite })
                           |> List.ofArray
 
     let handlers = typeof<'t> |> findMessageHandlers
