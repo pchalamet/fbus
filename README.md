@@ -144,7 +144,7 @@ type CommandMessage =
 ```
 
 ## Transports
-Two transports are available out of the box: RabbitMQ and InMemory. Still, you easily add new middleware.
+Two transports are available out of the box: RabbitMQ and InMemory. Still, it's possible to easily add new middlewares.
 
 See `FBus.IBusTransport`.
 
