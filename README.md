@@ -58,7 +58,7 @@ type CommandMessage =
 open FBus
 open FBus.Builder
 
-use bus = FBus.Testing.configure() |> build
+use bus = FBus.QuickStart.configure() |> build
 
 let busInitiator = bus.Start()
 busInitiator.Send "hello from FBus !"
@@ -74,8 +74,8 @@ type MessageConsumer() =
         member this.Handle context msg = 
             printfn "Received message: %A" msg
 
-use bus = FBus.Testing.configure() |> withConsumer<MessageConsumer> 
-                                   |> build
+use bus = FBus.QuickStart.configure() |> withConsumer<MessageConsumer> 
+                                      |> build
 bus.Start() |> ignore
 ```
 
@@ -208,7 +208,7 @@ FBus.Json | Description | Comments
 useDefaults | Configure System.Text.Json as serializer | FSharp.SystemTextJson](https://github.com/Tarmil/FSharp.SystemTextJson) is used to deal with F# types.
 useWith | Same as `useSerializer` but with provided configuration options |
 
-### Dependencies (package FBus.QuickStart)
+### QuickStart (package FBus.QuickStart)
 
 FBus.QuickStart | Description | Comments
 configure | Configure FBus with RabbitMQ, Json and In-Memory Activator. |
