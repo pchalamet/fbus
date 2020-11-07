@@ -33,7 +33,7 @@ Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "FBus.Json.Tests", "FBus.Jso
 EndProject
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "FBus.RabbitMQ.Tests", "FBus.RabbitMQ.Tests\FBus.RabbitMQ.Tests.fsproj", "{9929CAE2-E2EE-4B9B-BB4C-E5C2B0B789FD}"
 EndProject
-Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "FBus.Dependencies", "FBus.Dependencies\FBus.Dependencies.fsproj", "{153527B9-00A6-4C99-B1AF-27C02E4D559A}"
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "FBus.QuickStart", "FBus.QuickStart\FBus.QuickStart.fsproj", "{153527B9-00A6-4C99-B1AF-27C02E4D559A}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

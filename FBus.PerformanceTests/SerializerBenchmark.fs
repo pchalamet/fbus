@@ -28,7 +28,7 @@ type SerializerBenchmark() =
 
     member this.InitSerializer busBuilder =
         let useSerializer = match this.SerializerKind with
-                            | "Json" -> Json.useSerializer
+                            | "Json" -> Json.useDefaults
                             | _ -> InMemory.useSerializer
         useSerializer busBuilder
 

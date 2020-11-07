@@ -18,9 +18,9 @@ type ResponseConsumer() =
 [<EntryPoint>]
 let main argv =
 
-    use bus = FBus.Testing.configure() |> withName "client"
-                                       |> withConsumer<ResponseConsumer>
-                                       |> build
+    use bus = FBus.QuickStart.configure() |> withName "client"
+                                          |> withConsumer<ResponseConsumer>
+                                          |> build
  
     let busInitiator = bus.Start()
     

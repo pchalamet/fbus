@@ -5,13 +5,13 @@
 FBus is a lightweight service-bus implementation written in F#.
 
 It comes with default implementation for:
-* RabbitMQ (with dead-letter support)
-* In-memory transport for testing
 * Publish (broadcast), Send (direct) and Reply (direct)
 * Conversation follow-up using headers (ConversationId and MessageId)
-* Persistent queue/buffering across activation
+* RabbitMQ (with dead-letter support)
 * Generic Host support with dependency injection
 * System.Text.Json serialization
+* Full testing capabilities using In-Memory mode
+* Persistent queue/buffering across activation
 
 Following features might appear in future revisions:
 * Parallelism support via sharding
@@ -27,7 +27,7 @@ FBus | [![Nuget](https://img.shields.io/nuget/v/FBus?logo=nuget)](https://nuget.
 FBus.RabbitMQ | [![Nuget](https://img.shields.io/nuget/v/FBus.RabbitMQ?logo=nuget)](https://nuget.org/packages/FBus.RabbitMQ) | RabbitMQ transport
 FBus.Json | [![Nuget](https://img.shields.io/nuget/v/FBus.Json?logo=nuget)](https://nuget.org/packages/FBus.Json) | System.Text.Json serializer
 FBus.GenericHost | [![Nuget](https://img.shields.io/nuget/v/FBus.GenericHost?logo=nuget)](https://nuget.org/packages/FBus.GenericHost) | Generic Host support
-FBus.Dependencies | [![Nuget](https://img.shields.io/nuget/v/FBus.Dependencies?logo=nuget)](https://nuget.org/packages/FBus.Dependencies) | All FBus packages in a single reference package
+FBus.QuickStart | [![Nuget](https://img.shields.io/nuget/v/FBus.QuickStart?logo=nuget)](https://nuget.org/packages/FBus.QuickStart) | All FBus packages to quick start a project
 
 # Usage
 
@@ -85,8 +85,8 @@ bus.Start() |> ignore
 let configureBus builder =
     builder |> withName "server"
             |> withConsumer<MessageConsumer>
-            |> Json.useSerializer
-            |> RabbitMQ.useTransport
+            |> Json.useDefaults
+            |> RabbitMQ.useDefaults
 
 Host.CreateDefaultBuilder(argv)
     .ConfigureServices(fun services -> services.AddFBus(configureBus) |> ignore)
@@ -171,7 +171,6 @@ Two transports are available out of the box:
 
 See `FBus.IBusTransport`.
 
-
 ## Containers
 Support for Generic Host is available alongside dependencies injection. See `AddFBus` and samples for more details.
 
@@ -198,13 +197,21 @@ See `FBus.IBusHook`.
 
 FBus.RabbitMQ | Description | Comments
 --------------|-------------|---------
-useTransport | Configure RabbitMQ as transport | Endpoint is set to `amqp://guest:guest@localhost`.
+useDefaults | Configure RabbitMQ as transport | Endpoint is set to `amqp://guest:guest@localhost`.
+
+Transport leverages exchanges (one for each message type) to distribute messages across consumers (subscribing a queue).
 
 ### Json (package FBus.Json)
 
 FBus.Json | Description | Comments
 ----------|-------------|---------
-useSerializer | Configure System.Text.Json as serializer | FSharp.SystemTextJson](https://github.com/Tarmil/FSharp.SystemTextJson) is used to deal with F# types.
+useDefaults | Configure System.Text.Json as serializer | FSharp.SystemTextJson](https://github.com/Tarmil/FSharp.SystemTextJson) is used to deal with F# types.
+useWith | Same as `useSerializer` but with provided configuration options |
+
+### Dependencies (package FBus.QuickStart)
+
+FBus.QuickStart | Description | Comments
+configure | Configure FBus with RabbitMQ, Json and In-Memory Activator. |
 
 ### GenericHost
 

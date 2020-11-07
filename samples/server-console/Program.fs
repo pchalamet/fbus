@@ -1,6 +1,5 @@
 ﻿open FBus.Builder
 
-
 type HelloWorldConsumer() =
     interface FBus.IBusConsumer<Common.HelloWorld> with
         member this.Handle ctx msg = 
@@ -21,9 +20,9 @@ let main argv =
                      | [| serverName |] -> serverName
                      | _ -> "sample-server"
 
-    use bus = configure() |> withName serverName
-                          |> withConsumer<HelloWorldConsumer> 
-                          |> build
+    use bus = FBus.QuickStart.configure() |> withName serverName
+                                          |> withConsumer<HelloWorldConsumer> 
+                                          |> build
 
     bus.Start() |> ignore
 

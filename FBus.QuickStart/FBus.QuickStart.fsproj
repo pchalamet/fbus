@@ -12,7 +12,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Compile Include="Defaults.fs" />
+    <Compile Include="Dependencies.fs" />
   </ItemGroup>
 
   <PropertyGroup>

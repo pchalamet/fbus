@@ -2,4 +2,6 @@ module FBus.Json
 open FBus
 open FBus.Builder
 
-let useSerializer = FBus.Serializers.Json() :> IBusSerializer |> withSerializer
+let useDefaults = FBus.Serializers.Json() :> IBusSerializer |> withSerializer
+
+let useWith options = FBus.Serializers.Json(?initOptions = options) :> IBusSerializer |> withSerializer
