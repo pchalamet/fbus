@@ -32,9 +32,7 @@ FBus.QuickStart | [![Nuget](https://img.shields.io/nuget/v/FBus.QuickStart?logo=
 # Api
 
 ## Messages
-In order to exchange messages using FBus, you have first to define messages.
-
-There are 2 types:
+In order to exchange messages using FBus, you have first to define messages. There are 2 types:
 * events: messages that are broadcasted (see `Publish`)
 * commands: messages that are sent to one client (see `Send`)
 
