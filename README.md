@@ -29,7 +29,100 @@ FBus.Json | [![Nuget](https://img.shields.io/nuget/v/FBus.Json?logo=nuget)](http
 FBus.GenericHost | [![Nuget](https://img.shields.io/nuget/v/FBus.GenericHost?logo=nuget)](https://nuget.org/packages/FBus.GenericHost) | Generic Host support
 FBus.QuickStart | [![Nuget](https://img.shields.io/nuget/v/FBus.QuickStart?logo=nuget)](https://nuget.org/packages/FBus.QuickStart) | All FBus packages to quick start a project
 
-# Usage
+# Api
+
+## Messages
+In order to exchange messages using FBus, you have first to define messages.
+
+There are 2 types:
+* events: messages that are broadcasted (see `Publish`)
+* commands: messages that are sent to one client (see `Send`)
+
+In order to avoid mistakes, messages are marked with a dummy interface:
+
+For events:
+```
+type EventMessage =
+    { msg: string }
+    interface FBus.IMessageEvent
+````
+
+For commands:
+```
+type CommandMessage =
+    { msg: string }
+    interface FBus.IMessageCommand
+```
+
+For more information, see CQRS literature.
+
+## Builder
+Prior using the bus, a configuration must be built:
+FBus.Builder | Description | Default
+-------------|-------------|--------
+`configure` | Start configuration with default parameters. |
+`withName` | Change service name. Used to identify a bus client (see `IBusInitiator.Send` and `IBusConversation.Send`) | Name based on computer name, pid and random number.
+`withTransport` | Transport to use. | None
+`withEndpoint` | Transport endpoint | None
+`withContainer` | Container to use | None
+`withSerializer` | Serializer to use | None
+`withConsumer` | Add message consumer | None
+`withHook` | Hook on consumer message processing | None
+`withRecovery` | Connect to dead letter for recovery only | false
+`build` | Returns a new bus instance (`FBus.IBusControl`) based on configuration | n/a
+
+Note: bus clients are ephemeral by default - this is useful if you just want to connect to the bus for spying or sending commands for eg :-) Assigning a name (see `withName`) makes the client public so no queues are deleted upon exit.
+
+## Bus
+`IBusControl` is the primary interface to control the bus:
+IBusControl | Description | Comments
+------------|-------------|---------
+`Start` | Start the bus. Returns `IBusInitiator` | Must be called before sending messages. Start accepts a resolve context which can be used by the container.
+`Stop` | Stop the bus. | Bus can be restarted later on.
+`Dispose` | Dispose the bus instance. | Bus can't be reused.
+
+Once bus is started, `IBusInitiator` is available:
+IBusInitiator | Description
+--------------|------------
+`Publish` | Broadcast an event message to all subscribers.
+`Send` | Send a command message to given client.
+
+Note: a new conversation is started when using this interface.
+
+## Consumer
+`withConsumer` registers an handler - which will be able to process a message in an activation context. Note: exact type must match handler signature. A new instance is created each time a message has to be processed.
+
+```
+type IBusConsumer<'t> =
+    abstract Handle: IBusConversation -> 't -> unit
+```
+
+`IBusConversation` provides information to handlers and means to interact with the bus:
+IBusConversation | Description
+-----------------|------------
+`Sender` | Name of the client.
+`ConversationId` | Id of the conversation (identifier is flowing from initiator to subsequent consumers).
+`MessageId` | Id the this message.
+`Reply` | Provide a shortcut to reply to sender.
+`Publish` | Broadcast an event message to all subscribers.
+`Send` | Send a command message to given client.
+
+Note: the current conversation is used when using this interface.
+
+## Testing
+FBus can work in-memory, this is especially useful when unit-testing.
+
+FBus.Testing | Description | Comments
+-------------|-------------|---------
+`configure` | Configure FBus for unit-testing | Configure transport, serializer and activator.
+`waitForCompletion` | Wait for all messages to be processed | This method blocks until completion.
+
+# Extensibility
+Following extension points are supported:
+* Transports: which middleware is transporting messages.
+* Serializers: how messages are exchanged on the wire.
+* Containers: where and how consumers are allocated and hosted.
+* Hooks: handlers in case of failures.
 
 ## Messages
 There are 2 types of messages:
@@ -51,6 +144,75 @@ type CommandMessage =
     { msg: string }
     interface FBus.IMessageCommand
 ```
+
+## Transports
+Two transports are available out of the box: RabbitMQ and InMemory. Still, you easily add new middleware.
+
+See `FBus.IBusTransport`.
+
+## Containers
+Containers are in charge of activating and running consumers.
+
+See `FBus.IBusContainer`.
+
+## Serializers
+Serializers transform objects into byte streams and vis-versa without relying on native middleware capabilities.
+
+See `FBus.IBusSerializer`.
+
+## Consumers
+Consumers can be configured at will. There is one major restriction: only one handler per type is supported. If you want several subscribers, you will have to handle delegation.
+
+See `FBus.IBusConsumer<>`.
+
+## Hooks
+Allow one to observe errors while processing messages.
+
+See `FBus.IBusHook`.
+
+## Available extensions
+
+### RabbitMQ (package FBus.RabbitMQ)
+
+FBus.RabbitMQ | Description | Comments
+--------------|-------------|---------
+`useDefaults` | Configure RabbitMQ as transport | Endpoint is set to `amqp://guest:guest@localhost`.
+
+Transport leverages exchanges (one for each message type) to distribute messages across consumers (subscribing a queue).
+
+### Json (package FBus.Json)
+
+FBus.Json | Description | Comments
+----------|-------------|---------
+`useDefaults` | Configure System.Text.Json as serializer | FSharp.SystemTextJson](https://github.com/Tarmil/FSharp.SystemTextJson) is used to deal with F# types.
+`useWith` | Same as `useSerializer` but with provided configuration options |
+
+### QuickStart (package FBus.QuickStart)
+
+FBus.QuickStart | Description | Comments
+`configure` | Configure FBus with RabbitMQ, Json and In-Memory Activator. |
+
+### GenericHost
+
+FBus.GenericHost | Description | Comments
+-----------------|-------------|---------
+`AddFBus` | Inject FBus in GenericHost container | `FBus.IBusControl` and `FBus.IBusInitiator` are available in injection context. 
+
+# Thread safety
+FBus is thread-safe. Plugin implementation shall be thread-safe as well.
+
+## RabbitMQ transport
+`FBus.RabbitMQ` package implements a RabbitMQ transport. It supports only a simple concurrency model:
+* no concurrency at bus level for receive. This does not mean you can't have concurrency, you just have to handle it explicitely: you have to create multiple bus instances in-process and it's up to you to synchronize correctly among threads if required.
+* Sending is a thread safe operation - but locking happens behind the scene to access underlying channel/connection.
+* Automatic recovery is configured on connection.
+
+The default implementation use following settings:
+* messages are sent as persistent
+* a consumer fetches one message at a time and ack/nack accordingly
+* message goes to dead-letter on error
+
+# Samples
 
 ## In-Process console
 ### Client
@@ -95,147 +257,9 @@ Host.CreateDefaultBuilder(argv)
     .Run()
 ```
 
-# Api
-
-## Builder
-Prior using the bus, a configuration must be built:
-FBus.Builder | Description | Default
--------------|-------------|--------
-`configure` | Start configuration with default parameters. |
-`withName` | Change service name. Used to identify a bus client (see `IBusInitiator.Send` and `IBusConversation.Send`) | Name based on computer name, pid and random number.
-`withTransport` | Transport to use. | None
-`withEndpoint` | Transport endpoint | None
-`withContainer` | Container to use | None
-`withSerializer` | Serializer to use | None
-`withConsumer` | Add message consumer | None
-`withHook` | Hook on consumer message processing | None
-`withRecovery` | Connect to dead letter for recovery only | false
-`build` | Create a bus instance based on configuration | n/a
-
-Note: bus clients are ephemeral by default - this is useful if you just want to connect to the bus for spying or sending commands for eg :-) Assigning a name (see `withName`) makes the client public so no queues are deleted upon exit.
-
-## Testing
-FBus can work in-memory - this is especially useful when unit-testing.
-
-FBus.Testing | Description | Comments
--------------|-------------|---------
-configure | Configure FBus for unit-testing | Configure transport, serializer and activator.
-waitForCompletion | Wait for all messages to be processed | This method blocks until completion.
-
-## Bus
-`IBusControl` is the primary interface to control the bus:
-IBusControl | Description | Comments
-------------|-------------|---------
-`Start` | Start the bus. Returns `IBusInitiator` | Must be called before sending messages. Start accepts a resolve context which can be used by the container.
-`Stop` | Stop the bus. |
-
-Once bus is started, `IBusInitiator` is available:
-IBusInitiator | Description
---------------|------------
-`Publish` | Broadcast an event message to all subscribers.
-`Send` | Send a command message to given client.
-
-Note: a new conversation is started when using this interface.
-
-## Consumer
-`withConsumer` registers an handler - which will be able to process a message. Note exact type must match handler signature. A new instance is created each time a message has to be processed.
-
-```
-type IBusConsumer<'t> =
-    abstract Handle: IBusConversation -> 't -> unit
-```
-
-`IBusConversation` provides information to handlers and means to interact with the bus:
-IBusConversation | Description
------------------|------------
-`Sender` | Name of the client.
-`ConversationId` | Id of the conversation (identifier is flowing from initiator to subsequent consumers).
-`MessageId` | Id the this message.
-`Reply` | Provide a shortcut to reply to sender.
-`Publish` | Broadcast an event message to all subscribers.
-`Send` | Send a command message to given client.
-
-Note: the current conversation is used when using this interface.
-
-# Extensibility
-Following extension points are supported:
-* Transports: which middleware is transporting messages.
-* Serializers: how messages are exchanged on the wire.
-* Containers: where and how consumers are allocated and hosted.
-* Hooks: handlers in case of failures.
-
-## Transports
-Two transports are available out of the box:
-* RabbitMQ: transport implementation for RabbitMQ.
-* InMemory: transport, serializer and container operating purely in memory. This can be used for testing. See sample `samples/in-memory` or unit-tests.
-
-See `FBus.IBusTransport`.
-
-## Containers
-Support for Generic Host is available alongside dependencies injection. See `AddFBus` and samples for more details.
-
-See `FBus.IBusContainer`.
-
-## Serializers
-Support for Json is available (using FSharp.SystemTextJson underneath).
-
-See `FBus.IBusSerializer`.
-
-## Consumers
-Consumers can be configured at will. There is one major restriction: only one handler per type is supported. If you want several subscribers, you will have to handle delegation.
-
-See `FBus.IBusConsumer<>`.
-
-## Hooks
-Allow one to observe errors while processing messages.
-
-See `FBus.IBusHook`.
-
-## Available extensions
-
-### RabbitMQ (package FBus.RabbitMQ)
-
-FBus.RabbitMQ | Description | Comments
---------------|-------------|---------
-useDefaults | Configure RabbitMQ as transport | Endpoint is set to `amqp://guest:guest@localhost`.
-
-Transport leverages exchanges (one for each message type) to distribute messages across consumers (subscribing a queue).
-
-### Json (package FBus.Json)
-
-FBus.Json | Description | Comments
-----------|-------------|---------
-useDefaults | Configure System.Text.Json as serializer | FSharp.SystemTextJson](https://github.com/Tarmil/FSharp.SystemTextJson) is used to deal with F# types.
-useWith | Same as `useSerializer` but with provided configuration options |
-
-### QuickStart (package FBus.QuickStart)
-
-FBus.QuickStart | Description | Comments
-configure | Configure FBus with RabbitMQ, Json and In-Memory Activator. |
-
-### GenericHost
-
-FBus.GenericHost | Description | Comments
------------------|-------------|---------
-AddFBus | Inject FBus in GenericHost container | `FBus.IBusControl` and `FBus.IBusInitiator` are available in injection context. 
-
-# Thread safety
-FBus is thread-safe. Plugin implementation shall be thread-safe as well.
-
-## RabbitMQ transport
-`FBus.RabbitMQ` package implements a RabbitMQ transport. It supports only a simple concurrency model:
-* no concurrency at bus level for receive. This does not mean you can't have concurrency, you just have to handle it explicitely: you have to create multiple bus instances in-process and it's up to you to synchronize correctly among threads if required.
-* Sending is a thread safe operation - but locking happens behind the scene to access underlying channel/connection.
-* Automatic recovery is configured on connection.
-
-The default implementation use following settings:
-* messages are sent as persistent
-* a consumer fetches one message at a time and ack/nack accordingly
-* message goes to dead-letter on error
-
 # Build it
 A makefile is available:
-* make [build]: build FBus
-* make test: build and test FBus
+* `make [build]`: build FBus
+* `make test`: build and test FBus
 
 If you prefer to build using your IDE, solution file is named `fbus.sln`.
