@@ -46,12 +46,11 @@ let startServer<'t> name callback =
 
     let svcCollection = ServiceCollection() :> IServiceCollection
     svcCollection.AddSingleton(handledInvoked) |> ignore
-    let serverBus = FBus.Builder.init() |> withName name
-                                        |> Testing.setup
-                                        |> withContainer (FBus.Containers.GenericHost(svcCollection))
-                                        |> withConsumer<'t>
-                                        |> withHook checkErrorHook
-                                        |> FBus.Builder.build
+    let serverBus = FBus.Testing.configure() |> withName name
+                                             |> withContainer (FBus.Containers.GenericHost(svcCollection))
+                                             |> withConsumer<'t>
+                                             |> withHook checkErrorHook
+                                             |> FBus.Builder.build
     svcCollection.BuildServiceProvider() |> serverBus.Start |> ignore
     serverBus
 
@@ -62,8 +61,7 @@ let ``check inmemory message exchange`` () =
     use bus1 = startServer<InMemoryHandler1> "InMemoryHandler1" (fun () -> serverHasBeenInvoked1 <- true)
     use bus2 = startServer<InMemoryHandler2> "InMemoryHandler2" (fun () -> serverHasBeenInvoked2 <- true)
 
-    use clientBus = FBus.Builder.init() |> Testing.setup
-                                        |> FBus.Builder.build
+    use clientBus = FBus.Testing.configure() |> FBus.Builder.build
     let clientInitiator = clientBus.Start() 
 
     { Content1 = "Hello InMemory" } |> clientInitiator.Publish

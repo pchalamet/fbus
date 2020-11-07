@@ -2,7 +2,7 @@
 open FBus
 open System
 
-let init () =
+let configure () =
 
     let generateClientName() =
         let computerName = Environment.MachineName

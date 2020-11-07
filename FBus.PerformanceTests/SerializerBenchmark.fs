@@ -34,10 +34,8 @@ type SerializerBenchmark() =
 
     [<GlobalSetup>]
     member this.GlobalSetup() =
-        let busBuilder = Builder.init() |> InMemory.useTransport
-                                        |> InMemory.useContainer
-                                        |> Builder.withConsumer<InMemoryHandler>
-                                        |> this.InitSerializer
+        let busBuilder = Testing.configure() |> Builder.withConsumer<InMemoryHandler>
+                                             |> this.InitSerializer
 
         bus <- busBuilder |> Builder.build
         busInitiator <- bus.Start()

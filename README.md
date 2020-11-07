@@ -57,7 +57,7 @@ type CommandMessage =
 open FBus
 open FBus.Builder
 
-use bus = init() |> build
+use bus = FBus.Builder.configure() |> build
 
 let busInitiator = bus.Start()
 busInitiator.Send "hello from FBus !"
@@ -73,8 +73,8 @@ type MessageConsumer() =
         member this.Handle context msg = 
             printfn "Received message: %A" msg
 
-use bus = init() |> withConsumer<MessageConsumer> 
-                 |> build
+use bus = FBus.Builder.configure() |> withConsumer<MessageConsumer> 
+                                   |> build
 bus.Start() |> ignore
 ```
 
@@ -98,7 +98,7 @@ Host.CreateDefaultBuilder(argv)
 Prior using the bus, a configuration must be built:
 FBus.Builder | Description | Default
 -------------|-------------|--------
-`init` | Create default configuration. |
+`configure` | Start configuration with default parameters. |
 `withName` | Change service name. Used to identify a bus client (see `IBusInitiator.Send` and `IBusConversation.Send`) | Name based on computer name, pid and random number.
 `withTransport` | Transport to use. | None - recommended RabbitMQ
 `withEndpoint` | Transport endpoint | None
@@ -116,7 +116,7 @@ FBus can work in-memory - this is especially useful when unit-testing.
 
 FBus.Testing | Description | Comments
 -------------|-------------|---------
-setup | Configure FBus for unit-testing | Configure transport, serializer and activator.
+configure | Configure FBus for unit-testing | Configure transport, serializer and activator.
 waitForCompletion | Wait for all messages to be processed | This method is blocking.
 
 ## Bus

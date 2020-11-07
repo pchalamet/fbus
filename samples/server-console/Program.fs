@@ -21,9 +21,9 @@ let main argv =
                      | [| serverName |] -> serverName
                      | _ -> "sample-server"
 
-    use bus = init() |> withName serverName
-                     |> withConsumer<HelloWorldConsumer> 
-                     |> build
+    use bus = configure() |> withName serverName
+                          |> withConsumer<HelloWorldConsumer> 
+                          |> build
 
     bus.Start() |> ignore
 

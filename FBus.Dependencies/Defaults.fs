@@ -2,5 +2,5 @@
 
 let init () =
 
-    FBus.Builder.init() |> FBus.RabbitMQ.useTransport
-                        |> FBus.Json.useSerializer
+    FBus.Builder.configure() |> FBus.RabbitMQ.useTransport
+                             |> FBus.Json.useSerializer

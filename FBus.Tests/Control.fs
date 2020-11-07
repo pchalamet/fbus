@@ -142,15 +142,15 @@ let ``Test bus control`` () =
                         | _ -> ()
     }
 
-    let bus = init() |> withName client
-                     |> withEndpoint buildUri
-                     |> withConsumer<StringConsumer>
-                     |> withConsumer<IntConsumer>
-                     |> withContainer buildContainer
-                     |> withTransport buildTransportBuilder
-                     |> withSerializer buildSerializer
-                     |> withHook hook
-                     |> build
+    let bus = configure() |> withName client
+                          |> withEndpoint buildUri
+                          |> withConsumer<StringConsumer>
+                          |> withConsumer<IntConsumer>
+                          |> withContainer buildContainer
+                          |> withTransport buildTransportBuilder
+                          |> withSerializer buildSerializer
+                          |> withHook hook
+                          |> build
 
     let busInitiator = bus.Start activationContext
     { String = msgString } |> busInitiator.Publish 

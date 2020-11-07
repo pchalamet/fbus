@@ -5,9 +5,9 @@ open FBus.Containers
 
 type IServiceCollection with
     member services.AddFBus(configurator: BusBuilder -> BusBuilder) =
-        let busControl = Builder.init() |> configurator
-                                        |> Builder.withContainer (GenericHost(services))
-                                        |> Builder.build
+        let busControl = Builder.configure() |> configurator
+                                             |> Builder.withContainer (GenericHost(services))
+                                             |> Builder.build
 
         let busInitiator = busControl :?> IBusInitiator
 
