@@ -92,27 +92,6 @@ Host.CreateDefaultBuilder(argv)
     .Run()
 ```
 
-# Extensibility
-Following extension points are supported:
-* Transports: which middleware is transporting messages.
-* Serializers: how messages are exchanged on the wire.
-* Containers: where and how consumers are allocated and hosted.
-* Hooks: handlers in case of failures.
-
-## Transports
-Two transports are available out of the box:
-* RabbitMQ: transport implementation for RabbitMQ.
-* InMemory: transport, serializer and container operating purely in memory. This can be used for testing. See sample `samples/in-memory` or unit-tests.
-
-## Containers
-Support for Generic Host is available alongside dependencies injection. See `AddFBus` and samples for more details.
-
-## Serializers
-Support for Json is available (using FSharp.SystemTextJson underneath).
-
-## Hooks
-Allow one to observe errors while processing messages.
-
 # Api
 
 ## Builder
@@ -131,6 +110,14 @@ FBus.Builder | Description | Default
 `build` | Create a bus instance based on configuration | n/a
 
 Note: bus clients are ephemeral by default - this is useful if you just want to connect to the bus for spying or sending commands for eg :-) Assigning a name (see `withName`) makes the client public so no queues are deleted upon exit.
+
+## Testing
+FBus can work in-memory - this is especially useful when unit-testing.
+
+FBus.Testing | Description | Comments
+-------------|-------------|---------
+setup | Configure FBus for unit-testing | Configure transport, serializer and activator.
+waitForCompletion | Wait for all messages to be processed | This method is blocking.
 
 ## Bus
 `IBusControl` is the primary interface to control the bus:
@@ -167,21 +154,39 @@ IBusConversation | Description
 
 Note: the current conversation is used when using this interface.
 
-# Testing
-FBus can work in-memory - this is especially useful when unit-testing.
+# Extensibility
+Following extension points are supported:
+* Transports: which middleware is transporting messages.
+* Serializers: how messages are exchanged on the wire.
+* Containers: where and how consumers are allocated and hosted.
+* Hooks: handlers in case of failures.
 
-Module FBus.Testing is used to configure a bus instance easily:
-```
-    builder |> FBus.Testing.setup
-```
+## Transports
+Two transports are available out of the box:
+* RabbitMQ: transport implementation for RabbitMQ.
+* InMemory: transport, serializer and container operating purely in memory. This can be used for testing. See sample `samples/in-memory` or unit-tests.
 
-In unit-testing, it's important to wait for all messages to complete before asserting:
-```
-    builder |> FBus.Testing.waitForCompletion
-```
+See `FBus.IBusTransport`.
 
-Waiting for all messages to complete is 
+## Containers
+Support for Generic Host is available alongside dependencies injection. See `AddFBus` and samples for more details.
 
+See `FBus.IBusContainer`.
+
+## Serializers
+Support for Json is available (using FSharp.SystemTextJson underneath).
+
+See `FBus.IBusSerializer`.
+
+## Consumers
+Consumers can be configured at will. There is one major restriction: only one handler per type is supported. If you want several subscribers, you will have to handle delegation.
+
+See `FBus.IBusConsumer<>`.
+
+## Hooks
+Allow one to observe errors while processing messages.
+
+See `FBus.IBusHook`.
 
 # Thread safety
 FBus is thread-safe. Plugin implementation shall be thread-safe as well.
