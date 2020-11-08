@@ -6,30 +6,54 @@ type private ProcessingAgentMessage =
     | Message of (Map<string, string> * string * System.ReadOnlyMemory<byte>)
     | Exit
 
-type InMemory(busConfig, msgCallback) =
+type InMemoryContext() =
     static let initLock = obj()
-    static let mutable transports = Map.empty
+    static let mutable transports: Map<string, InMemory> = Map.empty
     static let mutable msgInFlight = 0
     static let doneHandle = new System.Threading.ManualResetEvent(false)
 
-    static let newMsgInFlight() =
+    let newMsgInFlight() =
         let msgInFlight = System.Threading.Interlocked.Increment(&msgInFlight)
         if msgInFlight = 1 then doneHandle.Reset() |> ignore
 
-    static let doneMsgInFlight() =
+    let doneMsgInFlight() =
         let msgInFlight = System.Threading.Interlocked.Decrement(&msgInFlight)
         if msgInFlight = 0 then doneHandle.Set() |> ignore
 
+    member _.Register name transport =
+        // doneHandle.Reset() |> ignore
+        lock initLock (fun () -> transports <- transports |> Map.add name transport)
+
+    member _.Unregister name =
+        lock initLock (fun () -> transports <- transports |> Map.remove name)
+
+    member _.WaitForCompletion() =
+        doneHandle.WaitOne() |> ignore        
+
+    member _.Publish headers msgType body =
+        transports |> Map.filter (fun _ transport -> transport.Accept msgType)
+                   |> Map.iter (fun _ transport -> newMsgInFlight()
+                                                   transport.Dispatch headers msgType body)
+
+    member _.Send headers client msgType body =
+        transports |> Map.tryFind client 
+                   |> Option.iter (fun transport -> newMsgInFlight()
+                                                    transport.Dispatch headers msgType body)
+
+    member _.Dispatch msgCallback headers msgType body =
+        try
+            msgCallback headers msgType body
+        with
+            | exn -> printfn "FAILURE: Dispatch failure for msgType [%s]:\n%A" msgType exn
+
+        doneMsgInFlight()
+
+and InMemory(context: InMemoryContext, busConfig, msgCallback) =
     let processingAgent = MailboxProcessor.Start (fun inbox ->
         let rec messageLoop() = async {
             let! msg = inbox.Receive()
             match msg with
-            | Message (headers, msgType, body) -> try
-                                                      msgCallback headers msgType body
-                                                  with
-                                                      | exn -> printfn "FAILURE: Dispatch failure for msgType [%s]:\n%A" msgType exn
-
-                                                  doneMsgInFlight()
+            | Message (headers, msgType, body) -> context.Dispatch msgCallback headers msgType body
                                                   return! messageLoop() 
             | Exit -> ()
         }
@@ -37,32 +61,24 @@ type InMemory(busConfig, msgCallback) =
         messageLoop()
     )
 
-    static member Create (busConfig: BusConfiguration) msgCallback =
-        doneHandle.Reset() |> ignore
-        let transport = new InMemory(busConfig, msgCallback)
-        lock initLock (fun () -> transports <- transports |> Map.add busConfig.Name transport)
+    static member Create context (busConfig: BusConfiguration) msgCallback =
+        let transport = new InMemory(context, busConfig, msgCallback)
+        context.Register busConfig.Name transport
         transport :> IBusTransport
 
-    static member WaitForCompletion() =
-        doneHandle.WaitOne() |> ignore
-
-    member private _.Accept msgType =
+    member _.Accept msgType =
         busConfig.Handlers |> Map.containsKey msgType
 
-    member private _.Dispatch headers msgType body =
+    member _.Dispatch headers msgType body =
         (headers, msgType, body) |> Message |> processingAgent.Post 
 
     interface IBusTransport with
         member _.Publish headers msgType body =
-            transports |> Map.filter (fun _ transport -> transport.Accept msgType)
-                       |> Map.iter (fun _ transport -> newMsgInFlight()
-                                                       transport.Dispatch headers msgType body)
+            context.Publish headers msgType body
 
         member _.Send headers client msgType body =
-            transports |> Map.tryFind client 
-                       |> Option.iter (fun transport -> newMsgInFlight()
-                                                        transport.Dispatch headers msgType body)
+            context.Send headers client msgType body
 
         member _.Dispose() =
-            lock initLock (fun () -> transports <- transports |> Map.remove busConfig.Name)
+            context.Unregister busConfig.Name
             Exit |> processingAgent.Post

@@ -1,8 +1,19 @@
 module FBus.Testing
 open FBus.InMemory
 
-let configure = useContainer << useSerializer << useTransport << FBus.Builder.configure
+type Context() =
+    let ctx = FBus.Transports.InMemoryContext()
+    let serializer = FBus.Serializers.InMemory()
 
-let waitForCompletion = FBus.Transports.InMemory.WaitForCompletion
+    member _.Configure() = 
+        FBus.Builder.configure() |> useTransport ctx
+                                 |> useContainer
+                                 |> FBus.Builder.withSerializer (serializer :> FBus.IBusSerializer)
 
-let clearSerializerCache = FBus.Serializers.InMemory.ClearCache
+    member _.WaitForCompletion() = ctx.WaitForCompletion()
+
+    member _.ClearCache() = serializer.Clear()
+
+    interface System.IDisposable with
+        member _.Dispose() =
+            ()

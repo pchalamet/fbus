@@ -17,6 +17,7 @@ type InMemoryHandler() =
 
 [<IterationCount(5_000)>]
 type SerializerBenchmark() =
+    let context = new FBus.Testing.Context()
     let mutable bus: IBusControl = Unchecked.defaultof<IBusControl>
     let mutable busInitiator: IBusInitiator = Unchecked.defaultof<IBusInitiator>
     let msg = { Content1 = "toto"
@@ -34,7 +35,7 @@ type SerializerBenchmark() =
 
     [<GlobalSetup>]
     member this.GlobalSetup() =
-        let busBuilder = Testing.configure() |> Builder.withConsumer<InMemoryHandler>
+        let busBuilder = context.Configure() |> Builder.withConsumer<InMemoryHandler>
                                              |> this.InitSerializer
 
         bus <- busBuilder |> Builder.build
@@ -44,14 +45,15 @@ type SerializerBenchmark() =
     member _.GlobalCleanup() =
         bus.Stop()
         bus.Dispose()
+        (context :> IDisposable).Dispose()
 
     [<IterationSetup>]
     member _.IterationSetup() =
-        FBus.Testing.clearSerializerCache()
+        context.ClearCache()
 
     [<IterationCleanup>]
     member _.IterationCleanUp() =
-        Testing.waitForCompletion()
+        context.WaitForCompletion()
 
     [<Benchmark>]
     member _.Publish () =

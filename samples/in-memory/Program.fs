@@ -26,12 +26,13 @@ type Consumer2() =
 [<EntryPoint>]
 let main argv =
 
-    use bus1 = FBus.Testing.configure()
+    use context = new FBus.Testing.Context()
+    use bus1 = context.Configure()
                  |> withConsumer<Consumer1>
                  |> build
     let busInitiator1 = bus1.Start()
     
-    use bus2 = FBus.Testing.configure()
+    use bus2 = context.Configure()
                  |> withConsumer<Consumer2>
                  |> build
     let busInitiator2 = bus2.Start()

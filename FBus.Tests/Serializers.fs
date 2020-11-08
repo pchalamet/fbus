@@ -23,14 +23,15 @@ let ``InMemory serializer roundtrip`` () =
                  Map = Map [ "toto", None
                              "titi", Some 42 ] }
     
-    let serializer = Serializers.InMemory() :> IBusSerializer
+    let cache = Serializers.InMemory()
+    let serializer = cache :> IBusSerializer
     
     let body = data |> serializer.Serialize
     let newData = body |> serializer.Deserialize typeof<MyType>
     Object.ReferenceEquals(newData, data) |> should equal true
 
     // check purge works as expected
-    FBus.Testing.clearSerializerCache()
+    cache.Clear()
     (fun () -> body |> serializer.Deserialize typeof<MyType> |> ignore) |> should (throwWithMessage "Failed to retrieve message") typeof<Exception>
 
     // test retrieve errors as well

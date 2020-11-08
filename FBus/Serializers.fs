@@ -4,9 +4,9 @@ open FBus
 open System.Collections.Concurrent
 
 type InMemory() =
-    static let refs = ConcurrentDictionary<Guid, obj>()
+    let refs = ConcurrentDictionary<Guid, obj>()
 
-    static member ClearCache() =
+    member _.Clear() =
         refs.Clear()
 
     interface IBusSerializer with

@@ -119,13 +119,13 @@ FBus.InMemory | Description | Comments
 NOTE: InMemory serializer does leak messages. This is by design.
 
 ## Testing
-FBus can work in-memory, this is especially useful when unit-testing.
+FBus can work in-memory, this is especially useful when unit-testing. Prior running a test in-memory, an `FBus.Testing.Context` instance has to be created (shall be `Dispose`'d).
 
-FBus.Testing | Description | Comments
+FBus.Testing.Context | Description | Comments
 -------------|-------------|---------
-`configure` | Configure FBus for unit-testing | Configure transport, serializer and activator.
-`clearSerializerCache` | Clear InMemory serializer cache | Run either before or after the unit test.
-`waitForCompletion` | Wait for all messages to be processed | This method blocks until completion.
+`Configure` | Configure FBus for unit-testing | Configure transport, serializer and activator.
+`WaitForCompletion` | Wait for all messages to be processed | This method blocks until completion.
+`ClearCache` | Clear InMemory serializer cache | Shall not be used unless necessary.
 
 # Extensibility
 Following extension points are supported:
