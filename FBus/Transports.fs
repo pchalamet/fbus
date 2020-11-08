@@ -24,7 +24,11 @@ type InMemory(busConfig, msgCallback) =
         let rec messageLoop() = async {
             let! msg = inbox.Receive()
             match msg with
-            | Message (headers, msgType, body) -> msgCallback headers msgType body
+            | Message (headers, msgType, body) -> try
+                                                      msgCallback headers msgType body
+                                                  with
+                                                      | exn -> printfn "FAILURE: Dispatch failure for msgType [%s]:\n%A" msgType exn
+
                                                   doneMsgInFlight()
                                                   return! messageLoop() 
             | Exit -> ()

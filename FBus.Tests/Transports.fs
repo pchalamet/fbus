@@ -26,6 +26,15 @@ type InMemoryHandler1() =
             { Content2 = msg.Content1 } |> ctx.Send "InMemoryHandler2"
             InMemoryHandler1.HandledInvoked |> Option.iter (fun callback -> callback.HasBeenInvoked())
 
+type InMemoryHandlerFail1() =
+    static member val HandledInvoked: IHandlerInvoked option = None with get, set
+
+    interface FBus.IBusConsumer<InMemoryMessage1> with
+        member _.Handle ctx msg = 
+            { Content2 = msg.Content1 } |> ctx.Send "InMemoryHandler2"
+            InMemoryHandlerFail1.HandledInvoked |> Option.iter (fun callback -> callback.HasBeenInvoked())
+            failwith "Test failure"
+
 type InMemoryHandler2() =
     static member val HandledInvoked: IHandlerInvoked option = None with get, set
 
@@ -47,12 +56,13 @@ let startServer<'t> name =
     serverBus.Start() |> ignore
     serverBus
 
+// We are expecting everything to be OK here
 [<Test>]
 let ``check inmemory message exchange`` () =
-    let mutable serverHasBeenInvoked1 = false
-    let mutable serverHasBeenInvoked2 = false
-    let callback1 = { new IHandlerInvoked with member _.HasBeenInvoked() = serverHasBeenInvoked1 <- true }
-    let callback2 = { new IHandlerInvoked with member _.HasBeenInvoked() = serverHasBeenInvoked2 <- true }
+    let mutable serverHasBeenInvoked1 = 0
+    let mutable serverHasBeenInvoked2 = 0
+    let callback1 = { new IHandlerInvoked with member _.HasBeenInvoked() = System.Threading.Interlocked.Increment(&serverHasBeenInvoked1) |> ignore }
+    let callback2 = { new IHandlerInvoked with member _.HasBeenInvoked() = System.Threading.Interlocked.Increment(&serverHasBeenInvoked2) |> ignore }
     InMemoryHandler1.HandledInvoked <- Some callback1
     InMemoryHandler2.HandledInvoked <- Some callback2
     use bus1 = startServer<InMemoryHandler1> "InMemoryHandler1"
@@ -65,9 +75,54 @@ let ``check inmemory message exchange`` () =
 
     Testing.waitForCompletion()
 
-    serverHasBeenInvoked1 |> should equal true
-    serverHasBeenInvoked2 |> should equal true
+    serverHasBeenInvoked1 |> should equal 1
+    serverHasBeenInvoked2 |> should equal 1
 
+// We are expecting both handlers to be called
+// As we know handler1 will fail, waitForCompletion() shall still exit
 [<Test>]
-let ``check inmemory message exchange again`` () =
-    ``check inmemory message exchange`` ()
+let ``check inmemory message exchange with handler failure`` () =
+    let mutable serverHasBeenInvoked1 = 0
+    let mutable serverHasBeenInvoked2 = 0
+    let callback1 = { new IHandlerInvoked with member _.HasBeenInvoked() = System.Threading.Interlocked.Increment(&serverHasBeenInvoked1) |> ignore }
+    let callback2 = { new IHandlerInvoked with member _.HasBeenInvoked() = System.Threading.Interlocked.Increment(&serverHasBeenInvoked2) |> ignore }
+    InMemoryHandlerFail1.HandledInvoked <- Some callback1
+    InMemoryHandler2.HandledInvoked <- Some callback2
+    use bus1 = startServer<InMemoryHandlerFail1> "InMemoryHandler1"
+    use bus2 = startServer<InMemoryHandler2> "InMemoryHandler2"
+
+    use clientBus = FBus.Testing.configure() |> FBus.Builder.build
+    let clientInitiator = clientBus.Start() 
+
+    { Content1 = "Hello InMemory" } |> clientInitiator.Publish
+
+    Testing.waitForCompletion()
+
+    serverHasBeenInvoked1 |> should equal 1
+    serverHasBeenInvoked2 |> should equal 1
+
+// We are expecting both handlers to be called
+// Message shall be dispatched to all handler1
+// Message sent by handler1 will have be received by handler2
+[<Test>]
+let ``check inmemory message exchange with multiple subscribers`` () =
+    let mutable serverHasBeenInvoked1 = 0
+    let mutable serverHasBeenInvoked2 = 0
+    let callback1 = { new IHandlerInvoked with member _.HasBeenInvoked() = System.Threading.Interlocked.Increment(&serverHasBeenInvoked1) |> ignore }
+    let callback2 = { new IHandlerInvoked with member _.HasBeenInvoked() = System.Threading.Interlocked.Increment(&serverHasBeenInvoked2) |> ignore }
+    InMemoryHandler1.HandledInvoked <- Some callback1
+    InMemoryHandler2.HandledInvoked <- Some callback2
+    use bus1 = startServer<InMemoryHandler1> "InMemoryHandler1-1"
+    use bus2 = startServer<InMemoryHandler1> "InMemoryHandler1-2"
+    use bus3 = startServer<InMemoryHandler1> "InMemoryHandler1-3"
+    use bus4 = startServer<InMemoryHandler2> "InMemoryHandler2"
+
+    use clientBus = FBus.Testing.configure() |> FBus.Builder.build
+    let clientInitiator = clientBus.Start() 
+
+    { Content1 = "Hello InMemory" } |> clientInitiator.Publish
+
+    Testing.waitForCompletion()
+
+    serverHasBeenInvoked1 |> should equal 3
+    serverHasBeenInvoked2 |> should equal 3

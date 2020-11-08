@@ -107,6 +107,17 @@ IBusConversation | Description
 
 Note: the current conversation is used when using this interface.
 
+## InMemory
+FBus provides InMemory implementation for transport, serializer and activator. They only exist to help testing or to easily prototype.
+
+FBus.InMemory | Description | Comments
+--------------|-------------|---------
+`useTransport` | Register InMemory transport |
+`useSerializer` | Register marshal by reference serializer | Object is preserved and passed by reference.
+`useContainer` | Register default activator (see `System.Activator`) | empty constructor must exist.
+
+NOTE: InMemory serializer does leak messages. This is by design.
+
 ## Testing
 FBus can work in-memory, this is especially useful when unit-testing.
 
