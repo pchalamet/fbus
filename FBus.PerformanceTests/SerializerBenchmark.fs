@@ -45,6 +45,10 @@ type SerializerBenchmark() =
         bus.Stop()
         bus.Dispose()
 
+    [<IterationSetup>]
+    member _.IterationSetup() =
+        FBus.Testing.clearSerializerCache()
+
     [<IterationCleanup>]
     member _.IterationCleanUp() =
         Testing.waitForCompletion()

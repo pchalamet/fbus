@@ -124,6 +124,7 @@ FBus can work in-memory, this is especially useful when unit-testing.
 FBus.Testing | Description | Comments
 -------------|-------------|---------
 `configure` | Configure FBus for unit-testing | Configure transport, serializer and activator.
+`clearSerializerCache` | Clear InMemory serializer cache | Run either before or after the unit test.
 `waitForCompletion` | Wait for all messages to be processed | This method blocks until completion.
 
 # Extensibility

@@ -6,6 +6,9 @@ open System.Collections.Concurrent
 type InMemory() =
     static let refs = ConcurrentDictionary<Guid, obj>()
 
+    static member ClearCache() =
+        refs.Clear()
+
     interface IBusSerializer with
         member _.Serialize (v: obj) =
             let id = Guid.NewGuid()

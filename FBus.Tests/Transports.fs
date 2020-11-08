@@ -59,6 +59,8 @@ let startServer<'t> name =
 // We are expecting everything to be OK here
 [<Test>]
 let ``check inmemory message exchange`` () =
+    FBus.Testing.clearSerializerCache()
+
     let mutable serverHasBeenInvoked1 = 0
     let mutable serverHasBeenInvoked2 = 0
     let callback1 = { new IHandlerInvoked with member _.HasBeenInvoked() = System.Threading.Interlocked.Increment(&serverHasBeenInvoked1) |> ignore }
@@ -82,6 +84,8 @@ let ``check inmemory message exchange`` () =
 // As we know handler1 will fail, waitForCompletion() shall still exit
 [<Test>]
 let ``check inmemory message exchange with handler failure`` () =
+    FBus.Testing.clearSerializerCache()
+
     let mutable serverHasBeenInvoked1 = 0
     let mutable serverHasBeenInvoked2 = 0
     let callback1 = { new IHandlerInvoked with member _.HasBeenInvoked() = System.Threading.Interlocked.Increment(&serverHasBeenInvoked1) |> ignore }
@@ -106,6 +110,8 @@ let ``check inmemory message exchange with handler failure`` () =
 // Message sent by handler1 will have be received by handler2
 [<Test>]
 let ``check inmemory message exchange with multiple subscribers`` () =
+    FBus.Testing.clearSerializerCache()
+
     let mutable serverHasBeenInvoked1 = 0
     let mutable serverHasBeenInvoked2 = 0
     let callback1 = { new IHandlerInvoked with member _.HasBeenInvoked() = System.Threading.Interlocked.Increment(&serverHasBeenInvoked1) |> ignore }
