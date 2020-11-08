@@ -114,7 +114,7 @@ FBus.InMemory | Description | Comments
 --------------|-------------|---------
 `useTransport` | Register InMemory transport |
 `useSerializer` | Register marshal by reference serializer | Object is preserved and passed by reference.
-`useContainer` | Register default activator (see `System.Activator`) | empty constructor must exist.
+`useContainer` | Register default activator (see `System.Activator`) | Default constructor must exist.
 
 NOTE: InMemory serializer does leak messages. This is by design.
 
