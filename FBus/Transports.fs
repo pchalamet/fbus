@@ -12,23 +12,24 @@ type InMemoryContext() =
     let mutable msgInFlight = 0
     let doneHandle = new System.Threading.ManualResetEvent(false)
 
+    // NOTE: WaitForCompletion is really best effort
+    //       It's theorically possible to complete since messages are processed asynchronously
     let newMsgInFlight() =
-        let msgInFlight = System.Threading.Interlocked.Increment(&msgInFlight)
-        if msgInFlight = 1 then doneHandle.Reset() |> ignore
+        doneHandle.Reset() |> ignore
+        System.Threading.Interlocked.Increment(&msgInFlight) |> ignore
 
     let doneMsgInFlight() =
         let msgInFlight = System.Threading.Interlocked.Decrement(&msgInFlight)
         if msgInFlight = 0 then doneHandle.Set() |> ignore
 
+    member _.WaitForCompletion() =
+        doneHandle.WaitOne() |> ignore
+
     member _.Register name transport =
-        // doneHandle.Reset() |> ignore
         lock initLock (fun () -> transports <- transports |> Map.add name transport)
 
     member _.Unregister name =
         lock initLock (fun () -> transports <- transports |> Map.remove name)
-
-    member _.WaitForCompletion() =
-        doneHandle.WaitOne() |> ignore        
 
     member _.Publish headers msgType body =
         transports |> Map.filter (fun _ transport -> transport.Accept msgType)
@@ -66,11 +67,9 @@ and InMemory(context: InMemoryContext, busConfig, msgCallback) =
         context.Register busConfig.Name transport
         transport :> IBusTransport
 
-    member _.Accept msgType =
-        busConfig.Handlers |> Map.containsKey msgType
+    member _.Accept msgType = busConfig.Handlers |> Map.containsKey msgType
 
-    member _.Dispatch headers msgType body =
-        (headers, msgType, body) |> Message |> processingAgent.Post 
+    member _.Dispatch headers msgType body = (headers, msgType, body) |> Message |> processingAgent.Post
 
     interface IBusTransport with
         member _.Publish headers msgType body =
