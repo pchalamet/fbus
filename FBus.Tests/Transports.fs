@@ -59,7 +59,7 @@ let startServer<'t> (session: FBus.Testing.Session) name =
 // We are expecting everything to be OK here
 [<Test>]
 let ``check inmemory message exchange`` () =
-    use session = new FBus.Testing.Session()
+    let session = FBus.Testing.Session()
 
     let mutable serverHasBeenInvoked1 = 0
     let mutable serverHasBeenInvoked2 = 0
@@ -84,7 +84,7 @@ let ``check inmemory message exchange`` () =
 // As we know handler1 will fail, waitForCompletion() shall still exit
 [<Test>]
 let ``check inmemory message exchange with handler failure`` () =
-    use session = new FBus.Testing.Session()
+    let session = FBus.Testing.Session()
 
     let mutable serverHasBeenInvoked1 = 0
     let mutable serverHasBeenInvoked2 = 0
@@ -110,7 +110,7 @@ let ``check inmemory message exchange with handler failure`` () =
 // Message sent by handler1 will have be received by handler2
 [<Test>]
 let ``check inmemory message exchange with multiple subscribers`` () =
-    use session = new FBus.Testing.Session()
+    let session = FBus.Testing.Session()
 
     let mutable serverHasBeenInvoked1 = 0
     let mutable serverHasBeenInvoked2 = 0

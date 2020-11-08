@@ -119,7 +119,7 @@ FBus.InMemory | Description | Comments
 NOTE: InMemory serializer does leak messages. This is by design.
 
 ## Testing
-FBus can work in-memory, this is especially useful when unit-testing. Prior running a test in-memory, an `FBus.Testing.Session` instance has to be created (shall be `Dispose`'d).
+FBus can work in-memory, this is especially useful when unit-testing. Prior running a test in-memory, an `FBus.Testing.Session` instance has to be created. Multiple sessions can be created, they are completely isolated.
 
 FBus.Testing.Session | Description | Comments
 ---------------------|-------------|---------

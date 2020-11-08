@@ -25,8 +25,7 @@ type Consumer2() =
 
 [<EntryPoint>]
 let main argv =
-
-    use session = new FBus.Testing.Session()
+    let session = FBus.Testing.Session()
     use bus1 = session.Configure()
                  |> withConsumer<Consumer1>
                  |> build

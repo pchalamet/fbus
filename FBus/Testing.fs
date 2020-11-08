@@ -13,7 +13,3 @@ type Session() =
     member _.WaitForCompletion() = ctx.WaitForCompletion()
 
     member _.ClearCache() = serializer.Clear()
-
-    interface System.IDisposable with
-        member _.Dispose() =
-            ()

@@ -56,7 +56,7 @@ let startServer<'t> (session: FBus.Testing.Session) name callback =
 
 [<Test>]
 let ``check inmemory message exchange`` () =
-    use session = new FBus.Testing.Session()
+    let session = FBus.Testing.Session()
 
     let mutable serverHasBeenInvoked1 = false
     let mutable serverHasBeenInvoked2 = false
@@ -72,7 +72,3 @@ let ``check inmemory message exchange`` () =
 
     serverHasBeenInvoked1 |> should equal true
     serverHasBeenInvoked2 |> should equal true
-
-[<Test>]
-let ``check inmemory message exchange again`` () =
-    ``check inmemory message exchange`` ()

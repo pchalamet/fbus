@@ -17,7 +17,7 @@ type InMemoryHandler() =
 
 [<IterationCount(5_000)>]
 type SerializerBenchmark() =
-    let session = new FBus.Testing.Session()
+    let session = FBus.Testing.Session()
     let mutable bus: IBusControl = Unchecked.defaultof<IBusControl>
     let mutable busInitiator: IBusInitiator = Unchecked.defaultof<IBusInitiator>
     let msg = { Content1 = "toto"
@@ -45,7 +45,6 @@ type SerializerBenchmark() =
     member _.GlobalCleanup() =
         bus.Stop()
         bus.Dispose()
-        (session :> IDisposable).Dispose()
 
     [<IterationSetup>]
     member _.IterationSetup() =

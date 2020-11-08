@@ -7,10 +7,10 @@ type private ProcessingAgentMessage =
     | Exit
 
 type InMemoryContext() =
-    static let initLock = obj()
-    static let mutable transports: Map<string, InMemory> = Map.empty
-    static let mutable msgInFlight = 0
-    static let doneHandle = new System.Threading.ManualResetEvent(false)
+    let initLock = obj()
+    let mutable transports: Map<string, InMemory> = Map.empty
+    let mutable msgInFlight = 0
+    let doneHandle = new System.Threading.ManualResetEvent(false)
 
     let newMsgInFlight() =
         let msgInFlight = System.Threading.Interlocked.Increment(&msgInFlight)
