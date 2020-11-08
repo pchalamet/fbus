@@ -30,7 +30,7 @@ type InMemoryHandler2(handlerInvoked: IHandlerInvoked) =
         member this.Handle ctx msg = 
             handlerInvoked.HasBeenInvoked()
 
-let startServer<'t> (context: FBus.Testing.Context) name callback =
+let startServer<'t> (session: FBus.Testing.Session) name callback =
     let handledInvoked = {
         new IHandlerInvoked with
             member this.HasBeenInvoked(): unit = 
@@ -46,7 +46,7 @@ let startServer<'t> (context: FBus.Testing.Context) name callback =
 
     let svcCollection = ServiceCollection() :> IServiceCollection
     svcCollection.AddSingleton(handledInvoked) |> ignore
-    let serverBus = context.Configure() |> withName name
+    let serverBus = session.Configure() |> withName name
                                         |> withContainer (FBus.Containers.GenericHost(svcCollection))
                                         |> withConsumer<'t>
                                         |> withHook checkErrorHook
@@ -56,19 +56,19 @@ let startServer<'t> (context: FBus.Testing.Context) name callback =
 
 [<Test>]
 let ``check inmemory message exchange`` () =
-    use context = new FBus.Testing.Context()
+    use session = new FBus.Testing.Session()
 
     let mutable serverHasBeenInvoked1 = false
     let mutable serverHasBeenInvoked2 = false
-    use bus1 = startServer<InMemoryHandler1> context "InMemoryHandler1" (fun () -> serverHasBeenInvoked1 <- true)
-    use bus2 = startServer<InMemoryHandler2> context "InMemoryHandler2" (fun () -> serverHasBeenInvoked2 <- true)
+    use bus1 = startServer<InMemoryHandler1> session "InMemoryHandler1" (fun () -> serverHasBeenInvoked1 <- true)
+    use bus2 = startServer<InMemoryHandler2> session "InMemoryHandler2" (fun () -> serverHasBeenInvoked2 <- true)
 
-    use clientBus = context.Configure() |> FBus.Builder.build
+    use clientBus = session.Configure() |> FBus.Builder.build
     let clientInitiator = clientBus.Start() 
 
     { Content1 = "Hello InMemory" } |> clientInitiator.Publish
 
-    context.WaitForCompletion()
+    session.WaitForCompletion()
 
     serverHasBeenInvoked1 |> should equal true
     serverHasBeenInvoked2 |> should equal true

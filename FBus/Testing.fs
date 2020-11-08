@@ -1,7 +1,7 @@
 module FBus.Testing
 open FBus.InMemory
 
-type Context() =
+type Session() =
     let ctx = FBus.Transports.InMemoryContext()
     let serializer = FBus.Serializers.InMemory()
 
