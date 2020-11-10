@@ -49,10 +49,11 @@ let startServer<'t> (session: FBus.Testing.Session) name =
                 failwithf "No error shall be raised: %A" exn
     }
 
-    let serverBus = session.Configure() |> withName name
-                                        |> withConsumer<'t>
-                                        |> withHook checkErrorHook
-                                        |> FBus.Builder.build
+    let serverBus = FBus.Builder.configure() |> session.Use
+                                             |> withName name
+                                             |> withConsumer<'t>
+                                             |> withHook checkErrorHook
+                                             |> FBus.Builder.build
     serverBus.Start() |> ignore
     serverBus
 
@@ -70,7 +71,7 @@ let ``check inmemory message exchange`` () =
     use bus1 = startServer<InMemoryHandler1> session "InMemoryHandler1"
     use bus2 = startServer<InMemoryHandler2> session "InMemoryHandler2"
 
-    use clientBus = session.Configure() |> FBus.Builder.build
+    use clientBus = FBus.Builder.configure() |> session.Use |> FBus.Builder.build
     let clientInitiator = clientBus.Start() 
 
     { Content1 = "Hello InMemory" } |> clientInitiator.Publish
@@ -95,7 +96,7 @@ let ``check inmemory message exchange with handler failure`` () =
     use bus1 = startServer<InMemoryHandlerFail1> session "InMemoryHandler1"
     use bus2 = startServer<InMemoryHandler2> session "InMemoryHandler2"
 
-    use clientBus = session.Configure() |> FBus.Builder.build
+    use clientBus = FBus.Builder.configure() |> session.Use |> FBus.Builder.build
     let clientInitiator = clientBus.Start() 
 
     { Content1 = "Hello InMemory" } |> clientInitiator.Publish
@@ -123,7 +124,7 @@ let ``check inmemory message exchange with multiple subscribers`` () =
     use bus3 = startServer<InMemoryHandler1> session "InMemoryHandler1-3"
     use bus4 = startServer<InMemoryHandler2> session "InMemoryHandler2"
 
-    use clientBus = session.Configure() |> FBus.Builder.build
+    use clientBus = FBus.Builder.configure() |> session.Use |> FBus.Builder.build
     let clientInitiator = clientBus.Start() 
 
     { Content1 = "Hello InMemory" } |> clientInitiator.Publish

@@ -26,14 +26,14 @@ type Consumer2() =
 [<EntryPoint>]
 let main argv =
     let session = FBus.Testing.Session()
-    use bus1 = session.Configure()
-                 |> withConsumer<Consumer1>
-                 |> build
+    use bus1 = FBus.Builder.configure() |> session.Use
+                                        |> withConsumer<Consumer1>
+                                        |> build
     let busInitiator1 = bus1.Start()
     
-    use bus2 = session.Configure()
-                 |> withConsumer<Consumer2>
-                 |> build
+    use bus2 = FBus.Builder.configure() |> session.Use
+                                        |> withConsumer<Consumer2>
+                                        |> build
     let busInitiator2 = bus2.Start()
 
     busInitiator1.Publish { Msg = "Hello in-memory !" }

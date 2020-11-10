@@ -29,14 +29,15 @@ type SerializerBenchmark() =
 
     member this.InitSerializer busBuilder =
         let useSerializer = match this.SerializerKind with
-                            | "Json" -> Json.useDefaults
+                            | "Json" -> FBus.Json.useDefaults
                             | _ -> InMemory.useSerializer
         useSerializer busBuilder
 
     [<GlobalSetup>]
     member this.GlobalSetup() =
-        let busBuilder = session.Configure() |> Builder.withConsumer<InMemoryHandler>
-                                             |> this.InitSerializer
+        let busBuilder = FBus.Builder.configure() |>  session.Use
+                                                  |> Builder.withConsumer<InMemoryHandler>
+                                                  |> this.InitSerializer
 
         bus <- busBuilder |> Builder.build
         busInitiator <- bus.Start()
