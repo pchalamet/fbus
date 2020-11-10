@@ -15,7 +15,7 @@ jobs:
       - name: Setup .NET Core
         uses: actions/setup-dotnet@v1
         with:
-          dotnet-version: 3.1.100
+          dotnet-version: 5.0.100
 
       - name: Build & Test
         run: make test config=Release
@@ -34,7 +34,7 @@ jobs:
       - name: Setup .NET Core
         uses: actions/setup-dotnet@v1
         with:
-          dotnet-version: 3.1.100
+          dotnet-version: 5.0.100
 
       - name: Build nuget
         run: make nuget config=Release version=${GITHUB_REF#refs/tags/} 
