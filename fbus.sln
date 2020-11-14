@@ -35,6 +35,8 @@ Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "FBus.RabbitMQ.Tests", "FBus
 EndProject
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "FBus.QuickStart", "FBus.QuickStart\FBus.QuickStart.fsproj", "{153527B9-00A6-4C99-B1AF-27C02E4D559A}"
 EndProject
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "FBus.EventHubs", "FBus.EventHubs\FBus.EventHubs.fsproj", "{5D14C40E-0FA5-4C90-A184-39F0493640FF}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -264,6 +266,18 @@ Global
 		{989CEDE9-9735-4F7E-91BC-826524D5068D}.Release|x64.Build.0 = Release|Any CPU
 		{989CEDE9-9735-4F7E-91BC-826524D5068D}.Release|x86.ActiveCfg = Release|Any CPU
 		{989CEDE9-9735-4F7E-91BC-826524D5068D}.Release|x86.Build.0 = Release|Any CPU
+		{5D14C40E-0FA5-4C90-A184-39F0493640FF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5D14C40E-0FA5-4C90-A184-39F0493640FF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5D14C40E-0FA5-4C90-A184-39F0493640FF}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{5D14C40E-0FA5-4C90-A184-39F0493640FF}.Debug|x64.Build.0 = Debug|Any CPU
+		{5D14C40E-0FA5-4C90-A184-39F0493640FF}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{5D14C40E-0FA5-4C90-A184-39F0493640FF}.Debug|x86.Build.0 = Debug|Any CPU
+		{5D14C40E-0FA5-4C90-A184-39F0493640FF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5D14C40E-0FA5-4C90-A184-39F0493640FF}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5D14C40E-0FA5-4C90-A184-39F0493640FF}.Release|x64.ActiveCfg = Release|Any CPU
+		{5D14C40E-0FA5-4C90-A184-39F0493640FF}.Release|x64.Build.0 = Release|Any CPU
+		{5D14C40E-0FA5-4C90-A184-39F0493640FF}.Release|x86.ActiveCfg = Release|Any CPU
+		{5D14C40E-0FA5-4C90-A184-39F0493640FF}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{F18AD2B6-E3BB-4F2B-A0D4-A4593325EC7F} = {676221DE-F0BE-4D9E-9329-28DEF7BD900E}

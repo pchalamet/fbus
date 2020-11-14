@@ -2,11 +2,13 @@ module FBus.RabbitMQ
 open FBus
 open FBus.Builder
 
-let useDefaults (busBuilder: BusBuilder) =
-    let uri = System.Uri("amqp://guest:guest@localhost")
 
+let useWith uri (busBuilder: BusBuilder) =
     let createTransport (busConfig: BusConfiguration) msgCallback =
-        new Transports.RabbitMQ(busConfig, msgCallback) :> IBusTransport
+        new Transports.RabbitMQ(uri, busConfig, msgCallback) :> IBusTransport
 
-    busBuilder |> withEndpoint uri
-               |> withTransport createTransport
+    busBuilder |> withTransport createTransport
+
+let useDefaults =
+    System.Uri("amqp://guest:guest@localhost") |> useWith
+
