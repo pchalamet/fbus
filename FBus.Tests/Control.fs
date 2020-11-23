@@ -108,8 +108,8 @@ let buildSerializer = {
 }
 
 
-let buildTransportBuilder (busConfig: BusConfiguration) (callback: Map<string, string> -> string -> ReadOnlyMemory<byte> -> unit): IBusTransport =
-    busConfig.Uri |> should equal buildUri
+let buildTransportBuilder uri (busConfig: BusConfiguration) (callback: Map<string, string> -> string -> ReadOnlyMemory<byte> -> unit): IBusTransport =
+    uri |> should equal buildUri
 
     { new IBusTransport with
         member this.Dispose(): unit =
@@ -143,11 +143,10 @@ let ``Test bus control`` () =
     }
 
     let bus = configure() |> withName client
-                          |> withEndpoint buildUri
                           |> withConsumer<StringConsumer>
                           |> withConsumer<IntConsumer>
                           |> withContainer buildContainer
-                          |> withTransport buildTransportBuilder
+                          |> withTransport (buildTransportBuilder buildUri)
                           |> withSerializer buildSerializer
                           |> withHook hook
                           |> build

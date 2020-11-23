@@ -13,7 +13,6 @@ let configure () =
     { BusBuilder.Name = generateClientName()
       BusBuilder.IsEphemeral = true
       BusBuilder.IsRecovery = false
-      BusBuilder.Uri = None
       BusBuilder.Container = None
       BusBuilder.Transport = None
       BusBuilder.Serializer = None
@@ -28,9 +27,6 @@ let withName name busBuilder =
 
 let withTransport transport busBuilder = 
     { busBuilder with BusBuilder.Transport = Some transport }
-
-let withEndpoint uri busBuilder =
-    { busBuilder with BusBuilder.Uri = Some uri }
 
 let withContainer container busBuilder =
     { busBuilder with BusBuilder.Container = Some container }
@@ -72,10 +68,6 @@ let build (busBuilder : BusBuilder) =
                      else
                         busBuilder
 
-    let uri = match busBuilder.Uri with
-              | Some uri -> uri
-              | _ -> failwith "Uri must be initialized"
-
     let serializer = match busBuilder.Serializer with
                      | Some serializer -> serializer
                      | _ -> failwith "Serializer must be initialized"
@@ -91,7 +83,6 @@ let build (busBuilder : BusBuilder) =
     let busConfig = { Name = busBuilder.Name
                       IsEphemeral = busBuilder.IsEphemeral
                       IsRecovery = busBuilder.IsRecovery
-                      Uri = uri
                       Container = container
                       Serializer = serializer
                       Hook = busBuilder.Hook

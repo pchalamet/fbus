@@ -17,13 +17,6 @@ let ``Invalid withName raises an error `` () =
     (fun () -> FBus.Builder.configure() |> withName "   " |> ignore) |> should (throwWithMessage "Invalid bus name") typeof<Exception>
 
 [<Test>]
-let ``withEndpoint set new uri`` () =
-    let expectedUri = Uri("amqp://my-rabbitmq-server")
-    let builder = FBus.Builder.configure() |> withEndpoint expectedUri
-    builder.Uri |> should equal (Some expectedUri)
-
-
-[<Test>]
 let ``withContainer set container builder`` () =
     let expectedContainer = {
         new IBusContainer with

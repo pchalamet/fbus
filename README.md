@@ -61,7 +61,6 @@ FBus.Builder | Description | Default
 `configure` | Start configuration with default parameters. |
 `withName` | Change service name. Used to identify a bus client (see `IBusInitiator.Send` and `IBusConversation.Send`) | Name based on computer name, pid and random number.
 `withTransport` | Transport to use. | None
-`withEndpoint` | Transport endpoint | None
 `withContainer` | Container to use | None
 `withSerializer` | Serializer to use | None
 `withConsumer` | Add message consumer | None
@@ -187,6 +186,7 @@ See `FBus.IBusHook`.
 FBus.RabbitMQ | Description | Comments
 --------------|-------------|---------
 `useDefaults` | Configure RabbitMQ as transport | Endpoint is set to `amqp://guest:guest@localhost`.
+`useWith` | Configure RabbitMQ as transport with provided URI |
 
 Transport leverages exchanges (one for each message type) to distribute messages across consumers (subscribing a queue).
 
@@ -195,7 +195,7 @@ Transport leverages exchanges (one for each message type) to distribute messages
 FBus.Json | Description | Comments
 ----------|-------------|---------
 `useDefaults` | Configure System.Text.Json as serializer | FSharp.SystemTextJson](https://github.com/Tarmil/FSharp.SystemTextJson) is used to deal with F# types.
-`useWith` | Same as `useSerializer` but with provided configuration options |
+`useWith` | Same as `useDefaults` but with provided configuration options |
 
 ### QuickStart (package FBus.QuickStart)
 

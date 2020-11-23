@@ -3,9 +3,9 @@ open FBus
 open RabbitMQ.Client
 open RabbitMQ.Client.Events
 
-type RabbitMQ(busConfig: BusConfiguration, msgCallback) =
+type RabbitMQ(uri, busConfig: BusConfiguration, msgCallback) =
     let channelLock = obj()
-    let factory = ConnectionFactory(Uri = busConfig.Uri, AutomaticRecoveryEnabled = true)
+    let factory = ConnectionFactory(Uri = uri, AutomaticRecoveryEnabled = true)
     let conn = factory.CreateConnection()
     let channel = conn.CreateModel()
     let mutable sendChannel = conn.CreateModel()
