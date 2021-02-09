@@ -179,6 +179,12 @@ Allow one to observe errors while processing messages.
 
 See `FBus.IBusHook`.
 
+FBus.IBusHook | Description | Comments
+--------------|-------------|---------
+`OnEnter` | Invoked before processing a message | Must not throw.
+`OnLeave` | Invoked after processing a message without error | Must not throw.
+`OnError` | Invoked on error | Must not throw.
+
 ## Available extensions
 
 ### RabbitMQ (package FBus.RabbitMQ)

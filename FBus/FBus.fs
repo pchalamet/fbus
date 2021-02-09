@@ -46,7 +46,9 @@ type IBusSerializer =
     abstract Deserialize: Type -> ReadOnlyMemory<byte> -> obj
 
 type IBusHook =
+    abstract OnEnter: ctx:IBusConversation -> unit
     abstract OnError: ctx:IBusConversation -> msg:obj -> exn: Exception -> unit
+    abstract OnLeave: ctx:IBusConversation -> unit
 
 
 type BusConfiguration =

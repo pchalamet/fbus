@@ -45,8 +45,10 @@ type InMemoryHandler2() =
 let startServer<'t> (session: FBus.Testing.Session) name =
     let checkErrorHook = {
         new IBusHook with
+            member _.OnEnter ctx = ()
             member _.OnError ctx msg exn =
                 failwithf "No error shall be raised: %A" exn
+            member _.OnLeave ctx = ()
     }
 
     let serverBus = FBus.Builder.configure() |> session.Use
