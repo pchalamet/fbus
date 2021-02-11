@@ -40,12 +40,12 @@ let startServer<'t> (session: FBus.Testing.Session) name callback =
 
     let checkErrorHook = {
         new IBusHook with
-            member this.OnEnter ctx = ()
+            member this.OnEnter ctx = null
 
-            member this.OnError ctx msg exn =
+            member this.OnError ctx msg exn state =
                 failwithf "No error shall be raised: %A" exn
 
-            member this.OnLeave ctx = ()
+            member this.OnLeave ctx state = ()
     }
 
     let svcCollection = ServiceCollection() :> IServiceCollection

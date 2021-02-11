@@ -39,9 +39,9 @@ type Bus(busConfig: BusConfiguration) =
                     member _.Publish msg = conversationHeaders() |> publish msg
                     member _.Send client msg = conversationHeaders() |> send client msg }
 
-        try
-            busConfig.Hook |> Option.iter (fun hook -> hook.OnEnter ctx)
+        let hookState = busConfig.Hook |> Option.map (fun hook -> hook.OnEnter ctx) |> Option.defaultValue null
 
+        try
             let handlerInfo = match busConfig.Handlers |> Map.tryFind msgType with
                               | Some handlerInfo -> handlerInfo
                               | _ -> failwithf "Unknown message type [%s]" msgType
@@ -51,11 +51,11 @@ type Bus(busConfig: BusConfiguration) =
             msg <- busConfig.Serializer.Deserialize handlerInfo.MessageType content
             handlerInfo.CallSite.Invoke(handler, [| ctx; msg |]) |> ignore
 
-            busConfig.Hook |> Option.iter (fun hook -> hook.OnLeave ctx)
+            busConfig.Hook |> Option.iter (fun hook -> hook.OnLeave ctx hookState)
         with
-            | :? Reflection.TargetInvocationException as tie -> busConfig.Hook |> Option.iter (fun hook -> hook.OnError ctx msg tie.InnerException)
+            | :? Reflection.TargetInvocationException as tie -> busConfig.Hook |> Option.iter (fun hook -> hook.OnError ctx msg tie.InnerException hookState)
                                                                 reraise()
-            | exn -> busConfig.Hook |> Option.iter (fun hook -> hook.OnError ctx msg exn)
+            | exn -> busConfig.Hook |> Option.iter (fun hook -> hook.OnError ctx msg exn hookState)
                      reraise()
 
     let newConversationHeaders () =
