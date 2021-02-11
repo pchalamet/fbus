@@ -52,6 +52,10 @@ type MyConsumer1() =
         member this.Handle context msg = 
             failwith "Not Implemented"
 
+    interface IBusConsumer<float> with
+        member this.Handle context msg = 
+            failwith "Not Implemented"
+
 type MyConsumer2() =
     interface IBusConsumer<int> with
         member this.Handle context msg = 
@@ -65,6 +69,10 @@ let ``withConsumer add consumers`` () =
                                                     InterfaceType = typeof<IBusConsumer<string>>
                                                     ImplementationType = typeof<MyConsumer1>
                                                     CallSite = typeof<IBusConsumer<string>>.GetMethod("Handle") }
+                                 "System.Double", { MessageType = typeof<float>
+                                                    InterfaceType = typeof<IBusConsumer<float>>
+                                                    ImplementationType = typeof<MyConsumer1>
+                                                    CallSite = typeof<IBusConsumer<float>>.GetMethod("Handle") }
                                  "System.Int32", { MessageType = typeof<int>
                                                    InterfaceType = typeof<IBusConsumer<int>>
                                                    ImplementationType = typeof<MyConsumer2>
