@@ -181,8 +181,7 @@ See `FBus.IBusHook`.
 
 FBus.IBusHook | Description | Comments
 --------------|-------------|---------
-`OnEnter` | Invoked before processing a message | Must not throw.
-`OnLeave` | Invoked after processing a message without error | Must not throw.
+`OnBeforeProcessing` | Invoked before processing a message | Must not throw - can return an IDisposable object released once processing is done.
 `OnError` | Invoked on error | Must not throw.
 
 ## Available extensions

@@ -134,14 +134,13 @@ let ``Test bus control`` () =
     let mutable onError = 0
 
     let hook = { new FBus.IBusHook with
-                    member _.OnEnter ctx = null
-                    member this.OnError ctx msg exn state =
+                    member _.OnBeforeProcessing ctx = null
+                    member this.OnError ctx msg exn =
                         match msg with
                         | :? StringMessage as s when s.String = fatalString -> match exn with
                                                                                | :? TestBusException -> onError <- onError + 1
                                                                                | _ -> ()
                         | _ -> ()
-                    member _.OnLeave ctx state = ()
     }
 
     let bus = configure() |> withName client
