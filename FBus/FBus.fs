@@ -46,6 +46,8 @@ type IBusSerializer =
     abstract Deserialize: Type -> ReadOnlyMemory<byte> -> obj
 
 type IBusHook =
+    abstract OnStart: ctx:IBusInitiator -> unit
+    abstract OnStop: ctx:IBusInitiator -> unit
     abstract OnBeforeProcessing: ctx:IBusConversation -> IDisposable
     abstract OnError: ctx:IBusConversation -> msg:obj -> exn: Exception -> unit
 

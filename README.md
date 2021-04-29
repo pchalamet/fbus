@@ -181,6 +181,8 @@ See `FBus.IBusHook`.
 
 FBus.IBusHook | Description | Comments
 --------------|-------------|---------
+`OnStart` | Invoked after the bus is started - use to start additional services if required |
+`OnStop` | Invoked before the bus is stopped - use to stop additional services if required |
 `OnBeforeProcessing` | Invoked before processing a message | Must not throw - can return an IDisposable object released once processing is done.
 `OnError` | Invoked on error | Must not throw.
 

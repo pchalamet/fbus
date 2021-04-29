@@ -131,9 +131,13 @@ let buildTransportBuilder uri (busConfig: BusConfiguration) (callback: Map<strin
 
 [<Test>]
 let ``Test bus control`` () =
+    let mutable onStart = 0
+    let mutable onStop = 0
     let mutable onError = 0
 
     let hook = { new FBus.IBusHook with
+                    member _.OnStart initiator = onStart <- onStart + 1
+                    member _.OnStop initiator = onStop <- onStop + 1
                     member _.OnBeforeProcessing ctx = null
                     member this.OnError ctx msg exn =
                         match msg with
@@ -168,3 +172,5 @@ let ``Test bus control`` () =
     transportDisposedCalls |> should equal 1 // tear down
 
     onError |> should equal 1
+    onStart |> should equal 1
+    onStop |> should equal 1

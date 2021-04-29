@@ -65,16 +65,18 @@ type Bus(busConfig: BusConfiguration) =
         | Some _ -> failwith "Bus is already started"
         | None -> busTransport <- Some (busConfig.Transport busConfig (msgCallback activationContext))
 
-    let stop () =
+    let stop initiator =
         match busTransport with
         | None -> failwith "Bus is already stopped"
-        | Some dispose -> dispose.Dispose()
-                          busTransport <- None
+        | Some transport -> busConfig.Hook |> Option.iter (fun hook -> hook.OnStop initiator)
+                            transport.Dispose()
+                            busTransport <- None
 
-    let dispose () =
+    let dispose initiator =
         match busTransport with
         | None -> ()
-        | Some transport -> transport.Dispose()
+        | Some transport -> busConfig.Hook |> Option.iter (fun hook -> hook.OnStop initiator)
+                            transport.Dispose()
                             busTransport <- None
 
     interface IBusInitiator with
@@ -84,10 +86,14 @@ type Bus(busConfig: BusConfiguration) =
     interface IBusControl with
         member this.Start activationContext =
             doExclusive (fun() -> start activationContext)
-            this :> IBusInitiator
+            let initiator = this :> IBusInitiator
+            busConfig.Hook |> Option.iter (fun hook -> hook.OnStart initiator)
+            initiator
 
-        member _.Stop() = 
-            doExclusive stop
+        member this.Stop() = 
+            let initiator = this :> IBusInitiator
+            doExclusive (fun () -> stop initiator)
 
-        member _.Dispose() =
-            doExclusive dispose
+        member this.Dispose() =
+            let initiator = this :> IBusInitiator
+            doExclusive (fun () -> dispose initiator)

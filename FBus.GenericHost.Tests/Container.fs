@@ -40,9 +40,12 @@ let startServer<'t> (session: FBus.Testing.Session) name callback =
 
     let checkErrorHook = {
         new IBusHook with
-            member this.OnBeforeProcessing ctx = null
+            member _.OnStart initiator = ()
+            member _.OnStop initiator = ()
 
-            member this.OnError ctx msg exn =
+            member _.OnBeforeProcessing ctx = null
+
+            member _.OnError ctx msg exn =
                 failwithf "No error shall be raised: %A" exn
     }
 
