@@ -8,7 +8,7 @@ type InMemoryMessage =
     { Content1: string
       Value1: int
       Value2: float } 
-    interface IMessageCommand
+    interface IMessageEvent
 
 type InMemoryHandler() =
     interface IBusConsumer<InMemoryMessage> with

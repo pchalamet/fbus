@@ -10,7 +10,7 @@ open Microsoft.Extensions.DependencyInjection
 
 type InMemoryMessage1 =
     { Content1: string } 
-    interface FBus.IMessageCommand
+    interface FBus.IMessageEvent
 
 type InMemoryMessage2 =
     { Content2: string } 

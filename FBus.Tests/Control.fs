@@ -10,11 +10,12 @@ open FBus.Builder
 
 type StringMessage =
     { String: string } 
+    interface FBus.IMessageCommand
     interface FBus.IMessageEvent
 
 type IntMessage =
     { Int: int }
-    interface FBus.IMessageEvent
+    interface FBus.IMessageCommand
 
 type StringConsumer(callback: IBusConversation -> string -> unit) =
     interface IBusConsumer<StringMessage> with

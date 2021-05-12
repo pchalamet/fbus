@@ -34,7 +34,7 @@ FBus.QuickStart | [![Nuget](https://img.shields.io/nuget/v/FBus.QuickStart?logo=
 ## Messages
 In order to exchange messages using FBus, you have first to define messages. There are 2 types:
 * events: messages that are broadcasted (see `Publish`)
-* commands: messages that are sent to one client (see `Send`)
+* commands: messages that are sent to one client (see `Send` or `Reply`)
 
 In order to avoid mistakes, messages are marked with a dummy interface:
 
@@ -52,7 +52,7 @@ type CommandMessage =
     interface FBus.IMessageCommand
 ```
 
-For more information, see CQRS literature.
+For more information, see CQRS/Event Sourcing literature.
 
 ## Builder
 Prior using the bus, a configuration must be built:

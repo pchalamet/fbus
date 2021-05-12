@@ -2,7 +2,7 @@ namespace FBus
 open System
 
 type IMessageCommand = interface end
-type IMessageEvent = IMessageCommand
+type IMessageEvent = interface end
 
 type IBusInitiator =
     abstract Publish<'t when 't :> IMessageEvent> : msg:'t -> unit
