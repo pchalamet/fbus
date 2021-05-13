@@ -29,7 +29,7 @@ type Bus(busConfig: BusConfiguration) =
     let msgCallback activationContext headers content =
         let mutable msg: obj = null
         let ctx = 
-            let conversationHeaders = 
+            let conversationHeaders () = 
                 defaultHeaders |> Map.add "fbus:message-id" (Guid.NewGuid().ToString())
                                |> Map.add "fbus:conversation-id" (headers |> Map.find "fbus:conversation-id")
 
@@ -37,9 +37,9 @@ type Bus(busConfig: BusConfiguration) =
                     member _.ConversationId: string = headers |> Map.find "fbus:conversation-id"
                     member _.MessageId: string = headers |> Map.find "fbus:message-id"
                     member _.Sender: string = headers |> Map.find "fbus:sender"
-                    member this.Reply msg = doExclusive (fun () -> send this.Sender msg conversationHeaders)
-                    member _.Publish msg = doExclusive (fun () -> publish msg conversationHeaders)
-                    member _.Send client msg = doExclusive (fun () -> send client msg conversationHeaders) }
+                    member this.Reply msg = conversationHeaders() |> send this.Sender msg
+                    member _.Publish msg = conversationHeaders() |> publish msg
+                    member _.Send client msg = conversationHeaders() |> send client msg }
 
         use hookState = busConfig.Hook |> Option.map (fun hook -> hook.OnBeforeProcessing ctx) |> Option.defaultValue null
 
@@ -83,8 +83,8 @@ type Bus(busConfig: BusConfiguration) =
                             busTransport <- None
 
     interface IBusInitiator with
-        member _.Publish msg = doExclusive (fun () -> newConversationHeaders() |> publish msg)
-        member _.Send client msg = doExclusive (fun () -> newConversationHeaders() |> send client msg)
+        member _.Publish msg = newConversationHeaders() |> publish msg
+        member _.Send client msg = newConversationHeaders() |> send client msg
 
     interface IBusControl with
         member this.Start activationContext =
