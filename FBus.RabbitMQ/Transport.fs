@@ -4,7 +4,6 @@ open RabbitMQ.Client
 open RabbitMQ.Client.Events
 
 type RabbitMQ(uri, busConfig: BusConfiguration, msgCallback) =
-    let channelLock = obj()
     let factory = ConnectionFactory(Uri = uri, AutomaticRecoveryEnabled = true)
     let conn = factory.CreateConnection()
     let channel = conn.CreateModel()
@@ -15,37 +14,25 @@ type RabbitMQ(uri, busConfig: BusConfiguration, msgCallback) =
             | true, (:? (byte[]) as s) -> Some (System.Text.Encoding.UTF8.GetString(s))
             | _ -> None
 
-
-    // ========================================================================================================
-    // WARNING: IModel is not thread safe: https://www.rabbitmq.com/dotnet-api-guide.html#concurrency
-    // ========================================================================================================
-    let safeSend headers xchgName routingKey msgType body =
+    let send headers xchgName routingKey msgType body =
         let headers = headers |> Map.map (fun _ v -> v :> obj) |> Map.add "fbus:msgtype" (msgType :> obj)
 
-        let send () =
-            if sendChannel.IsClosed then
-                sendChannel.Dispose()
-                sendChannel <- conn.CreateModel()
+        if sendChannel.IsClosed then
+            sendChannel.Dispose()
+            sendChannel <- conn.CreateModel()
 
-            let props = sendChannel.CreateBasicProperties(Headers = headers, Persistent = true)
-            sendChannel.BasicPublish(exchange = xchgName,
-                                     routingKey = routingKey,
-                                     basicProperties = props,
-                                     body = body)
+        let props = sendChannel.CreateBasicProperties(Headers = headers, Persistent = true)
+        sendChannel.BasicPublish(exchange = xchgName,
+                                 routingKey = routingKey,
+                                 basicProperties = props,
+                                 body = body)
 
-        lock channelLock send
+    let ack (ea: BasicDeliverEventArgs) =
+        channel.BasicAck(deliveryTag = ea.DeliveryTag, multiple = false)
 
-    let safeAck (ea: BasicDeliverEventArgs) =
-        let ack () =
-            channel.BasicAck(deliveryTag = ea.DeliveryTag, multiple = false)
+    let nack (ea: BasicDeliverEventArgs) =
+        channel.BasicNack(deliveryTag = ea.DeliveryTag, multiple = false, requeue = false)
 
-        lock channelLock ack
-
-    let safeNack (ea: BasicDeliverEventArgs) =
-        let nack() =
-            channel.BasicNack(deliveryTag = ea.DeliveryTag, multiple = false, requeue = false)
-
-        lock channelLock nack
     // ========================================================================================================
 
 
@@ -107,9 +94,9 @@ type RabbitMQ(uri, busConfig: BusConfiguration, msgCallback) =
 
                 msgCallback headers msgType ea.Body
 
-                safeAck ea
+                ack ea
             with
-                | _ -> safeNack ea
+                | _ -> nack ea
 
         consumer.Received.Add (consumerCallback msgCallback)
         channel.BasicConsume(queue = queueName, autoAck = false, consumer = consumer) |> ignore
@@ -123,11 +110,11 @@ type RabbitMQ(uri, busConfig: BusConfiguration, msgCallback) =
     interface IBusTransport with
         member _.Publish headers msgType body =
             let xchgName = getExchangeName msgType
-            safeSend headers xchgName "" msgType body
+            send headers xchgName "" msgType body
 
         member _.Send headers client msgType body =
             let routingKey = getClientQueue client
-            safeSend headers "" routingKey msgType body
+            send headers "" routingKey msgType body
 
         member _.Dispose() =
             sendChannel.Dispose()
