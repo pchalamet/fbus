@@ -109,22 +109,22 @@ let buildSerializer = {
 }
 
 
-let buildTransportBuilder uri (busConfig: BusConfiguration) (callback: Map<string, string> -> string -> ReadOnlyMemory<byte> -> unit): IBusTransport =
+let buildTransportBuilder uri (busConfig: BusConfiguration) (callback: Map<string, string> -> ReadOnlyMemory<byte> -> unit): IBusTransport =
     uri |> should equal buildUri
 
     { new IBusTransport with
         member this.Dispose(): unit =
             Interlocked.Increment(&transportDisposedCalls) |> ignore
 
-        member this.Publish headers msgType body = 
+        member this.Publish headers body = 
             Interlocked.Increment(&publishCalls) |> ignore
-            callback headers msgType body
+            callback headers body
 
-        member this.Send headers target msgType body = 
+        member this.Send headers target body = 
             Interlocked.Increment(&sendCalls) |> ignore
             target |> should equal target
             try
-                callback headers msgType body
+                callback headers body
             with
                 _ -> ()
     }

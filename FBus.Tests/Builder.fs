@@ -29,7 +29,7 @@ let ``withContainer set container builder`` () =
 
 [<Test>]
 let ``withTransport set transport builder`` () =
-    let expectedTransportBuilder (busConfig: BusConfiguration) (callback: Map<string, string> -> string -> ReadOnlyMemory<byte> -> unit): IBusTransport =
+    let expectedTransportBuilder (busConfig: BusConfiguration) (callback: Map<string, string> -> ReadOnlyMemory<byte> -> unit): IBusTransport =
         failwith "Not implemented"
 
     let builder = FBus.Builder.configure() |> withTransport expectedTransportBuilder

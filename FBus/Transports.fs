@@ -31,19 +31,22 @@ type InMemoryContext() =
     member _.Unregister name =
         lock initLock (fun () -> transports <- transports |> Map.remove name)
 
-    member _.Publish headers msgType body =
+    member _.Publish headers body =
+        let msgType = headers |> Map.find "fbus:msgtype"
         transports |> Map.filter (fun _ transport -> transport.Accept msgType)
                    |> Map.iter (fun _ transport -> newMsgInFlight()
                                                    transport.Dispatch headers msgType body)
 
-    member _.Send headers client msgType body =
+    member _.Send headers client body =
+        let msgType = headers |> Map.find "fbus:msgtype"
         transports |> Map.tryFind client 
                    |> Option.iter (fun transport -> newMsgInFlight()
                                                     transport.Dispatch headers msgType body)
 
-    member _.Dispatch msgCallback headers msgType body =
+    member _.Dispatch msgCallback headers body =
+        let msgType = headers |> Map.find "fbus:msgtype"
         try
-            msgCallback headers msgType body
+            msgCallback headers body
         with
             | exn -> printfn "FAILURE: Dispatch failure for msgType [%s]:\n%A" msgType exn
 
@@ -54,7 +57,7 @@ and InMemory(context: InMemoryContext, busConfig, msgCallback) =
         let rec messageLoop() = async {
             let! msg = inbox.Receive()
             match msg with
-            | Message (headers, msgType, body) -> context.Dispatch msgCallback headers msgType body
+            | Message (headers, msgType, body) -> context.Dispatch msgCallback headers body
                                                   return! messageLoop() 
             | Exit -> ()
         }
@@ -72,11 +75,11 @@ and InMemory(context: InMemoryContext, busConfig, msgCallback) =
     member _.Dispatch headers msgType body = (headers, msgType, body) |> Message |> processingAgent.Post
 
     interface IBusTransport with
-        member _.Publish headers msgType body =
-            context.Publish headers msgType body
+        member _.Publish headers body =
+            context.Publish headers body
 
-        member _.Send headers client msgType body =
-            context.Send headers client msgType body
+        member _.Send headers client body =
+            context.Send headers client body
 
         member _.Dispose() =
             context.Unregister busConfig.Name

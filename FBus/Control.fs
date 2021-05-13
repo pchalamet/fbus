@@ -17,14 +17,16 @@ type Bus(busConfig: BusConfiguration) =
     let publish msg headers =
         match busTransport with
         | None -> failwith "Bus is not started"
-        | Some busTransport -> busConfig.Serializer.Serialize msg |> busTransport.Publish headers (msg |> getMsgType)
+        | Some busTransport -> let msgHeaders = headers |> Map.add "fbus:msgtype" (msg |> getMsgType)
+                               busConfig.Serializer.Serialize msg |> busTransport.Publish msgHeaders
 
     let send client msg headers =
         match busTransport with
         | None -> failwith "Bus is not started"
-        | Some busTransport -> busConfig.Serializer.Serialize msg |> busTransport.Send headers client (msg |> getMsgType)
+        | Some busTransport -> let msgHeaders = headers |> Map.add "fbus:msgtype" (msg |> getMsgType)
+                               busConfig.Serializer.Serialize msg |> busTransport.Send msgHeaders client
 
-    let msgCallback activationContext headers msgType content =
+    let msgCallback activationContext headers content =
         let mutable msg: obj = null
         let ctx = 
             let conversationHeaders = 
@@ -42,6 +44,7 @@ type Bus(busConfig: BusConfiguration) =
         use hookState = busConfig.Hook |> Option.map (fun hook -> hook.OnBeforeProcessing ctx) |> Option.defaultValue null
 
         try
+            let msgType = headers |> Map.find "fbus:msgtype"
             let handlerInfo = match busConfig.Handlers |> Map.tryFind msgType with
                               | Some handlerInfo -> handlerInfo
                               | _ -> failwithf "Unknown message type [%s]" msgType

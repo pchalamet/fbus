@@ -18,13 +18,30 @@ type ResponseConsumer() =
 [<EntryPoint>]
 let main argv =
 
+    let hook = { new FBus.IBusHook with
+                     member _.OnStart initiator =
+                         printfn ">>> OnStart"
+     
+                     member _.OnStop initiator =
+                         printfn ">>> OnStop"
+     
+                     member _.OnBeforeProcessing conversation =
+                         printfn ">>> OnBeforeProcessing"
+                         null :> IDisposable
+     
+                     member _.OnError conversation msg exn =
+                         printfn ">>> Error: %A %A" msg exn
+                }
+
     use bus = FBus.QuickStart.configure() |> withName "client"
                                           |> withConsumer<ResponseConsumer>
+                                          |> withHook hook
                                           |> build
  
     let busInitiator = bus.Start()
     
-    { Common.HelloWorld.Message = "Message1" } |> busInitiator.Publish
+    for i in [1..1000] do
+        { Common.HelloWorld.Message = $"Message{i}" } |> busInitiator.Publish
 
     printfn "Press ENTER to exit"
     Console.ReadLine() |> ignore

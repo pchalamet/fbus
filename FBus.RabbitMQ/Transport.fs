@@ -14,8 +14,8 @@ type RabbitMQ(uri, busConfig: BusConfiguration, msgCallback) =
             | true, (:? (byte[]) as s) -> Some (System.Text.Encoding.UTF8.GetString(s))
             | _ -> None
 
-    let send headers xchgName routingKey msgType body =
-        let headers = headers |> Map.map (fun _ v -> v :> obj) |> Map.add "fbus:msgtype" (msgType :> obj)
+    let send headers xchgName routingKey body =
+        let headers = headers |> Map.map (fun _ v -> v :> obj)
 
         if sendChannel.IsClosed then
             sendChannel.Dispose()
@@ -85,14 +85,10 @@ type RabbitMQ(uri, busConfig: BusConfiguration, msgCallback) =
         let consumer = EventingBasicConsumer(channel)
         let consumerCallback msgCallback (ea: BasicDeliverEventArgs) =
             try
-                let msgType = match ea.BasicProperties |> tryGetHeaderAsString "fbus:msgtype" with
-                              | Some msgType -> msgType
-                              | _ -> failwithf "Missing header fbus:msgtype"
-
                 let headers = ea.BasicProperties.Headers |> Seq.choose (fun kvp -> ea.BasicProperties |> tryGetHeaderAsString kvp.Key |> Option.map (fun s -> kvp.Key, s))
                                                          |> Map
 
-                msgCallback headers msgType ea.Body
+                msgCallback headers ea.Body
 
                 ack ea
             with
@@ -108,13 +104,14 @@ type RabbitMQ(uri, busConfig: BusConfiguration, msgCallback) =
         listenMessages()
 
     interface IBusTransport with
-        member _.Publish headers msgType body =
+        member _.Publish headers body =
+            let msgType = headers |> Map.find "fbus:msgtype"
             let xchgName = getExchangeName msgType
-            send headers xchgName "" msgType body
+            send headers xchgName "" body
 
-        member _.Send headers client msgType body =
+        member _.Send headers client body =
             let routingKey = getClientQueue client
-            send headers "" routingKey msgType body
+            send headers "" routingKey body
 
         member _.Dispose() =
             sendChannel.Dispose()
