@@ -9,7 +9,7 @@ type ResponseConsumer() =
             printfn "-> conversation-id = %s" ctx.ConversationId
             printfn "-> message-id = %s" ctx.MessageId
 
-            { Common.HelloWorld3.Message3 = "Message2" } |> ctx.Publish
+            // { Common.HelloWorld3.Message3 = "Message2" } |> ctx.Publish
 
             printfn "ResponseConsumer done"
 
