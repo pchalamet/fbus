@@ -41,11 +41,11 @@ type InMemoryContext() =
                    |> Option.iter (fun transport -> newMsgInFlight()
                                                     transport.Dispatch headers msgType body)
 
-    member _.Dispatch msgCallback headers msgType body =
+    member _.Dispatch msgCallback headers body =
         try
-            msgCallback headers msgType body
+            msgCallback headers body
         with
-            | exn -> printfn "FAILURE: Dispatch failure for msgType [%s]:\n%A" msgType exn
+            | exn -> printfn "FAILURE: Dispatch failure %A" exn
 
         doneMsgInFlight()
 
@@ -54,8 +54,8 @@ and InMemory(context: InMemoryContext, busConfig, msgCallback) =
         let rec messageLoop() = async {
             let! msg = inbox.Receive()
             match msg with
-            | Message (headers, msgType, body) -> context.Dispatch msgCallback headers msgType body
-                                                  return! messageLoop() 
+            | Message (headers, _, body) -> context.Dispatch msgCallback headers body
+                                            return! messageLoop() 
             | Exit -> ()
         }
 
@@ -69,7 +69,7 @@ and InMemory(context: InMemoryContext, busConfig, msgCallback) =
 
     member _.Accept msgType = busConfig.Handlers |> Map.containsKey msgType
 
-    member _.Dispatch headers msgType body = (headers, msgType, body) |> Message |> processingAgent.Post
+    member _.Dispatch headers msgtype body = (headers, msgtype, body) |> Message |> processingAgent.Post
 
     interface IBusTransport with
         member _.Publish headers msgType body =

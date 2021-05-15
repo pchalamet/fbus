@@ -2,14 +2,28 @@ namespace FBus.Control
 open System
 open FBus
 
+
 type Bus(busConfig: BusConfiguration) =
+
+    [<Literal>]
+    let FBUS_MSGTYPE = "fbus:msgtype"
+
+    [<Literal>]
+    let FBUS_CONVERSATION_ID = "fbus:conversation-id"
+
+    [<Literal>]
+    let FBUS_MESSAGE_ID = "fbus:message-id"
+
+    [<Literal>]
+    let FBUS_SENDER = "fbus:sender"
+
     do busConfig.Handlers |> Map.iter (fun _ v -> busConfig.Container.Register v)
 
     let initLock = obj()
     let doExclusive = lock initLock
     let mutable busTransport : IBusTransport option = None
 
-    let defaultHeaders = Map [ "fbus:sender", busConfig.Name ]
+    let defaultHeaders = Map [ FBUS_SENDER, busConfig.Name ]
 
     let getMsgType (t: obj) =
         t.GetType().FullName
@@ -17,24 +31,28 @@ type Bus(busConfig: BusConfiguration) =
     let publish msg headers =
         match busTransport with
         | None -> failwith "Bus is not started"
-        | Some busTransport -> busConfig.Serializer.Serialize msg |> busTransport.Publish headers (msg |> getMsgType)
+        | Some busTransport -> let msgtype = msg |> getMsgType
+                               let msgHeaders = headers |> Map.add FBUS_MSGTYPE msgtype
+                               busConfig.Serializer.Serialize msg |> busTransport.Publish msgHeaders msgtype
 
     let send client msg headers =
         match busTransport with
         | None -> failwith "Bus is not started"
-        | Some busTransport -> busConfig.Serializer.Serialize msg |> busTransport.Send headers client (msg |> getMsgType)
+        | Some busTransport -> let msgtype = msg |> getMsgType
+                               let msgHeaders = headers |> Map.add FBUS_MSGTYPE msgtype
+                               busConfig.Serializer.Serialize msg |> busTransport.Send msgHeaders client msgtype
 
-    let msgCallback activationContext headers msgType content =
+    let msgCallback activationContext headers content =
         let mutable msg: obj = null
         let ctx = 
             let conversationHeaders () = 
-                defaultHeaders |> Map.add "fbus:message-id" (Guid.NewGuid().ToString())
-                               |> Map.add "fbus:conversation-id" (headers |> Map.find "fbus:conversation-id")
+                defaultHeaders |> Map.add FBUS_MESSAGE_ID (Guid.NewGuid().ToString())
+                               |> Map.add FBUS_CONVERSATION_ID (headers |> Map.find FBUS_CONVERSATION_ID)
 
             { new IBusConversation with
-                    member _.ConversationId: string = headers |> Map.find "fbus:conversation-id"
-                    member _.MessageId: string = headers |> Map.find "fbus:message-id"
-                    member _.Sender: string = headers |> Map.find "fbus:sender"
+                    member _.ConversationId: string = headers |> Map.find FBUS_CONVERSATION_ID
+                    member _.MessageId: string = headers |> Map.find FBUS_MESSAGE_ID
+                    member _.Sender: string = headers |> Map.find FBUS_SENDER
                     member this.Reply msg = conversationHeaders() |> send this.Sender msg
                     member _.Publish msg = conversationHeaders() |> publish msg
                     member _.Send client msg = conversationHeaders() |> send client msg }
@@ -42,6 +60,7 @@ type Bus(busConfig: BusConfiguration) =
         use hookState = busConfig.Hook |> Option.map (fun hook -> hook.OnBeforeProcessing ctx) |> Option.defaultValue null
 
         try
+            let msgType = headers |> Map.find FBUS_MSGTYPE
             let handlerInfo = match busConfig.Handlers |> Map.tryFind msgType with
                               | Some handlerInfo -> handlerInfo
                               | _ -> failwithf "Unknown message type [%s]" msgType
@@ -57,8 +76,8 @@ type Bus(busConfig: BusConfiguration) =
                      reraise()
 
     let newConversationHeaders () =
-        defaultHeaders |> Map.add "fbus:conversation-id" (Guid.NewGuid().ToString())
-                       |> Map.add "fbus:message-id" (Guid.NewGuid().ToString())
+        defaultHeaders |> Map.add FBUS_CONVERSATION_ID (Guid.NewGuid().ToString())
+                       |> Map.add FBUS_MESSAGE_ID (Guid.NewGuid().ToString())
 
     let start activationContext =
         match busTransport with

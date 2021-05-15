@@ -19,12 +19,11 @@ type RabbitMQ(uri, busConfig: BusConfiguration, msgCallback) =
     // ========================================================================================================
     // WARNING: IModel is not thread safe: https://www.rabbitmq.com/dotnet-api-guide.html#concurrency
     // ========================================================================================================
-    let safeSend headers xchgName routingKey msgType body =
-        let headers = headers |> Map.map (fun _ v -> v :> obj) |> Map.add "fbus:msgtype" (msgType :> obj)
+    let safeSend headers xchgName routingKey body =
+        let headers = headers |> Map.map (fun _ v -> v :> obj)
 
         let send () =
             if sendChannel.IsClosed then
-                sendChannel.Dispose()
                 sendChannel <- conn.CreateModel()
 
             let props = sendChannel.CreateBasicProperties(Headers = headers, Persistent = true)
@@ -98,14 +97,10 @@ type RabbitMQ(uri, busConfig: BusConfiguration, msgCallback) =
         let consumer = EventingBasicConsumer(channel)
         let consumerCallback msgCallback (ea: BasicDeliverEventArgs) =
             try
-                let msgType = match ea.BasicProperties |> tryGetHeaderAsString "fbus:msgtype" with
-                              | Some msgType -> msgType
-                              | _ -> failwithf "Missing header fbus:msgtype"
-
                 let headers = ea.BasicProperties.Headers |> Seq.choose (fun kvp -> ea.BasicProperties |> tryGetHeaderAsString kvp.Key |> Option.map (fun s -> kvp.Key, s))
                                                          |> Map
 
-                msgCallback headers msgType ea.Body
+                msgCallback headers ea.Body
 
                 safeAck ea
             with
@@ -123,11 +118,11 @@ type RabbitMQ(uri, busConfig: BusConfiguration, msgCallback) =
     interface IBusTransport with
         member _.Publish headers msgType body =
             let xchgName = getExchangeName msgType
-            safeSend headers xchgName "" msgType body
+            safeSend headers xchgName "" body
 
         member _.Send headers client msgType body =
             let routingKey = getClientQueue client
-            safeSend headers "" routingKey msgType body
+            safeSend headers "" routingKey body
 
         member _.Dispose() =
             sendChannel.Dispose()

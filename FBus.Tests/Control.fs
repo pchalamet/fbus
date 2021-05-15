@@ -67,7 +67,7 @@ let consumerIntCallback (context: IBusConversation) (msg: int) =
 
 let buildContainer = {
     new IBusContainer with
-        member this.Register handlerInfo = 
+        member _.Register handlerInfo = 
             Interlocked.Increment(&registerCalls) |> ignore
 
             [typeof<StringMessage>; typeof<IntMessage>] |> List.contains  handlerInfo.MessageType |> should be True
@@ -78,7 +78,7 @@ let buildContainer = {
                 handlerInfo.InterfaceType |> should equal typeof<IBusConsumer<IntMessage>>
                 handlerInfo.ImplementationType |> should equal typeof<IntConsumer>
 
-        member this.Resolve ctx handlerInfo =
+        member _.Resolve ctx handlerInfo =
             Interlocked.Increment(&resolveCalls) |> ignore
             ctx |> should equal activationContext
 
@@ -93,38 +93,38 @@ let buildContainer = {
                 IntConsumer(consumerIntCallback) :> obj
 }
 
-let serializer = FBus.Serializers.Json() :> IBusSerializer
+let serializer = Serializers.Json() :> IBusSerializer
 
 let buildSerializer = {
     new IBusSerializer with
-        member this.Deserialize msgType body = 
+        member _.Deserialize msgType body = 
             Interlocked.Increment(&deserializeCalls) |> ignore
             [typeof<StringMessage>; typeof<IntMessage>] |> List.contains  msgType |> should be True
             serializer.Deserialize msgType body
 
-        member this.Serialize msg =
+        member _.Serialize msg =
             Interlocked.Increment(&serializeCalls) |> ignore
             [typeof<StringMessage>; typeof<IntMessage>] |> List.contains (msg.GetType()) |> should be True
             serializer.Serialize msg
 }
 
 
-let buildTransportBuilder uri (busConfig: BusConfiguration) (callback: Map<string, string> -> string -> ReadOnlyMemory<byte> -> unit): IBusTransport =
+let buildTransportBuilder uri (busConfig: BusConfiguration) (callback: Map<string, string> -> ReadOnlyMemory<byte> -> unit): IBusTransport =
     uri |> should equal buildUri
 
     { new IBusTransport with
-        member this.Dispose(): unit =
+        member _.Dispose(): unit =
             Interlocked.Increment(&transportDisposedCalls) |> ignore
 
-        member this.Publish headers msgType body = 
+        member _.Publish headers msgType body = 
             Interlocked.Increment(&publishCalls) |> ignore
-            callback headers msgType body
+            callback headers body
 
-        member this.Send headers target msgType body = 
+        member _.Send headers target msgType body = 
             Interlocked.Increment(&sendCalls) |> ignore
             target |> should equal target
             try
-                callback headers msgType body
+                callback headers body
             with
                 _ -> ()
     }
@@ -140,7 +140,7 @@ let ``Test bus control`` () =
                     member _.OnStart initiator = onStart <- onStart + 1
                     member _.OnStop initiator = onStop <- onStop + 1
                     member _.OnBeforeProcessing ctx = null
-                    member this.OnError ctx msg exn =
+                    member _.OnError ctx msg exn =
                         match msg with
                         | :? StringMessage as s when s.String = fatalString -> match exn with
                                                                                | :? TestBusException -> onError <- onError + 1

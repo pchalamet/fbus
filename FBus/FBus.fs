@@ -58,7 +58,7 @@ type BusConfiguration =
       Container: IBusContainer
       Serializer: IBusSerializer
       Hook: IBusHook option
-      Transport: BusConfiguration -> (Map<string,string> -> string -> ReadOnlyMemory<byte> -> unit) -> IBusTransport
+      Transport: BusConfiguration -> (Map<string,string> -> ReadOnlyMemory<byte> -> unit) -> IBusTransport
       Handlers : Map<string, HandlerInfo> }
 
 [<RequireQualifiedAccessAttribute>]
@@ -69,5 +69,5 @@ type BusBuilder =
       Container: IBusContainer option
       Serializer: IBusSerializer option
       Hook: IBusHook option
-      Transport: (BusConfiguration -> (Map<string,string> -> string -> ReadOnlyMemory<byte> -> unit) -> IBusTransport) option
+      Transport: (BusConfiguration -> (Map<string,string> -> ReadOnlyMemory<byte> -> unit) -> IBusTransport) option
       Handlers : Map<string, HandlerInfo> }

@@ -1,0 +1,55 @@
+module FBus.StressTest.Server
+open FBus.Builder
+open System
+open Common
+
+let rnd = Random()
+
+type MessageConsumer() =
+    let handle (ctx: FBus.IBusConversation) msg seq =
+            printfn "Received message [%A] from [%s]" msg ctx.Sender
+
+            let proba = rnd.NextDouble()
+            if proba < 0.5 then 
+                printfn ">>> Replying"
+                { Pong.Message = $"{msg}/Pong"
+                  Seq = seq } |> ctx.Reply
+
+    interface FBus.IBusConsumer<Pong> with
+        member _.Handle ctx msg = handle ctx msg.Message msg.Seq
+
+    interface FBus.IBusConsumer<Ping> with
+        member _.Handle ctx msg = handle ctx msg.Message msg.Seq
+
+
+let hook = { new FBus.IBusHook with
+                 member _.OnStart initiator =
+                     printfn ">>> OnStart"
+ 
+                 member _.OnStop initiator =
+                     printfn ">>> OnStop"
+ 
+                 member _.OnBeforeProcessing conversation =
+                     printfn ">>> OnBeforeProcessing"
+                     null :> IDisposable
+ 
+                 member _.OnError conversation msg exn =
+                     printfn ">>> Error: %A %A" msg exn
+            }
+
+
+[<EntryPoint>]
+let main argv =
+    use bus = FBus.QuickStart.configure() |> withName "fbus-stresstest-server"
+                                          |> withConsumer<MessageConsumer>
+                                          |> withHook hook
+                                          |> build
+
+    bus.Start() |> ignore
+
+    printfn "Press ENTER to exit"
+    System.Console.ReadLine() |> ignore
+
+    bus.Stop()
+
+    0 // return an integer exit code
