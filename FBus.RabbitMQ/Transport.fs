@@ -24,7 +24,6 @@ type RabbitMQ(uri, busConfig: BusConfiguration, msgCallback) =
 
         let send () =
             if sendChannel.IsClosed then
-                sendChannel.Dispose()
                 sendChannel <- conn.CreateModel()
 
             let props = sendChannel.CreateBasicProperties(Headers = headers, Persistent = true)

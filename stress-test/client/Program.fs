@@ -46,10 +46,10 @@ let main argv =
     for i in [1..100000] do
         try
             let proba = rnd.NextDouble()
-            if proba < 0.8 then
+            if proba < 0.9 then
                 printfn $">>> Sending Ping {i}"
                 { Ping.Message = "Ping"; Seq = i } |> busInitiator.Publish
-            elif proba < 0.9 then
+            elif proba < 0.95 then
                 printfn $">>> Sending BangEvent {i}"
                 { BangEvent.Message = "Bang !" } |> busInitiator.Publish
             else
