@@ -120,7 +120,7 @@ let buildTransportBuilder uri (busConfig: BusConfiguration) (callback: Map<strin
             Interlocked.Increment(&publishCalls) |> ignore
             callback headers body
 
-        member _.Send headers target body = 
+        member _.Send headers msgtype target body = 
             Interlocked.Increment(&sendCalls) |> ignore
             target |> should equal target
             try

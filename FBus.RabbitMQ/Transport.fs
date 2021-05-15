@@ -120,7 +120,7 @@ type RabbitMQ(uri, busConfig: BusConfiguration, msgCallback) =
             let xchgName = getExchangeName msgtype
             safeSend headers xchgName "" body
 
-        member _.Send headers client body =
+        member _.Send headers _ client body =
             let routingKey = getClientQueue client
             safeSend headers "" routingKey body
 

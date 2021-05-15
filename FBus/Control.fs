@@ -26,8 +26,9 @@ type Bus(busConfig: BusConfiguration) =
     let send client msg headers =
         match busTransport with
         | None -> failwith "Bus is not started"
-        | Some busTransport -> let msgHeaders = headers |> Map.add FBUS_MSGTYPE (msg |> getMsgType)
-                               busConfig.Serializer.Serialize msg |> busTransport.Send msgHeaders client
+        | Some busTransport -> let msgtype = msg |> getMsgType
+                               let msgHeaders = headers |> Map.add FBUS_MSGTYPE msgtype
+                               busConfig.Serializer.Serialize msg |> busTransport.Send msgHeaders msgtype client
 
     let msgCallback activationContext headers content =
         let mutable msg: obj = null
