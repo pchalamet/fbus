@@ -75,10 +75,10 @@ and InMemory(context: InMemoryContext, busConfig, msgCallback) =
     member _.Dispatch headers msgtype body = (headers, msgtype, body) |> Message |> processingAgent.Post
 
     interface IBusTransport with
-        member _.Publish headers msgtype body =
+        member _.Publish headers msgType body =
             context.Publish headers body
 
-        member _.Send headers client msgtype body =
+        member _.Send headers client msgType body =
             context.Send headers client body
 
         member _.Dispose() =
