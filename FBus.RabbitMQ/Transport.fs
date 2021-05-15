@@ -116,9 +116,8 @@ type RabbitMQ(uri, busConfig: BusConfiguration, msgCallback) =
         listenMessages()
 
     interface IBusTransport with
-        member _.Publish headers body =
-            let msgType = headers |> Map.find "fbus:msgtype"
-            let xchgName = getExchangeName msgType
+        member _.Publish headers msgtype body =
+            let xchgName = getExchangeName msgtype
             safeSend headers xchgName "" body
 
         member _.Send headers client body =
