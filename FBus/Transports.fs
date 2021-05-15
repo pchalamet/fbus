@@ -1,6 +1,5 @@
 namespace FBus.Transports
 open FBus
-open FBus.Headers
 
 
 type private ProcessingAgentMessage =
@@ -32,14 +31,12 @@ type InMemoryContext() =
     member _.Unregister name =
         lock initLock (fun () -> transports <- transports |> Map.remove name)
 
-    member _.Publish headers body =
-        let msgType = headers |> Map.find FBUS_MSGTYPE
+    member _.Publish headers msgType body =
         transports |> Map.filter (fun _ transport -> transport.Accept msgType)
                    |> Map.iter (fun _ transport -> newMsgInFlight()
                                                    transport.Dispatch headers msgType body)
 
-    member _.Send headers client body =
-        let msgType = headers |> Map.find FBUS_MSGTYPE
+    member _.Send headers client msgType body =
         transports |> Map.tryFind client 
                    |> Option.iter (fun transport -> newMsgInFlight()
                                                     transport.Dispatch headers msgType body)
@@ -76,10 +73,10 @@ and InMemory(context: InMemoryContext, busConfig, msgCallback) =
 
     interface IBusTransport with
         member _.Publish headers msgType body =
-            context.Publish headers body
+            context.Publish headers msgType body
 
         member _.Send headers client msgType body =
-            context.Send headers client body
+            context.Send headers client msgType body
 
         member _.Dispose() =
             context.Unregister busConfig.Name

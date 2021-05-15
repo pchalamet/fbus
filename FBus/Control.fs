@@ -1,10 +1,22 @@
 namespace FBus.Control
 open System
 open FBus
-open FBus.Headers
 
 
 type Bus(busConfig: BusConfiguration) =
+
+    [<Literal>]
+    let FBUS_MSGTYPE = "fbus:msgtype"
+
+    [<Literal>]
+    let FBUS_CONVERSATION_ID = "fbus:conversation-id"
+
+    [<Literal>]
+    let FBUS_MESSAGE_ID = "fbus:message-id"
+
+    [<Literal>]
+    let FBUS_SENDER = "fbus:sender"
+
     do busConfig.Handlers |> Map.iter (fun _ v -> busConfig.Container.Register v)
 
     let initLock = obj()

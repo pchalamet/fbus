@@ -5,7 +5,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Include="Headers.fs" />
     <Compile Include="FBus.fs" />
     <Compile Include="Containers.fs" />
     <Compile Include="Serializers.fs" />
