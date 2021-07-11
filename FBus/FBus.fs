@@ -29,7 +29,7 @@ type IBusConsumer<'t> =
 type IFuncConsumer<'t> = IBusConversation -> 't -> unit
 
 type Handler = 
-    | Class of implementationType:Type * classSite:Reflection.MethodInfo
+    | Class of implementationType:Type
     | Instance of obj
 
 type HandlerInfo =

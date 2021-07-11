@@ -43,21 +43,25 @@ let withConsumer<'t> busBuilder =
 
     let findMessageHandlers (t: System.Type) =    
         t.GetInterfaces() |> Array.choose findMessageHandler
-                          |> Array.map (fun (msgType, itfType) -> let callsite = itfType.GetMethod("Handle")
-                                                                  if callsite |> isNull then failwith "Handler method not found"
-                                                                  { MessageType = msgType
+                          |> Array.map (fun (msgType, itfType) -> { MessageType = msgType
                                                                     InterfaceType = itfType
-                                                                    Handler = Class (t, callsite) })
+                                                                    Handler = Class t })
                           |> List.ofArray
 
     let handlers = typeof<'t> |> findMessageHandlers
     if handlers = List.empty then failwith "No handler implemented"
     { busBuilder with BusBuilder.Handlers = handlers |> List.fold (fun acc h -> acc |> Map.add h.MessageType.FullName h) busBuilder.Handlers }
 
-let withFuncConsumer (handler: IFuncConsumer<'t>) busBuilder =
+type private FuncBusConsumer<'t>(func: IFuncConsumer<'t>) =
+    interface IBusConsumer<'t> with
+        member _.Handle ctx msg = func ctx msg
+
+let withFuncConsumer (func: IFuncConsumer<'t>) busBuilder =
+    let funcBusConsumerType = typedefof<FuncBusConsumer<_>>.MakeGenericType(typeof<'t>)
+    let funcBusConsumer = System.Activator.CreateInstance(funcBusConsumerType, func)
     let handlerInfo = { MessageType = typeof<'t>
                         InterfaceType = typeof<IBusConsumer<'t>>
-                        Handler = Instance (handler) }
+                        Handler = Instance funcBusConsumer }
     { busBuilder with BusBuilder.Handlers = busBuilder.Handlers |> Map.add typeof<'t>.FullName handlerInfo }
 
 let withRecovery busBuilder =

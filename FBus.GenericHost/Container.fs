@@ -15,12 +15,11 @@ type internal BusService(busControl: IBusControl, serviceProvider: IServiceProvi
             busControl.Stop()
             Task.CompletedTask
 
-
 type GenericHost(services: IServiceCollection) =
     interface IBusContainer with
         member _.Register (handlerInfo: HandlerInfo) =
             match handlerInfo.Handler with
-            | Class (implementationType, _) -> services.AddTransient(handlerInfo.InterfaceType, implementationType) |> ignore
+            | Class implementationType -> services.AddTransient(handlerInfo.InterfaceType, implementationType) |> ignore
             | Instance target -> services.AddSingleton(handlerInfo.InterfaceType, target) |> ignore
 
         member _.Resolve ctx handlerInfo =

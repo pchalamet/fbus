@@ -59,38 +59,37 @@ type Bus(busConfig: BusConfiguration) =
 
         use hookState = busConfig.Hook |> Option.map (fun hook -> hook.OnBeforeProcessing ctx) |> Option.defaultValue null
 
+        let dynamicFunction (fn:obj) (args:obj list) =
+            let rec dynamicFunctionInternal (next:obj) (args:obj list) =
+                match args with
+                | head :: tail -> let fType = next.GetType()
+                                  if Reflection.FSharpType.IsFunction fType then
+                                      let methodInfo = 
+                                          fType.GetMethods()
+                                              |> Seq.filter (fun x -> x.Name = "Invoke" && x.GetParameters().Length = 1)
+                                              |> Seq.head
+                                      let partalResult = methodInfo.Invoke(next, [| head |])
+                                      dynamicFunctionInternal partalResult tail
+                                  else
+                                      failwithf "Expecting FSharpFunc"
+                | _ -> ()
+            dynamicFunctionInternal fn (args |> List.ofSeq )
+
         try
             let msgType = headers |> Map.find FBUS_MSGTYPE
 
-            let processClassConsumer handlerInfo =
-                let handler = busConfig.Container.Resolve activationContext handlerInfo
-                if handler |> isNull then failwith "No handler found"
+            let handlerInfo = match busConfig.Handlers |> Map.tryFind msgType with
+                              | Some handlerInfo -> handlerInfo
+                              | _ -> failwithf "Unknown message type [%s]" msgType
 
-                msg <- busConfig.Serializer.Deserialize handlerInfo.MessageType content
-                handlerInfo.CallSite.Invoke(handler, [| ctx; msg |]) |> ignore
+            msg <- busConfig.Serializer.Deserialize handlerInfo.MessageType content
 
-            let processFuncConsumer (handlerInfo: FuncHandlerInfo) =
-                let dynamicFunction (fn:obj) (args: obj list) =
-                    let rec dynamicFunctionInternal (next:obj) (args:obj list) =
-                        match args with
-                        | head :: tail -> let fType = next.GetType()
-                                          if Reflection.FSharpType.IsFunction fType then
-                                              let methodInfo = fType.GetMethods()
-                                                                   |> Seq.filter (fun x -> x.Name = "Invoke" && x.GetParameters().Length = 1)
-                                                                   |> Seq.head
-                                              let tmpRet = methodInfo.Invoke(next, [| head |])
-                                              dynamicFunctionInternal tmpRet tail
-                                          else
-                                              failwithf "Expecting FSharpFunc"
-                        | _ -> ()
-                    dynamicFunctionInternal fn args
-                dynamicFunction handlerInfo.Func [ctx; msg] |> ignore
+            let callsite = handlerInfo.InterfaceType.GetMethod("Handle")
+            if callsite |> isNull then failwith "Handler method not found"
 
-            match busConfig.Handlers |> Map.tryFind msgType with
-            | Some handlerInfo -> processClassConsumer handlerInfo
-            | _ -> match busConfig.FuncHandlers |> Map.tryFind msgType with
-                   | Some handlerInfo -> processFuncConsumer handlerInfo
-                   | _ -> failwithf "Unknown message type [%s]" msgType
+            let handler = busConfig.Container.Resolve activationContext handlerInfo
+            if handler |> isNull then failwith "No handler found"
+            callsite.Invoke(handler, [| ctx; msg |]) |> ignore
         with
             | :? Reflection.TargetInvocationException as tie -> busConfig.Hook |> Option.iter (fun hook -> hook.OnError ctx msg tie.InnerException)
                                                                 reraise()
