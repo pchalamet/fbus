@@ -19,7 +19,9 @@ type internal BusService(busControl: IBusControl, serviceProvider: IServiceProvi
 type GenericHost(services: IServiceCollection) =
     interface IBusContainer with
         member _.Register (handlerInfo: HandlerInfo) =
-            services.AddTransient(handlerInfo.InterfaceType, handlerInfo.ImplementationType) |> ignore
+            match handlerInfo.Handler with
+            | Class (implementationType, _) -> services.AddTransient(handlerInfo.InterfaceType, implementationType) |> ignore
+            | Instance target -> services.AddSingleton(handlerInfo.InterfaceType, target) |> ignore
 
         member _.Resolve ctx handlerInfo =
             match ctx with

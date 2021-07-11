@@ -47,13 +47,18 @@ let withConsumer<'t> busBuilder =
                                                                   if callsite |> isNull then failwith "Handler method not found"
                                                                   { MessageType = msgType
                                                                     InterfaceType = itfType
-                                                                    ImplementationType = t
-                                                                    CallSite = callsite })
+                                                                    Handler = Class (t, callsite) })
                           |> List.ofArray
 
     let handlers = typeof<'t> |> findMessageHandlers
     if handlers = List.empty then failwith "No handler implemented"
     { busBuilder with BusBuilder.Handlers = handlers |> List.fold (fun acc h -> acc |> Map.add h.MessageType.FullName h) busBuilder.Handlers }
+
+let withFuncConsumer (handler: IFuncConsumer<'t>) busBuilder =
+    let handlerInfo = { MessageType = typeof<'t>
+                        InterfaceType = typeof<IBusConsumer<'t>>
+                        Handler = Instance (handler) }
+    { busBuilder with BusBuilder.Handlers = busBuilder.Handlers |> Map.add typeof<'t>.FullName handlerInfo }
 
 let withRecovery busBuilder =
     { busBuilder with BusBuilder.IsRecovery = true }

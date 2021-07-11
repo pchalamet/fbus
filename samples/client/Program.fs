@@ -41,6 +41,7 @@ let main argv =
     let busInitiator = bus.Start()
     
     for i in [1..1000] do
+        printfn "Sending msg %d" i
         { Common.HelloWorld.Message = $"Message{i}" } |> busInitiator.Publish
 
     printfn "Press ENTER to exit"

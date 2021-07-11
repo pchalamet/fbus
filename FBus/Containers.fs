@@ -6,5 +6,7 @@ type Activator() =
         member _.Register handlerInfo = ()
 
         member _.Resolve activationContext handlerInfo =
-            System.Activator.CreateInstance(handlerInfo.ImplementationType)
-
+            match handlerInfo.Handler with
+            | Class (implementationType, _) -> System.Activator.CreateInstance(implementationType)
+            | Instance (target) -> // FIXME
+                                   target
