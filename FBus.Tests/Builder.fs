@@ -63,14 +63,14 @@ type MyConsumer2() =
 
 [<Test>]
 let ``withConsumer add consumers`` () =
-    let funcHandler: IFuncConsumer<decimal> = 
+    let funcHandler: IFunConsumer<decimal> = 
         fun ctx msg -> failwith "Not implemented"
 
     let build = 
         FBus.Builder.configure()
         |> withConsumer<MyConsumer1>
         |> withConsumer<MyConsumer2>
-        |> withFuncConsumer funcHandler
+        |> withFunConsumer funcHandler
 
     let expectedHandlers = Map [ "System.String", { MessageType = typeof<string>
                                                     Handler = Class typeof<MyConsumer1> }

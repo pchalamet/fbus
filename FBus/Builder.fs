@@ -51,11 +51,11 @@ let withConsumer<'t> busBuilder =
     if handlers = List.empty then failwith "No handler implemented"
     { busBuilder with BusBuilder.Handlers = handlers |> List.fold (fun acc h -> acc |> Map.add h.MessageType.FullName h) busBuilder.Handlers }
 
-type private FuncBusConsumer<'t>(func: IFuncConsumer<'t>) =
+type private FunBusConsumer<'t>(func: IFunConsumer<'t>) =
     interface IBusConsumer<'t> with
         member _.Handle ctx msg = func ctx msg
 
-let withFuncConsumer (func: IFuncConsumer<'t>) busBuilder =
+let withFunConsumer (func: IFunConsumer<'t>) busBuilder =
     let handlerInfo = { MessageType = typeof<'t>
                         Handler = Instance func }
     { busBuilder with BusBuilder.Handlers = busBuilder.Handlers |> Map.add typeof<'t>.FullName handlerInfo }
@@ -88,7 +88,7 @@ let build (busBuilder : BusBuilder) =
     let toRuntimeHandler _ (handlerInfo: HandlerInfo) =
         match handlerInfo.Handler with
         | Class _ -> handlerInfo
-        | Instance func -> let funcBusConsumerType = typedefof<FuncBusConsumer<_>>.MakeGenericType(handlerInfo.MessageType)
+        | Instance func -> let funcBusConsumerType = typedefof<FunBusConsumer<_>>.MakeGenericType(handlerInfo.MessageType)
                            let funcBusConsumer = System.Activator.CreateInstance(funcBusConsumerType, func)
                            { handlerInfo with Handler = Instance funcBusConsumer }
 

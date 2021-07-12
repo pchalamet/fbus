@@ -26,7 +26,7 @@ type IBusConversation =
 type IBusConsumer<'t> =
     abstract Handle: IBusConversation -> msg:'t -> unit
 
-type IFuncConsumer<'t> = IBusConversation -> 't -> unit
+type IFunConsumer<'t> = IBusConversation -> 't -> unit
 
 type Handler = 
     | Class of implementationType:Type

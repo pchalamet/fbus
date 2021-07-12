@@ -87,12 +87,7 @@ IBusInitiator | Description
 Note: a new conversation is started when using this interface.
 
 ## Consumer
-`withConsumer` registers an handler - which will be able to process a message in an activation context. Note: exact type must match handler signature. A new instance is created each time a message has to be processed.
-
-```
-type IBusConsumer<'t> =
-    abstract Handle: IBusConversation -> 't -> unit
-```
+A consumer process incoming messages: a context is provided (`IBusConversation`) and a message.
 
 `IBusConversation` provides information to handlers and means to interact with the bus:
 IBusConversation | Description
@@ -105,6 +100,20 @@ IBusConversation | Description
 `Send` | Send a command message to given client.
 
 Note: the current conversation is used when using this interface.
+
+There are two kind of handlers:
+
+### Class
+Implement `IBusConsumer` interface on the class. Multiple implementation are allowed as of F# 5.0.
+Use `withConsumer` to register the handlers.
+
+```
+type IBusConsumer<'t> =
+    abstract Handle: IBusConversation -> 't -> unit
+```
+### Function
+A function which enable partial application scenario: use `withFunConsumer`.
+Use `withFunConsumer` to register the handler.
 
 ## InMemory
 FBus provides InMemory implementation for transport, serializer and activator. They only exist to help testing or to easily prototype.
