@@ -38,14 +38,13 @@ let withConsumer<'t> busBuilder =
     let findMessageHandler (t: System.Type) =
         if t.IsGenericType && t.GetGenericTypeDefinition() = typedefof<IBusConsumer<_>> then 
             let msgType = t.GetGenericArguments().[0]
-            Some (msgType, t)
+            Some msgType
         else None
 
     let findMessageHandlers (t: System.Type) =    
         t.GetInterfaces() |> Array.choose findMessageHandler
-                          |> Array.map (fun (msgType, itfType) -> { MessageType = msgType
-                                                                    InterfaceType = itfType
-                                                                    Handler = Class t })
+                          |> Array.map (fun msgType -> { MessageType = msgType
+                                                         Handler = Class t })
                           |> List.ofArray
 
     let handlers = typeof<'t> |> findMessageHandlers
@@ -57,11 +56,8 @@ type private FuncBusConsumer<'t>(func: IFuncConsumer<'t>) =
         member _.Handle ctx msg = func ctx msg
 
 let withFuncConsumer (func: IFuncConsumer<'t>) busBuilder =
-    let funcBusConsumerType = typedefof<FuncBusConsumer<_>>.MakeGenericType(typeof<'t>)
-    let funcBusConsumer = System.Activator.CreateInstance(funcBusConsumerType, func)
     let handlerInfo = { MessageType = typeof<'t>
-                        InterfaceType = typeof<IBusConsumer<'t>>
-                        Handler = Instance funcBusConsumer }
+                        Handler = Instance func }
     { busBuilder with BusBuilder.Handlers = busBuilder.Handlers |> Map.add typeof<'t>.FullName handlerInfo }
 
 let withRecovery busBuilder =
@@ -89,6 +85,15 @@ let build (busBuilder : BusBuilder) =
                     | Some transport -> transport
                     | _ -> failwith "Transport must be initialized"
 
+    let toRuntimeHandler _ (handlerInfo: HandlerInfo) =
+        match handlerInfo.Handler with
+        | Class _ -> handlerInfo
+        | Instance func -> let funcBusConsumerType = typedefof<FuncBusConsumer<_>>.MakeGenericType(handlerInfo.MessageType)
+                           let funcBusConsumer = System.Activator.CreateInstance(funcBusConsumerType, func)
+                           { handlerInfo with Handler = Instance funcBusConsumer }
+
+    let runtimeHandlers = busBuilder.Handlers |> Map.map toRuntimeHandler
+
     let busConfig = { Name = busBuilder.Name
                       IsEphemeral = busBuilder.IsEphemeral
                       IsRecovery = busBuilder.IsRecovery
@@ -96,6 +101,6 @@ let build (busBuilder : BusBuilder) =
                       Serializer = serializer
                       Hook = busBuilder.Hook
                       Transport = transport
-                      Handlers = busBuilder.Handlers }
+                      Handlers = runtimeHandlers }
 
     new Control.Bus(busConfig) :> IBusControl

@@ -63,17 +63,23 @@ type MyConsumer2() =
 
 [<Test>]
 let ``withConsumer add consumers`` () =
-    let build = FBus.Builder.configure() |> withConsumer<MyConsumer1> |> withConsumer<MyConsumer2>
+    let funcHandler: IFuncConsumer<decimal> = 
+        fun ctx msg -> failwith "Not implemented"
+
+    let build = 
+        FBus.Builder.configure()
+        |> withConsumer<MyConsumer1>
+        |> withConsumer<MyConsumer2>
+        |> withFuncConsumer funcHandler
 
     let expectedHandlers = Map [ "System.String", { MessageType = typeof<string>
-                                                    InterfaceType = typeof<IBusConsumer<string>>
                                                     Handler = Class typeof<MyConsumer1> }
                                  "System.Double", { MessageType = typeof<float>
-                                                    InterfaceType = typeof<IBusConsumer<float>>
                                                     Handler = Class typeof<MyConsumer1> }
                                  "System.Int32", { MessageType = typeof<int>
-                                                   InterfaceType = typeof<IBusConsumer<int>>
-                                                   Handler = Class typeof<MyConsumer2> } ]
+                                                   Handler = Class typeof<MyConsumer2> } 
+                                 "System.Decimal", { MessageType = typeof<decimal>
+                                                     Handler = Instance funcHandler } ]
 
     build.Handlers |> should equal expectedHandlers
 

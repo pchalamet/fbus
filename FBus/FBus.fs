@@ -34,7 +34,6 @@ type Handler =
 
 type HandlerInfo =
     { MessageType: Type
-      InterfaceType: Type
       Handler: Handler }
 
 type IBusContainer =

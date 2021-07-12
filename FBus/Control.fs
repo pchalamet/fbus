@@ -84,7 +84,8 @@ type Bus(busConfig: BusConfiguration) =
 
             msg <- busConfig.Serializer.Deserialize handlerInfo.MessageType content
 
-            let callsite = handlerInfo.InterfaceType.GetMethod("Handle")
+            let itfType = typedefof<IBusConsumer<_>>.MakeGenericType(handlerInfo.MessageType)
+            let callsite = itfType.GetMethod("Handle")
             if callsite |> isNull then failwith "Handler method not found"
 
             let handler = busConfig.Container.Resolve activationContext handlerInfo
