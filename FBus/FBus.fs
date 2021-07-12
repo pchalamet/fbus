@@ -26,11 +26,15 @@ type IBusConversation =
 type IBusConsumer<'t> =
     abstract Handle: IBusConversation -> msg:'t -> unit
 
+type IFunConsumer<'t> = IBusConversation -> 't -> unit
+
+type Handler = 
+    | Class of implementationType:Type
+    | Instance of obj
+
 type HandlerInfo =
     { MessageType: Type
-      InterfaceType: Type
-      ImplementationType: Type
-      CallSite: Reflection.MethodInfo }
+      Handler: Handler }
 
 type IBusContainer =
     abstract Register: HandlerInfo -> unit

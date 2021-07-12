@@ -63,20 +63,23 @@ type MyConsumer2() =
 
 [<Test>]
 let ``withConsumer add consumers`` () =
-    let build = FBus.Builder.configure() |> withConsumer<MyConsumer1> |> withConsumer<MyConsumer2>
+    let funcHandler: IFunConsumer<decimal> = 
+        fun ctx msg -> failwith "Not implemented"
+
+    let build = 
+        FBus.Builder.configure()
+        |> withConsumer<MyConsumer1>
+        |> withConsumer<MyConsumer2>
+        |> withFunConsumer funcHandler
 
     let expectedHandlers = Map [ "System.String", { MessageType = typeof<string>
-                                                    InterfaceType = typeof<IBusConsumer<string>>
-                                                    ImplementationType = typeof<MyConsumer1>
-                                                    CallSite = typeof<IBusConsumer<string>>.GetMethod("Handle") }
+                                                    Handler = Class typeof<MyConsumer1> }
                                  "System.Double", { MessageType = typeof<float>
-                                                    InterfaceType = typeof<IBusConsumer<float>>
-                                                    ImplementationType = typeof<MyConsumer1>
-                                                    CallSite = typeof<IBusConsumer<float>>.GetMethod("Handle") }
+                                                    Handler = Class typeof<MyConsumer1> }
                                  "System.Int32", { MessageType = typeof<int>
-                                                   InterfaceType = typeof<IBusConsumer<int>>
-                                                   ImplementationType = typeof<MyConsumer2>
-                                                   CallSite = typeof<IBusConsumer<int>>.GetMethod("Handle") } ]
+                                                   Handler = Class typeof<MyConsumer2> } 
+                                 "System.Decimal", { MessageType = typeof<decimal>
+                                                     Handler = Instance funcHandler } ]
 
     build.Handlers |> should equal expectedHandlers
 

@@ -72,11 +72,9 @@ let buildContainer = {
 
             [typeof<StringMessage>; typeof<IntMessage>] |> List.contains  handlerInfo.MessageType |> should be True
             if handlerInfo.MessageType = typeof<StringMessage> then
-                handlerInfo.InterfaceType |> should equal typeof<IBusConsumer<StringMessage>>
-                handlerInfo.ImplementationType |> should equal typeof<StringConsumer>
+                handlerInfo.Handler |> should equal (Class typeof<StringConsumer>)
             else
-                handlerInfo.InterfaceType |> should equal typeof<IBusConsumer<IntMessage>>
-                handlerInfo.ImplementationType |> should equal typeof<IntConsumer>
+                handlerInfo.Handler |> should equal (Class typeof<IntConsumer>)
 
         member _.Resolve ctx handlerInfo =
             Interlocked.Increment(&resolveCalls) |> ignore
@@ -84,12 +82,10 @@ let buildContainer = {
 
             [typeof<StringMessage>; typeof<IntMessage>] |> List.contains  handlerInfo.MessageType |> should be True
             if handlerInfo.MessageType = typeof<StringMessage> then
-                handlerInfo.InterfaceType |> should equal typeof<IBusConsumer<StringMessage>>
-                handlerInfo.ImplementationType |> should equal typeof<StringConsumer>
+                handlerInfo.Handler |> should equal (Class typeof<StringConsumer>)
                 StringConsumer(consumerStringCallback) :> obj
             else
-                handlerInfo.InterfaceType |> should equal typeof<IBusConsumer<IntMessage>>
-                handlerInfo.ImplementationType |> should equal typeof<IntConsumer>
+                handlerInfo.Handler |> should equal (Class typeof<IntConsumer>)
                 IntConsumer(consumerIntCallback) :> obj
 }
 

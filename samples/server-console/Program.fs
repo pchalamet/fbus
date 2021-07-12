@@ -1,5 +1,6 @@
 ﻿open FBus.Builder
 
+
 type HelloWorldConsumer() =
     interface FBus.IBusConsumer<Common.HelloWorld> with
         member this.Handle ctx msg = 
@@ -14,6 +15,18 @@ type HelloWorldConsumer() =
             printfn "HelloWorldConsumer done"
 
 
+let handler (ctx:FBus.IBusConversation) (msg: Common.HelloWorld) =
+    printfn "Received HelloWorld message [%A] from [%s]" msg ctx.Sender
+    printfn "-> sender = %s" ctx.Sender
+    printfn "-> conversation-id = %s" ctx.ConversationId
+    printfn "-> message-id = %s" ctx.MessageId
+
+    for idx in [1..10] do
+        { Common.HelloWorld2.Message2 = sprintf "Hello %s (%d)" ctx.Sender idx } |> ctx.Reply
+
+    printfn "HelloWorldConsumer done"
+
+
 [<EntryPoint>]
 let main argv =
     let serverName = match argv with
@@ -21,7 +34,8 @@ let main argv =
                      | _ -> "sample-server"
 
     use bus = FBus.QuickStart.configure() |> withName serverName
-                                          |> withConsumer<HelloWorldConsumer> 
+                                          |> withFunConsumer handler
+                                        //   |> withConsumer<HelloWorldConsumer> 
                                           |> build
 
     bus.Start() |> ignore

@@ -17,9 +17,7 @@ type StringConsumer() =
 let ``Activator Register is no-op`` () =
     let activator = Containers.Activator() :> FBus.IBusContainer
     let handlerInfo = { MessageType = typeof<string>
-                        InterfaceType = typeof<IBusConsumer<string>>
-                        ImplementationType = typeof<StringConsumer>
-                        CallSite = typeof<IBusConsumer<string>>.GetMethod("Handle") }
+                        Handler = Class typeof<StringConsumer> }
     activator.Register handlerInfo
 
 
@@ -27,8 +25,6 @@ let ``Activator Register is no-op`` () =
 let ``Activator create type with default constructor`` () =
     let activator = Containers.Activator() :> FBus.IBusContainer
     let handlerInfo = { MessageType = typeof<string>
-                        InterfaceType = typeof<IBusConsumer<string>>
-                        ImplementationType = typeof<StringConsumer>
-                        CallSite = typeof<IBusConsumer<string>>.GetMethod("Handle") }
+                        Handler = Class typeof<StringConsumer> }
     let consumer = activator.Resolve null handlerInfo
-    consumer.GetType() |> should equal handlerInfo.ImplementationType
+    consumer.GetType() |> should equal typeof<StringConsumer>
