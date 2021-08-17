@@ -87,7 +87,7 @@ IBusInitiator | Description
 Note: a new conversation is started when using this interface.
 
 ## Consumer
-A consumer process incoming messages: a context is provided (`IBusConversation`) and a message.
+A consumer processes incoming messages: a context is provided (`IBusConversation`) and a message.
 
 `IBusConversation` provides information to handlers and means to interact with the bus:
 IBusConversation | Description
