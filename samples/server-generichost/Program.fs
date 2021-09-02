@@ -1,5 +1,4 @@
-﻿open System
-open FBus.Builder
+﻿open FBus.Builder
 open Microsoft.Extensions.Hosting
 open FBus.GenericHost
 
@@ -19,7 +18,7 @@ let main argv =
                 |> withConsumer<HelloWorldConsumer> 
 
     Host.CreateDefaultBuilder(argv)
-        .ConfigureServices(fun services -> FBus.GenericHost.AddFBus(services, Func<FBus.BusBuilder, FBus.BusBuilder>(configureBus)) |> ignore)
+        .ConfigureServices(fun services -> services.AddFBus(configureBus) |> ignore)
         .UseConsoleLifetime()
         .Build()
         .Run()
