@@ -1,15 +1,14 @@
-﻿using System;
-using Common;
-using FBus;
-using FBus.GenericHost;
+﻿using FBus;
+using Microsoft.Extensions.Hosting;
+using Microsoft.FSharp.Core;
 
 namespace client_cs
 {
     public class HelloWorldConsumer : FBus.IBusConsumer<Common.HelloWorld>
     {
-        public void Handle(IBusConversation ctx, HelloWorld msg)
+        public void Handle(IBusConversation ctx, Common.HelloWorld msg)
         {
-            Console.WriteLine($"Received HelloWorld message {msg} from {ctx.Sender}");
+            System.Console.WriteLine($"Received HelloWorld message {msg} from {ctx.Sender}");
         }
     }
 
@@ -19,7 +18,7 @@ namespace client_cs
         {
             var serverName = args.Length == 1 ? args[0] : "sample-server";
             Host.CreateDefaultBuilder(args)
-                .ConfigureServices(services => services.AddFBus(configureBus))
+                .ConfigureServices(services => FBus.GenericHost.ServiceCollectionExtensions.AddFBus(services, (FSharpFunc<BusBuilder, BusBuilder>)configureBus))
                 .UseConsoleLifetime()
                 .Build()
                 .Run();
@@ -27,6 +26,8 @@ namespace client_cs
             FBus.BusBuilder configureBus(FBus.BusBuilder busBuilder)
             {
                 busBuilder = FBus.Builder.withName(serverName, busBuilder);
+                busBuilder = FBus.Json.useDefaults.Invoke(busBuilder);
+                busBuilder = FBus.RabbitMQ.useDefaults.Invoke(busBuilder);
                 busBuilder = FBus.Builder.withConsumer<HelloWorldConsumer>(busBuilder);
                 return busBuilder;
             }
