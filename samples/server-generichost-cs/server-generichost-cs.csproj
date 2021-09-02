@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net5.0</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\FBus.QuickStart\FBus.QuickStart.fsproj" />
+    <ProjectReference Include="..\..\FBus.GenericHost\FBus.GenericHost.fsproj" />
+    <ProjectReference Include="..\common\common.fsproj" />
+  </ItemGroup>
+
+    <PropertyGroup>
+        <IsPackable>false</IsPackable>
+    </PropertyGroup>
+
+</Project>

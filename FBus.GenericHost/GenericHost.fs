@@ -1,10 +1,14 @@
+[<System.Runtime.CompilerServices.Extension>]
 module FBus.GenericHost
 open Microsoft.Extensions.DependencyInjection
 open FBus
 open FBus.Containers
+open System.Runtime.CompilerServices
 
-type IServiceCollection with
-    member services.AddFBus(configurator: BusBuilder -> BusBuilder) =
+[<Extension>]
+type ServiceCollectionExtensions =
+    [<Extension>]
+    static member AddFBus(services: IServiceCollection, configurator: BusBuilder -> BusBuilder) =
         let busControl = Builder.configure() |> configurator
                                              |> Builder.withContainer (GenericHost(services))
                                              |> Builder.build
@@ -14,3 +18,4 @@ type IServiceCollection with
         services.AddSingleton(busControl)
                 .AddSingleton(busInitiator)
                 .AddHostedService<BusService>() |> ignore
+
