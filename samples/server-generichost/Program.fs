@@ -1,8 +1,7 @@
-﻿open FBus
+﻿open System
 open FBus.Builder
-open GenericHost
 open Microsoft.Extensions.Hosting
-
+open FBus.GenericHost
 
 type HelloWorldConsumer() =
     interface FBus.IBusConsumer<Common.HelloWorld> with
@@ -20,7 +19,7 @@ let main argv =
                 |> withConsumer<HelloWorldConsumer> 
 
     Host.CreateDefaultBuilder(argv)
-        .ConfigureServices(fun services -> services.AddFBus(configureBus) |> ignore)
+        .ConfigureServices(fun services -> FBus.GenericHost.AddFBus(services, Func<FBus.BusBuilder, FBus.BusBuilder>(configureBus)) |> ignore)
         .UseConsoleLifetime()
         .Build()
         .Run()
