@@ -1,7 +1,7 @@
 ﻿using System;
 using Common;
 using FBus;
-using Microsoft.Extensions.Hosting;
+using FBus.GenericHost;
 
 namespace client_cs
 {
