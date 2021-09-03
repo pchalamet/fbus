@@ -9,7 +9,7 @@ type BridgeEventMessage =
     interface FBus.IMessageEvent
 
 [<RequireQualifiedAccess>]
-type BridgeEventCommand =
+type BridgeCommandMessage =
     { Type: string
       Message: string }
     interface FBus.IMessageCommand
@@ -20,8 +20,8 @@ type BridgeSerializer() =
             match v with
             | :? BridgeEventMessage as msg -> let body = System.Text.Encoding.UTF8.GetBytes(msg.Message)
                                               msg.Type, ReadOnlyMemory(body)
-            | :? BridgeEventCommand as msg -> let body = System.Text.Encoding.UTF8.GetBytes(msg.Message)
-                                              msg.Type, ReadOnlyMemory(body)
+            | :? BridgeCommandMessage as msg -> let body = System.Text.Encoding.UTF8.GetBytes(msg.Message)
+                                                msg.Type, ReadOnlyMemory(body)
             | _ -> failwith "Expecting BridgeMessage"
 
         member _.Deserialize (t: System.Type) (body: ReadOnlyMemory<byte>) =

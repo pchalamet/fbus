@@ -18,8 +18,8 @@ let ``Bridge serialization`` () =
                  Map = Map [ "toto", None
                              "titi", Some 42 ] }
     
-    let bridgeMessage = { FBus.Serializers.BridgeEventCommand.Type = "Provided.Message.Type"
-                          FBus.Serializers.BridgeEventCommand.Message = JsonSerializer.Serialize(data) }
+    let bridgeMessage = { FBus.Serializers.BridgeEventMessage.Type = "Provided.Message.Type"
+                          FBus.Serializers.BridgeEventMessage.Message = JsonSerializer.Serialize(data) }
  
     let bridge = Serializers.BridgeSerializer() :> IBusSerializer
     let msgtype, body = bridgeMessage |> bridge.Serialize
