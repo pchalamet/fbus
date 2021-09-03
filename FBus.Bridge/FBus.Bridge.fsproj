@@ -1,0 +1,18 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net5.0</TargetFramework>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <WarnOn>3390;$(WarnOn)</WarnOn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\FBus\FBus.fsproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="Serializer.fs" />
+    <Compile Include="Bridge.fs" />
+  </ItemGroup>
+
+</Project>
