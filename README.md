@@ -56,6 +56,7 @@ For more information, see CQRS/Event Sourcing literature.
 
 ## Builder
 Prior using the bus, a configuration must be built:
+
 FBus.Builder | Description | Default
 -------------|-------------|--------
 `configure` | Start configuration with default parameters. |
@@ -72,6 +73,7 @@ Note: bus clients are ephemeral by default - this is useful if you just want to 
 
 ## Bus
 `IBusControl` is the primary interface to control the bus:
+
 IBusControl | Description | Comments
 ------------|-------------|---------
 `Start` | Start the bus. Returns `IBusInitiator` | Must be called before sending messages. Start accepts a resolve context which can be used by the container.
@@ -79,6 +81,7 @@ IBusControl | Description | Comments
 `Dispose` | Dispose the bus instance. | Bus can't be reused.
 
 Once bus is started, `IBusInitiator` is available:
+
 IBusInitiator | Description
 --------------|------------
 `Publish` | Broadcast an event message to all subscribers.
@@ -90,6 +93,7 @@ Note: a new conversation is started when using this interface.
 A consumer processes incoming messages: a context is provided (`IBusConversation`) and a message.
 
 `IBusConversation` provides information to handlers and means to interact with the bus:
+
 IBusConversation | Description
 -----------------|------------
 `Sender` | Name of the client.
