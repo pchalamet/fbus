@@ -1,6 +1,7 @@
-﻿using FBus;
-using Microsoft.Extensions.Hosting;
+﻿using Microsoft.Extensions.Hosting;
 using Microsoft.FSharp.Core;
+using FBus;
+using FBus.GenericHost;
 
 namespace client_cs
 {
@@ -18,7 +19,7 @@ namespace client_cs
         {
             var serverName = args.Length == 1 ? args[0] : "sample-server";
             Host.CreateDefaultBuilder(args)
-                .ConfigureServices(services => FBus.GenericHost.ServiceCollectionExtensions.AddFBus(services, (FSharpFunc<BusBuilder, BusBuilder>)configureBus))
+                .ConfigureServices(services => services.AddFBus((FSharpFunc<BusBuilder, BusBuilder>)configureBus))
                 .UseConsoleLifetime()
                 .Build()
                 .Run();
