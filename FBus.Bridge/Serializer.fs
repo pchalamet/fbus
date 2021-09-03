@@ -2,17 +2,18 @@
 open FBus
 open System
 
-type NopMessage =
+[<RequireQualifiedAccess>]
+type BridgeMessage =
     { Type: string
       Message: string }
 
-type NopSerializer() =
+type BridgeSerializer() =
     interface IBusSerializer with
         member _.Serialize (v: obj) =
             match v with
-            | :? NopMessage as msg -> let body = System.Text.Encoding.UTF8.GetBytes(msg.Message)
-                                      msg.Type, ReadOnlyMemory(body)
-            | _ -> failwith "Expecting NopMessage"
+            | :? BridgeMessage as msg -> let body = System.Text.Encoding.UTF8.GetBytes(msg.Message)
+                                         msg.Type, ReadOnlyMemory(body)
+            | _ -> failwith "Expecting BridgeMessage"
 
         member _.Deserialize (t: System.Type) (body: ReadOnlyMemory<byte>) =
-            failwith "NopSerializer is not designed to deserialize"
+            failwith "BridgeSerializer is not designed to deserialize"
