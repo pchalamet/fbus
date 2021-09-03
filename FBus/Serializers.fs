@@ -11,7 +11,7 @@ type InMemory() =
 
     interface IBusSerializer with
         member _.Serialize (v: obj) =
-            let msgtype = v.GetType()
+            let msgtype = v.GetType().FullName
             let id = Guid.NewGuid()
             let body = id.ToByteArray() |> ReadOnlyMemory
             if refs.TryAdd(id, v) |> not then failwith "Failed to store message"

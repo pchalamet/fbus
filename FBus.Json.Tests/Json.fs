@@ -18,4 +18,5 @@ let ``Json roundtrip`` () =
     
     let json = Serializers.Json() :> IBusSerializer
     let msgtype, body = data |> json.Serialize
-    body |> json.Deserialize msgtype |> should equal data
+    msgtype |> should equal "FBus.Json.Tests+MyType"
+    body |> json.Deserialize typeof<MyType> |> should equal data

@@ -28,16 +28,14 @@ type Bus(busConfig: BusConfiguration) =
     let publish msg headers =
         match busTransport with
         | None -> failwith "Bus is not started"
-        | Some busTransport -> let tpe, body = busConfig.Serializer.Serialize msg
-                               let msgtype = tpe.FullName
+        | Some busTransport -> let msgtype, body = busConfig.Serializer.Serialize msg
                                let msgHeaders = headers |> Map.add FBUS_MSGTYPE msgtype
                                busTransport.Publish msgHeaders msgtype body
 
     let send client msg headers =
         match busTransport with
         | None -> failwith "Bus is not started"
-        | Some busTransport -> let tpe, body = busConfig.Serializer.Serialize msg
-                               let msgtype = tpe.FullName
+        | Some busTransport -> let msgtype, body = busConfig.Serializer.Serialize msg
                                let msgHeaders = headers |> Map.add FBUS_MSGTYPE msgtype
                                busTransport.Send msgHeaders client msgtype body
 

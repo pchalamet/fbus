@@ -26,8 +26,9 @@ let ``InMemory serializer roundtrip`` () =
     let cache = Serializers.InMemory()
     let serializer = cache :> IBusSerializer
     
-    let tpe, body = data |> serializer.Serialize
-    let newData = body |> serializer.Deserialize tpe
+    let msgtype, body = data |> serializer.Serialize
+    let newData = body |> serializer.Deserialize typeof<MyType>
+    msgtype |> should equal "FBus.InMemory.Tests+MyType"
     Object.ReferenceEquals(newData, data) |> should equal true
 
     // check purge works as expected

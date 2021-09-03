@@ -46,7 +46,7 @@ type IBusTransport =
     abstract Send: headers:Map<string, string> -> target:string -> msgType:string -> body:ReadOnlyMemory<byte> -> unit
 
 type IBusSerializer =
-    abstract Serialize: msg:obj -> Type * ReadOnlyMemory<byte>
+    abstract Serialize: msg:obj -> string * ReadOnlyMemory<byte>
     abstract Deserialize: Type -> ReadOnlyMemory<byte> -> obj
 
 type IBusHook =
