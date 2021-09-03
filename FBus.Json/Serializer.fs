@@ -16,8 +16,9 @@ type Json(?initOptions: JsonSerializerOptions -> unit) =
 
     interface IBusSerializer with
         member _.Serialize (v: obj) =
+            let tpe = v.GetType()
             let body = JsonSerializer.SerializeToUtf8Bytes(v, options)
-            ReadOnlyMemory(body)
+            tpe, ReadOnlyMemory(body)
 
         member _.Deserialize (t: System.Type) (body: ReadOnlyMemory<byte>) =
             JsonSerializer.Deserialize(body.Span, t, options)
