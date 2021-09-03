@@ -16,7 +16,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Include="..\README.md" Pack="true" PackagePath="\"/>
+    <None Include="..\NUGET.md" Pack="true" PackagePath="\"/>
   </ItemGroup>
 
   <PropertyGroup>
@@ -30,7 +30,7 @@
     <PackageProjectUrl>https://github.com/pchalamet/fbus</PackageProjectUrl>
     <RepositoryUrl>https://github.com/pchalamet/fbus.git</RepositoryUrl>
     <PackageTags>service;bus;service-bus</PackageTags>
-    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageReadmeFile>NUGET.md</PackageReadmeFile>
   </PropertyGroup>
 
 </Project>
