@@ -4,7 +4,6 @@ open FsUnit
 open FBus
 open System
 open System.Text.Json
-open System.Text.Json.Serialization
 
 type MyType = {
     Int: int
@@ -19,8 +18,8 @@ let ``Bridge serialization`` () =
                  Map = Map [ "toto", None
                              "titi", Some 42 ] }
     
-    let bridgeMessage = { FBus.Serializers.BridgeMessage.Type = "Provided.Message.Type"
-                          FBus.Serializers.BridgeMessage.Message = JsonSerializer.Serialize(data) }
+    let bridgeMessage = { FBus.Serializers.BridgeEventCommand.Type = "Provided.Message.Type"
+                          FBus.Serializers.BridgeEventCommand.Message = JsonSerializer.Serialize(data) }
  
     let bridge = Serializers.BridgeSerializer() :> IBusSerializer
     let msgtype, body = bridgeMessage |> bridge.Serialize
