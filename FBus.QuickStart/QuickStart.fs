@@ -1,7 +1,9 @@
-﻿module FBus.QuickStart
+﻿namespace FBus
 
-let configure () =
-
-    FBus.Builder.configure() |> FBus.RabbitMQ.useDefaults
-                             |> FBus.Json.useDefaults
-                             |> FBus.InMemory.useContainer
+[<AbstractClass; Sealed>]
+type QuickStart =
+    [<CompiledName("Configure")>]
+    static member configure () =
+        Builder.configure() |> RabbitMQ.useDefaults
+                            |> Json.useDefaults
+                            |> InMemory.useContainer

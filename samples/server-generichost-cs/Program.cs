@@ -26,10 +26,10 @@ namespace client_cs
 
             FBus.BusBuilder configureBus(FBus.BusBuilder busBuilder)
             {
-                busBuilder = FBus.Builder.withName(serverName, busBuilder);
-                busBuilder = FBus.Json.useDefaults.Invoke(busBuilder);
-                busBuilder = FBus.RabbitMQ.useDefaults.Invoke(busBuilder);
-                busBuilder = FBus.Builder.withConsumer<HelloWorldConsumer>(busBuilder);
+                busBuilder = Builder.WithName(serverName, busBuilder);
+                busBuilder = Json.UseDefaults(busBuilder);
+                busBuilder = FBus.RabbitMQ.UseDefaults(busBuilder);
+                busBuilder = Builder.WithConsumer<HelloWorldConsumer>(busBuilder);
                 return busBuilder;
             }
         }

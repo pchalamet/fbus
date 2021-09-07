@@ -1,10 +1,8 @@
 module FBus.Transports.Tests
-open System
 open NUnit.Framework
 open FsUnit
 
 open FBus
-open FBus.Builder
 
 
 type InMemoryMessage1 =
@@ -51,11 +49,11 @@ let startServer<'t> (session: FBus.Testing.Session) name =
             member _.OnError ctx msg exn = failwithf "No error shall be raised: %A" exn
     }
 
-    let serverBus = FBus.Builder.configure() |> session.Use
-                                             |> withName name
-                                             |> withConsumer<'t>
-                                             |> withHook checkErrorHook
-                                             |> FBus.Builder.build
+    let serverBus = Builder.configure() |> session.Use
+                                        |> Builder.withName name
+                                        |> Builder.withConsumer<'t>
+                                        |> Builder.withHook checkErrorHook
+                                        |> Builder.build
     serverBus.Start() |> ignore
     serverBus
 

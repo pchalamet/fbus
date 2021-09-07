@@ -1,6 +1,7 @@
-﻿open FBus.Builder
+﻿open FBus
 open Microsoft.Extensions.Hosting
 open FBus.GenericHost
+open System
 
 type HelloWorldConsumer() =
     interface FBus.IBusConsumer<Common.HelloWorld> with
@@ -14,10 +15,10 @@ let main argv =
                      | _ -> "sample-server"
 
     let configureBus builder =
-        builder |> withName serverName
+        builder |> Builder.withName serverName
                 |> FBus.Json.useDefaults
                 |> FBus.RabbitMQ.useDefaults
-                |> withConsumer<HelloWorldConsumer> 
+                |> Builder.withConsumer<HelloWorldConsumer> 
 
     Host.CreateDefaultBuilder(argv)
         .ConfigureServices(fun services -> services.AddFBus(configureBus) |> ignore)

@@ -1,5 +1,5 @@
 ﻿open System
-open FBus.Builder
+open FBus
 
 type ResponseConsumer() =
     interface FBus.IBusConsumer<Common.HelloWorld2> with
@@ -33,10 +33,10 @@ let main argv =
                          printfn ">>> Error: %A %A" msg exn
                 }
 
-    use bus = FBus.QuickStart.configure() |> withName "client"
-                                          |> withConsumer<ResponseConsumer>
-                                          |> withHook hook
-                                          |> build
+    use bus = FBus.QuickStart.configure() |> Builder.withName "client"
+                                          |> Builder.withConsumer<ResponseConsumer>
+                                          |> Builder.withHook hook
+                                          |> Builder.build
  
     let busInitiator = bus.Start()
     

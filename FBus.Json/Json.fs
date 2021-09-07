@@ -1,7 +1,12 @@
-module FBus.Json
+namespace FBus
 open FBus
-open FBus.Builder
 
-let useDefaults = FBus.Serializers.Json() :> IBusSerializer |> withSerializer
+[<AbstractClass; Sealed>]
+type Json =
+    [<CompiledName("UseDefaults")>]
+    static member useDefaults busBuilder = 
+        Builder.withSerializer (FBus.Serializers.Json() :> IBusSerializer) busBuilder
 
-let useWith options = FBus.Serializers.Json(options) :> IBusSerializer |> withSerializer
+    [<CompiledName("UseWith")>]
+    static member useWith options =
+        FBus.Serializers.Json(options) :> IBusSerializer |> Builder.withSerializer

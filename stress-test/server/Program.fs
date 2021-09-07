@@ -1,5 +1,5 @@
 module FBus.StressTest.Server
-open FBus.Builder
+open FBus
 open System
 open Common
 
@@ -40,10 +40,10 @@ let hook = { new FBus.IBusHook with
 
 [<EntryPoint>]
 let main argv =
-    use bus = FBus.QuickStart.configure() |> withName "fbus-stresstest-server"
-                                          |> withConsumer<MessageConsumer>
-                                          |> withHook hook
-                                          |> build
+    use bus = FBus.QuickStart.configure() |> Builder.withName "fbus-stresstest-server"
+                                          |> Builder.withConsumer<MessageConsumer>
+                                          |> Builder.withHook hook
+                                          |> Builder.build
 
     bus.Start() |> ignore
 

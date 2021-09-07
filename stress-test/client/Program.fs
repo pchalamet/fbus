@@ -1,7 +1,7 @@
 module FBus.StressTest.Client
 
 open System
-open FBus.Builder
+open FBus
 open Common
 
 let rnd = Random()
@@ -36,10 +36,10 @@ let hook = { new FBus.IBusHook with
 
 [<EntryPoint>]
 let main argv =
-    use bus = FBus.QuickStart.configure() |> withName "fbus-stresstest-client"
-                                          |> withConsumer<MessageConsumer>
-                                          |> withHook hook
-                                          |> build
+    use bus = FBus.QuickStart.configure() |> Builder.withName "fbus-stresstest-client"
+                                          |> Builder.withConsumer<MessageConsumer>
+                                          |> Builder.withHook hook
+                                          |> Builder.build
  
     let busInitiator = bus.Start()
    

@@ -1,5 +1,5 @@
 ﻿open System
-open FBus.Builder
+open FBus
 
 type HelloMessageRequest =
     { Msg: string }
@@ -32,13 +32,13 @@ type Consumer2() =
 let main argv =
     let session = FBus.Testing.Session()
     use bus1 = FBus.Builder.configure() |> session.Use
-                                        |> withConsumer<Consumer1>
-                                        |> build
+                                        |> Builder.withConsumer<Consumer1>
+                                        |> Builder.build
     let busInitiator1 = bus1.Start()
     
     use bus2 = FBus.Builder.configure() |> session.Use
-                                        |> withConsumer<Consumer2>
-                                        |> build
+                                        |> Builder.withConsumer<Consumer2>
+                                        |> Builder.build
     let busInitiator2 = bus2.Start()
 
     busInitiator1.Publish { HelloMessageRequest.Msg = "Hello in-memory !" }

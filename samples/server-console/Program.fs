@@ -1,4 +1,4 @@
-﻿open FBus.Builder
+﻿open FBus
 
 
 type HelloWorldConsumer() =
@@ -33,10 +33,9 @@ let main argv =
                      | [| serverName |] -> serverName
                      | _ -> "sample-server"
 
-    use bus = FBus.QuickStart.configure() |> withName serverName
-                                          |> withFunConsumer handler
-                                        //   |> withConsumer<HelloWorldConsumer> 
-                                          |> build
+    use bus = FBus.QuickStart.configure() |> Builder.withName serverName
+                                          |> Builder.withFunConsumer handler
+                                          |> Builder.build
 
     bus.Start() |> ignore
 

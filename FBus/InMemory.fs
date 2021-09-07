@@ -1,11 +1,9 @@
 module FBus.InMemory
 open FBus
-open FBus.Builder
-open System
 
 let useTransport context (busBuilder: BusBuilder) =
-    busBuilder |> withTransport (FBus.Transports.InMemory.Create context)
+    busBuilder |> Builder.withTransport (FBus.Transports.InMemory.Create context)
 
-let useSerializer = FBus.Serializers.InMemory() :> IBusSerializer |> withSerializer
+let useSerializer = FBus.Serializers.InMemory() :> IBusSerializer |> Builder.withSerializer
 
-let useContainer = FBus.Containers.Activator() :> IBusContainer |> withContainer
+let useContainer = FBus.Containers.Activator() :> IBusContainer |> Builder.withContainer

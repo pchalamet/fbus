@@ -1,5 +1,8 @@
-module FBus.Bridge
+namespace FBus
 open FBus
-open FBus.Builder
 
-let useDefaults = FBus.Serializers.BridgeSerializer() :> IBusSerializer |> withSerializer
+[<AbstractClass; Sealed>]
+type Bridge =
+    [<CompiledName("UseDefaults")>]
+    static member useDefaults =
+        FBus.Serializers.BridgeSerializer() :> IBusSerializer |> Builder.withSerializer

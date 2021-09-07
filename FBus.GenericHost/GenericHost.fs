@@ -1,4 +1,5 @@
 namespace FBus.GenericHost
+open System
 open Microsoft.Extensions.DependencyInjection
 open FBus
 open FBus.Containers
@@ -17,4 +18,3 @@ type Extensions =
         services.AddSingleton(busControl)
                 .AddSingleton(busInitiator)
                 .AddHostedService<BusService>() |> ignore
-

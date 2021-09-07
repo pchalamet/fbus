@@ -1,14 +1,15 @@
-module FBus.RabbitMQ
+namespace FBus
 open FBus
-open FBus.Builder
 
+[<AbstractClass; Sealed>]
+type RabbitMQ =
+    [<CompiledName("UseWith")>]
+    static member useWith uri busBuilder =
+        let createTransport (busConfig: BusConfiguration) msgCallback =
+            new Transports.RabbitMQ(uri, busConfig, msgCallback) :> IBusTransport
 
-let useWith uri (busBuilder: BusBuilder) =
-    let createTransport (busConfig: BusConfiguration) msgCallback =
-        new Transports.RabbitMQ(uri, busConfig, msgCallback) :> IBusTransport
+        busBuilder |> Builder.withTransport createTransport
 
-    busBuilder |> withTransport createTransport
-
-let useDefaults =
-    System.Uri("amqp://guest:guest@localhost") |> useWith
-
+    [<CompiledName("UseDefaults")>]
+    static member useDefaults busBuilder =
+        RabbitMQ.useWith (System.Uri("amqp://guest:guest@localhost")) busBuilder

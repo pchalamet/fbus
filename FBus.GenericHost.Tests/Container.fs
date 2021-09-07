@@ -1,10 +1,8 @@
 module FBus.Hosting.Tests
-open System
 open NUnit.Framework
 open FsUnit
 
 open FBus
-open FBus.Builder
 open Microsoft.Extensions.DependencyInjection
 
 
@@ -51,12 +49,12 @@ let startServer<'t> (session: FBus.Testing.Session) name callback =
 
     let svcCollection = ServiceCollection() :> IServiceCollection
     svcCollection.AddSingleton(handledInvoked) |> ignore
-    let serverBus = FBus.Builder.configure() |> session.Use
-                                             |> withName name
-                                             |> withContainer (FBus.Containers.GenericHost(svcCollection))
-                                             |> withConsumer<'t>
-                                             |> withHook checkErrorHook
-                                             |> FBus.Builder.build
+    let serverBus = Builder.configure() |> session.Use
+                                        |> Builder.withName name
+                                        |> Builder.withContainer (FBus.Containers.GenericHost(svcCollection))
+                                        |> Builder.withConsumer<'t>
+                                        |> Builder.withHook checkErrorHook
+                                        |> Builder.build
     svcCollection.BuildServiceProvider() |> serverBus.Start |> ignore
     serverBus
 
