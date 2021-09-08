@@ -10,6 +10,8 @@ open RabbitMQ.Client.Events
 //                   Exchanges                     |                         Queues
 // ----------------------------------------------------------------------------------------------------------
 //
+//              Exchange Binding               Queue Binding
+//
 // fbus:msg:MsgType <--+--- fbus:shard:Client1 <------ fbus:consumer:Client1 (* concurrent and/or ephemeral *)
 //                     |
 //                     +--- fbus:shard:Client2 <--+--- fbus:consumer:Client2-1 (* sharded and/or ephemeral *)
@@ -106,6 +108,7 @@ type RabbitMQ(uri, busConfig: BusConfiguration, msgCallback) =
         channel.ExchangeDeclare(exchange = xchgMsg, ``type`` = ExchangeType.Fanout, 
                                 durable = true, autoDelete = false)
 
+        // NOTE: if exchange creation crashes then check "rabbitmq_consistent_hash_exchange" is correctly installed
         let xchgShard = getExchangeShard busConfig.Name
         channel.ExchangeDeclare(exchange = xchgShard, ``type`` = "x-consistent-hash", 
                                 durable = true, autoDelete = false)
@@ -121,7 +124,9 @@ type RabbitMQ(uri, busConfig: BusConfiguration, msgCallback) =
         let consumer = EventingBasicConsumer(channel)
         let consumerCallback msgCallback (ea: BasicDeliverEventArgs) =
             try
-                let headers = ea.BasicProperties.Headers |> Seq.choose (fun kvp -> ea.BasicProperties |> tryGetHeaderAsString kvp.Key |> Option.map (fun s -> kvp.Key, s))
+                let headers = ea.BasicProperties.Headers |> Seq.choose (fun kvp -> ea.BasicProperties
+                                                                                   |> tryGetHeaderAsString kvp.Key
+                                                                                   |> Option.map (fun s -> kvp.Key, s))
                                                          |> Map
 
                 msgCallback headers ea.Body

@@ -6,13 +6,13 @@ open FBus
 type Bus(busConfig: BusConfiguration) =
 
     [<Literal>]
-    let FBUS_MSGTYPE = "fbus:msgtype"
+    let FBUS_MSGTYPE = "fbus:msg-type"
 
     [<Literal>]
     let FBUS_CONVERSATION_ID = "fbus:conversation-id"
 
     [<Literal>]
-    let FBUS_MESSAGE_ID = "fbus:message-id"
+    let FBUS_MESSAGE_ID = "fbus:msg-id"
 
     [<Literal>]
     let FBUS_SENDER = "fbus:sender"
