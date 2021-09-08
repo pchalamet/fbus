@@ -6,13 +6,13 @@ open FBus
 type Bus(busConfig: BusConfiguration) =
 
     [<Literal>]
-    let FBUS_MSGTYPE = "fbus:msgtype"
+    let FBUS_MSGTYPE = "fbus:msg-type"
 
     [<Literal>]
     let FBUS_CONVERSATION_ID = "fbus:conversation-id"
 
     [<Literal>]
-    let FBUS_MESSAGE_ID = "fbus:message-id"
+    let FBUS_MESSAGE_ID = "fbus:msg-id"
 
     [<Literal>]
     let FBUS_SENDER = "fbus:sender"
@@ -25,19 +25,26 @@ type Bus(busConfig: BusConfiguration) =
 
     let defaultHeaders = Map [ FBUS_SENDER, busConfig.Name ]
 
+    let getMessageKey (msg: obj) =
+        match msg with
+        | :? IMessageKey as key -> key.Key
+        | _ -> ""
+
     let publish msg headers =
+        let routing = msg |> getMessageKey
         match busTransport with
         | None -> failwith "Bus is not started"
         | Some busTransport -> let msgtype, body = busConfig.Serializer.Serialize msg
                                let msgHeaders = headers |> Map.add FBUS_MSGTYPE msgtype
-                               busTransport.Publish msgHeaders msgtype body
+                               busTransport.Publish msgHeaders msgtype body routing
 
     let send client msg headers =
+        let routing = msg |> getMessageKey
         match busTransport with
         | None -> failwith "Bus is not started"
         | Some busTransport -> let msgtype, body = busConfig.Serializer.Serialize msg
                                let msgHeaders = headers |> Map.add FBUS_MSGTYPE msgtype
-                               busTransport.Send msgHeaders client msgtype body
+                               busTransport.Send msgHeaders client msgtype body routing
 
     let msgCallback activationContext headers content =
         let mutable msg: obj = null
@@ -50,7 +57,7 @@ type Bus(busConfig: BusConfiguration) =
                     member _.ConversationId: string = headers |> Map.find FBUS_CONVERSATION_ID
                     member _.MessageId: string = headers |> Map.find FBUS_MESSAGE_ID
                     member _.Sender: string = headers |> Map.find FBUS_SENDER
-                    member this.Reply msg = conversationHeaders() |> send this.Sender msg
+                    member this.Reply (msg: 't) = conversationHeaders() |> send this.Sender msg
                     member _.Publish msg = conversationHeaders() |> publish msg
                     member _.Send client msg = conversationHeaders() |> send client msg }
 

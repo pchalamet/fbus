@@ -3,6 +3,23 @@ open FBus
 open RabbitMQ.Client
 open RabbitMQ.Client.Events
 
+//
+// Binding model is as follow:
+//
+// ----------------------------------------------------------------------------------------------------------
+//                   Exchanges                     |                         Queues
+// ----------------------------------------------------------------------------------------------------------
+//
+//              Exchange Binding               Queue Binding
+//
+// fbus:msg:MsgType <--+--- fbus:shard:Client1 <------ fbus:consumer:Client1 (* concurrent and/or ephemeral *)
+//                     |
+//                     +--- fbus:shard:Client2 <--+--- fbus:consumer:Client2-1 (* sharded and/or ephemeral *)
+//                                                |
+//                                                +--- fbus:consumer:Client2-2
+//
+
+
 type RabbitMQ(uri, busConfig: BusConfiguration, msgCallback) =
     let channelLock = obj()
     let factory = ConnectionFactory(Uri = uri, AutomaticRecoveryEnabled = true)
@@ -48,15 +65,20 @@ type RabbitMQ(uri, busConfig: BusConfiguration, msgCallback) =
     // ========================================================================================================
 
 
-    let getClientQueue name = sprintf "fbus:client:%s" name
+    let getExchangeMsg (msgType: string) = $"fbus:msg:{msgType}"
 
-    let getExchangeName (msgType: string) = msgType |> sprintf "fbus:type:%s"
+    let getExchangeShard (clientName: string) = $"fbus:shard:{clientName}"
+
+    let getQueueClient (clientName: string) (shardName: string option) = 
+        match shardName with
+        | Some shardName -> $"fbus:consumer:{clientName}#{shardName}"
+        | _ -> $"fbus:consumer:{clientName}"
 
     let configureAck () =
         channel.BasicQos(prefetchSize = 0ul, prefetchCount = 1us, ``global`` = false)
         channel.ConfirmSelect()
 
-    let queueName = getClientQueue busConfig.Name
+    let queueName = getQueueClient busConfig.Name busConfig.ShardName
 
     let configureDeadLettersQueues() =
        // ===============================================================================================
@@ -85,10 +107,22 @@ type RabbitMQ(uri, busConfig: BusConfiguration, msgCallback) =
                              arguments = queueArgs) |> ignore
 
     let bindExchangeAndQueue msgType =
-        let xchgName = getExchangeName msgType
-        channel.ExchangeDeclare(exchange = xchgName, ``type`` = ExchangeType.Fanout, 
+        let xchgMsg = getExchangeMsg msgType
+        channel.ExchangeDeclare(exchange = xchgMsg, ``type`` = ExchangeType.Fanout, 
                                 durable = true, autoDelete = false)
-        channel.QueueBind(queue = queueName, exchange = xchgName, routingKey = "")
+
+        // NOTE: if exchange creation crashes then check "rabbitmq_consistent_hash_exchange" is correctly installed
+        let xchgSub, xchgRouting = 
+            match busConfig.ShardName with
+            | Some _ -> let xchgShard = getExchangeShard busConfig.Name
+                        channel.ExchangeDeclare(exchange = xchgShard, ``type`` = "x-consistent-hash", 
+                                                durable = true, autoDelete = false)
+
+                        channel.ExchangeBind(xchgShard, xchgMsg, routingKey = "")
+                        xchgShard, "1"
+            | _ -> xchgMsg, ""
+
+        channel.QueueBind(queue = queueName, exchange = xchgSub, routingKey = xchgRouting)
 
     let subscribeMessages () =
         busConfig.Handlers |> Map.iter (fun msgType _ -> msgType |> bindExchangeAndQueue)
@@ -97,7 +131,9 @@ type RabbitMQ(uri, busConfig: BusConfiguration, msgCallback) =
         let consumer = EventingBasicConsumer(channel)
         let consumerCallback msgCallback (ea: BasicDeliverEventArgs) =
             try
-                let headers = ea.BasicProperties.Headers |> Seq.choose (fun kvp -> ea.BasicProperties |> tryGetHeaderAsString kvp.Key |> Option.map (fun s -> kvp.Key, s))
+                let headers = ea.BasicProperties.Headers |> Seq.choose (fun kvp -> ea.BasicProperties
+                                                                                   |> tryGetHeaderAsString kvp.Key
+                                                                                   |> Option.map (fun s -> kvp.Key, s))
                                                          |> Map
 
                 msgCallback headers ea.Body
@@ -116,13 +152,13 @@ type RabbitMQ(uri, busConfig: BusConfiguration, msgCallback) =
         listenMessages()
 
     interface IBusTransport with
-        member _.Publish headers msgType body =
-            let xchgName = getExchangeName msgType
-            safeSend headers xchgName "" body
+        member _.Publish headers msgType body key =
+            let xchgName = getExchangeMsg msgType
+            safeSend headers xchgName key body
 
-        member _.Send headers client msgType body =
-            let routingKey = getClientQueue client
-            safeSend headers "" routingKey body
+        member _.Send headers client msgType body key =
+            let xchgName = getExchangeShard client
+            safeSend headers xchgName key body
 
         member _.Dispose() =
             sendChannel.Dispose()

@@ -33,8 +33,7 @@ let main argv =
                          printfn ">>> Error: %A %A" msg exn
                 }
 
-    use bus = FBus.QuickStart.configure() |> Builder.withName "client"
-                                          |> Builder.withConsumer<ResponseConsumer>
+    use bus = FBus.QuickStart.configure() |> Builder.withConsumer<ResponseConsumer>
                                           |> Builder.withHook hook
                                           |> Builder.build
  

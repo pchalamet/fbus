@@ -9,15 +9,16 @@ type private FunBusConsumer<'t>(func: IFunConsumer<'t>) =
 
 [<AbstractClass; Sealed>]
 type Builder =
+    static member private generateClientName () =
+        let computerName = Environment.MachineName
+        let pid = Diagnostics.Process.GetCurrentProcess().Id
+        let rnd = Random().Next()
+        $"{computerName}-{pid}-{rnd}"
+
     [<CompiledName("Configure")>]
     static member configure () =
-        let generateClientName() =
-            let computerName = Environment.MachineName
-            let pid = Diagnostics.Process.GetCurrentProcess().Id
-            let rnd = Random().Next()
-            sprintf "%s-%d-%d" computerName pid rnd
-
-        { BusBuilder.Name = generateClientName()
+        { BusBuilder.Name = Builder.generateClientName()
+          BusBuilder.ShardName = None
           BusBuilder.IsEphemeral = true
           BusBuilder.IsRecovery = false
           BusBuilder.Container = None
@@ -31,6 +32,11 @@ type Builder =
         if name |> String.IsNullOrWhiteSpace then failwith "Invalid bus name"
         { busBuilder with BusBuilder.Name = name 
                           BusBuilder.IsEphemeral = false }
+
+    [<CompiledName("WithShard")>]
+    static member withShard name busBuilder =
+        if name |> String.IsNullOrWhiteSpace then failwith "Invalid shard name"
+        { busBuilder with BusBuilder.ShardName = Some name }
 
     [<CompiledName("WithTransport")>]
     static member withTransport transport busBuilder = 
@@ -106,6 +112,7 @@ type Builder =
         let runtimeHandlers = busBuilder.Handlers |> Map.map toRuntimeHandler
 
         let busConfig = { Name = busBuilder.Name
+                          ShardName = busBuilder.ShardName
                           IsEphemeral = busBuilder.IsEphemeral
                           IsRecovery = busBuilder.IsRecovery
                           Container = container

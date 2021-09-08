@@ -7,7 +7,10 @@ open FBus
 
 [<Test>]
 let ``withName set permanent client`` () =
-    let builder = FBus.Builder.configure() |> Builder.withName "new-client-name"
+    let builder = FBus.Builder.configure()
+
+    builder.IsEphemeral |> should equal true
+    let builder = builder |> Builder.withName "new-client-name"
     builder.Name |> should equal "new-client-name"
     builder.IsEphemeral |> should equal false
 

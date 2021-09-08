@@ -12,9 +12,7 @@ It comes with default implementation for:
 * System.Text.Json serialization
 * Full testing capabilities using In-Memory mode
 * Persistent queue/buffering across activation
-
-Following features might appear in future revisions:
-* Parallelism support via sharding
+* Sharding
 
 Features that won't be implemented in FBus:
 * Sagas: coordination is a big topic by itself - technically, everything required to handle this is available (ConversationId and MessageId). This can be handled outside of a service-bus.
@@ -61,6 +59,7 @@ FBus.Builder | Description | Default
 -------------|-------------|--------
 `configure` | Start configuration with default parameters. |
 `withName` | Change service name. Used to identify a bus client (see `IBusInitiator.Send` and `IBusConversation.Send`) | Name based on computer name, pid and random number.
+`withShard` | Enable sharding. | None
 `withTransport` | Transport to use. | None
 `withContainer` | Container to use | None
 `withSerializer` | Serializer to use | None
@@ -203,12 +202,15 @@ FBus.IBusHook | Description | Comments
 
 ### RabbitMQ (package FBus.RabbitMQ)
 
+**NOTE**: In order to use sharding with this transport, you **must** install plugin `rabbitmq_consistent_hash_exchange`.
+
 FBus.RabbitMQ | Description | Comments
 --------------|-------------|---------
 `useDefaults` | Configure RabbitMQ as transport | Endpoint is set to `amqp://guest:guest@localhost`.
 `useWith` | Configure RabbitMQ as transport with provided URI |
 
 Transport leverages exchanges (one for each message type) to distribute messages across consumers (subscribing a queue).
+
 
 ### Json (package FBus.Json)
 
