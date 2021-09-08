@@ -12,9 +12,7 @@ It comes with default implementation for:
 * System.Text.Json serialization
 * Full testing capabilities using In-Memory mode
 * Persistent queue/buffering across activation
-
-Following features might appear in future revisions:
-* Parallelism support via sharding
+* Sharding
 
 Features that won't be implemented in FBus:
 * Sagas: coordination is a big topic by itself - technically, everything required to handle this is available (ConversationId and MessageId). This can be handled outside of a service-bus.
