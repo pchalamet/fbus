@@ -69,13 +69,16 @@ type RabbitMQ(uri, busConfig: BusConfiguration, msgCallback) =
 
     let getExchangeShard (clientName: string) = $"fbus:shard:{clientName}"
 
-    let getQueueClient (clientName: string) = $"fbus:consumer:{clientName}"
+    let getQueueClient (clientName: string) (shardName: string option) = 
+        match shardName with
+        | Some shardName -> $"fbus:consumer:{clientName}#{shardName}"
+        | _ -> $"fbus:consumer:{clientName}"
 
     let configureAck () =
         channel.BasicQos(prefetchSize = 0ul, prefetchCount = 1us, ``global`` = false)
         channel.ConfirmSelect()
 
-    let queueName = getQueueClient busConfig.Name
+    let queueName = getQueueClient busConfig.Name busConfig.ShardName
 
     let configureDeadLettersQueues() =
        // ===============================================================================================

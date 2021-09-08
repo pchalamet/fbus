@@ -62,6 +62,7 @@ type IBusHook =
 type BusConfiguration =
     { Name: string
       IsEphemeral: bool
+      ShardName: string option
       IsRecovery: bool
       Container: IBusContainer
       Serializer: IBusSerializer
@@ -72,6 +73,7 @@ type BusConfiguration =
 [<RequireQualifiedAccessAttribute>]
 type BusBuilder =
     { Name: string
+      ShardName: string option
       IsEphemeral: bool
       IsRecovery: bool
       Container: IBusContainer option
