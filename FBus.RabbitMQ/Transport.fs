@@ -112,13 +112,17 @@ type RabbitMQ(uri, busConfig: BusConfiguration, msgCallback) =
                                 durable = true, autoDelete = false)
 
         // NOTE: if exchange creation crashes then check "rabbitmq_consistent_hash_exchange" is correctly installed
-        let xchgShard = getExchangeShard busConfig.Name
-        channel.ExchangeDeclare(exchange = xchgShard, ``type`` = "x-consistent-hash", 
-                                durable = true, autoDelete = false)
+        let xchgSub, xchgRouting = 
+            match busConfig.ShardName with
+            | Some _ -> let xchgShard = getExchangeShard busConfig.Name
+                        channel.ExchangeDeclare(exchange = xchgShard, ``type`` = "x-consistent-hash", 
+                                                durable = true, autoDelete = false)
 
-        channel.ExchangeBind(xchgShard, xchgMsg, routingKey = "")
+                        channel.ExchangeBind(xchgShard, xchgMsg, routingKey = "")
+                        xchgShard, "1"
+            | _ -> xchgMsg, ""
 
-        channel.QueueBind(queue = queueName, exchange = xchgShard, routingKey = "1")
+        channel.QueueBind(queue = queueName, exchange = xchgSub, routingKey = xchgRouting)
 
     let subscribeMessages () =
         busConfig.Handlers |> Map.iter (fun msgType _ -> msgType |> bindExchangeAndQueue)

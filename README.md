@@ -202,12 +202,15 @@ FBus.IBusHook | Description | Comments
 
 ### RabbitMQ (package FBus.RabbitMQ)
 
+**NOTE**: In order to use sharding with this transport, you **must** install plugin `rabbitmq_consistent_hash_exchange`.
+
 FBus.RabbitMQ | Description | Comments
 --------------|-------------|---------
 `useDefaults` | Configure RabbitMQ as transport | Endpoint is set to `amqp://guest:guest@localhost`.
 `useWith` | Configure RabbitMQ as transport with provided URI |
 
 Transport leverages exchanges (one for each message type) to distribute messages across consumers (subscribing a queue).
+
 
 ### Json (package FBus.Json)
 
