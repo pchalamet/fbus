@@ -34,6 +34,7 @@ let main argv =
                      | _ -> "sample-server"
 
     use bus = FBus.QuickStart.configure() |> Builder.withName serverName
+                                          |> Builder.withShard
                                           |> Builder.withFunConsumer handler
                                           |> Builder.build
 

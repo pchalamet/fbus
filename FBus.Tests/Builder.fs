@@ -7,9 +7,20 @@ open FBus
 
 [<Test>]
 let ``withName set permanent client`` () =
-    let builder = FBus.Builder.configure() |> Builder.withName "new-client-name"
+    let builder = FBus.Builder.configure()
+
+    builder.IsEphemeral |> should equal true
+    let builder = builder |> Builder.withName "new-client-name"
     builder.Name |> should equal "new-client-name"
     builder.IsEphemeral |> should equal false
+
+[<Test>]
+let ``withShard enables sharding`` () =
+    let builder = FBus.Builder.configure()
+
+    builder.IsSharded |> should equal false
+    let builder = builder |> Builder.withShard
+    builder.IsSharded |> should equal true
 
 [<Test>]
 let ``Invalid withName raises an error `` () =

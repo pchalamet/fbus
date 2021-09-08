@@ -58,6 +58,7 @@ type IBusHook =
 type BusConfiguration =
     { Name: string
       IsEphemeral: bool
+      IsSharded: bool
       IsRecovery: bool
       Container: IBusContainer
       Serializer: IBusSerializer
@@ -69,6 +70,7 @@ type BusConfiguration =
 type BusBuilder =
     { Name: string
       IsEphemeral: bool
+      IsSharded: bool
       IsRecovery: bool
       Container: IBusContainer option
       Serializer: IBusSerializer option

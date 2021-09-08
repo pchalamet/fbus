@@ -19,6 +19,7 @@ type Builder =
 
         { BusBuilder.Name = generateClientName()
           BusBuilder.IsEphemeral = true
+          BusBuilder.IsSharded = false
           BusBuilder.IsRecovery = false
           BusBuilder.Container = None
           BusBuilder.Transport = None
@@ -31,6 +32,10 @@ type Builder =
         if name |> String.IsNullOrWhiteSpace then failwith "Invalid bus name"
         { busBuilder with BusBuilder.Name = name 
                           BusBuilder.IsEphemeral = false }
+
+    [<CompiledName("WithShard")>]
+    static member withShard busBuilder =
+        { busBuilder with BusBuilder.IsSharded = true }
 
     [<CompiledName("WithTransport")>]
     static member withTransport transport busBuilder = 
@@ -107,6 +112,7 @@ type Builder =
 
         let busConfig = { Name = busBuilder.Name
                           IsEphemeral = busBuilder.IsEphemeral
+                          IsSharded = busBuilder.IsSharded
                           IsRecovery = busBuilder.IsRecovery
                           Container = container
                           Serializer = serializer
