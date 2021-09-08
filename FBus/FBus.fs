@@ -2,7 +2,11 @@ namespace FBus
 open System
 
 type IMessageCommand = interface end
+
 type IMessageEvent = interface end
+
+type IMessageKey = 
+    abstract Key: string with get
 
 type IBusInitiator =
     abstract Publish<'t when 't :> IMessageEvent> : msg:'t -> unit
@@ -42,8 +46,8 @@ type IBusContainer =
 
 type IBusTransport =
     inherit IDisposable
-    abstract Publish: headers:Map<string, string> -> msgType:string -> body:ReadOnlyMemory<byte> -> unit
-    abstract Send: headers:Map<string, string> -> target:string -> msgType:string -> body:ReadOnlyMemory<byte> -> unit
+    abstract Publish: headers:Map<string, string> -> msgType:string -> body:ReadOnlyMemory<byte> -> routing:string -> unit
+    abstract Send: headers:Map<string, string> -> target:string -> msgType:string -> body:ReadOnlyMemory<byte> -> routing:string -> unit
 
 type IBusSerializer =
     abstract Serialize: msg:obj -> string * ReadOnlyMemory<byte>
@@ -58,7 +62,6 @@ type IBusHook =
 type BusConfiguration =
     { Name: string
       IsEphemeral: bool
-      IsSharded: bool
       IsRecovery: bool
       Container: IBusContainer
       Serializer: IBusSerializer
@@ -70,7 +73,6 @@ type BusConfiguration =
 type BusBuilder =
     { Name: string
       IsEphemeral: bool
-      IsSharded: bool
       IsRecovery: bool
       Container: IBusContainer option
       Serializer: IBusSerializer option

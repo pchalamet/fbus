@@ -15,14 +15,6 @@ let ``withName set permanent client`` () =
     builder.IsEphemeral |> should equal false
 
 [<Test>]
-let ``withShard enables sharding`` () =
-    let builder = FBus.Builder.configure()
-
-    builder.IsSharded |> should equal false
-    let builder = builder |> Builder.withShard
-    builder.IsSharded |> should equal true
-
-[<Test>]
 let ``Invalid withName raises an error `` () =
     (fun () -> FBus.Builder.configure() |> Builder.withName "   " |> ignore) |> should (throwWithMessage "Invalid bus name") typeof<Exception>
 

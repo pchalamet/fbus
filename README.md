@@ -61,6 +61,7 @@ FBus.Builder | Description | Default
 -------------|-------------|--------
 `configure` | Start configuration with default parameters. |
 `withName` | Change service name. Used to identify a bus client (see `IBusInitiator.Send` and `IBusConversation.Send`) | Name based on computer name, pid and random number.
+`withShard` | Enable sharding. | None
 `withTransport` | Transport to use. | None
 `withContainer` | Container to use | None
 `withSerializer` | Serializer to use | None

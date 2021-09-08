@@ -106,18 +106,13 @@ type RabbitMQ(uri, busConfig: BusConfiguration, msgCallback) =
         channel.ExchangeDeclare(exchange = xchgMsg, ``type`` = ExchangeType.Fanout, 
                                 durable = true, autoDelete = false)
 
-        let xchg, routing = 
-            if busConfig.IsSharded then        
-                let xchgShard = getExchangeShard busConfig.Name
-                channel.ExchangeDeclare(exchange = xchgShard, ``type`` = "x-consistent-hash", 
-                                        durable = true, autoDelete = false)
+        let xchgShard = getExchangeShard busConfig.Name
+        channel.ExchangeDeclare(exchange = xchgShard, ``type`` = "x-consistent-hash", 
+                                durable = true, autoDelete = false)
 
-                channel.ExchangeBind(xchgShard, xchgMsg, routingKey = "")
-                xchgShard, "1"
-            else
-                xchgMsg, ""
+        channel.ExchangeBind(xchgShard, xchgMsg, routingKey = "")
 
-        channel.QueueBind(queue = queueName, exchange = xchg, routingKey = routing)
+        channel.QueueBind(queue = queueName, exchange = xchgShard, routingKey = "1")
 
     let subscribeMessages () =
         busConfig.Handlers |> Map.iter (fun msgType _ -> msgType |> bindExchangeAndQueue)
@@ -145,13 +140,13 @@ type RabbitMQ(uri, busConfig: BusConfiguration, msgCallback) =
         listenMessages()
 
     interface IBusTransport with
-        member _.Publish headers msgType body =
+        member _.Publish headers msgType body key =
             let xchgName = getExchangeMsg msgType
-            safeSend headers xchgName "" body
+            safeSend headers xchgName key body
 
-        member _.Send headers client msgType body =
-            let routingKey = getQueueClient client
-            safeSend headers "" routingKey body
+        member _.Send headers client msgType body key =
+            let xchgName = getExchangeShard client
+            safeSend headers xchgName key body
 
         member _.Dispose() =
             sendChannel.Dispose()
