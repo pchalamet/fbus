@@ -75,7 +75,7 @@ type RabbitMQ(uri, busConfig: BusConfiguration, msgCallback) =
         | _ -> $"fbus:consumer:{clientName}"
 
     let configureAck () =
-        channel.BasicQos(prefetchSize = 0ul, prefetchCount = 1us, ``global`` = false)
+        channel.BasicQos(prefetchSize = 0ul, prefetchCount = 10us, ``global`` = false)
         channel.ConfirmSelect()
 
     let queueName = getQueueClient busConfig.Name busConfig.ShardName

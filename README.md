@@ -230,6 +230,8 @@ The default implementation use following settings:
 * messages are sent as persistent
 * a consumer fetches one message at a time and ack/nack accordingly
 * message goes to dead-letter on error
+* prefetch size is 0
+* prefetch count is 10
 
 ### Json (package FBus.Json)
 

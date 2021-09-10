@@ -15,16 +15,29 @@ type HelloWorldConsumer() =
             printfn "HelloWorldConsumer done"
 
 
+
+
+let mutable convoy = 1UL
+
 let handler (ctx:FBus.IBusConversation) (msg: Common.HelloWorld) =
-    printfn "Received HelloWorld message [%A] from [%s]" msg ctx.Sender
+    let currConvoy = System.Threading.Interlocked.Increment(&convoy)
+
+    printfn "Received HelloWorld message [%A] from [%s] - convoy %d" msg ctx.Sender currConvoy
     printfn "-> sender = %s" ctx.Sender
     printfn "-> conversation-id = %s" ctx.ConversationId
     printfn "-> message-id = %s" ctx.MessageId
 
-    for idx in [1..10] do
-        { Common.HelloWorld2.Message2 = sprintf "Hello %s (%d)" ctx.Sender idx } |> ctx.Reply
+    let rnd = System.Random()
+    let ts = 1000.0 + rnd.NextDouble() * 1000.0 * 10.0 |> int
+    System.Threading.Thread.Sleep(ts)
 
-    printfn "HelloWorldConsumer done"
+    let prevConvoy = System.Threading.Interlocked.Read(&convoy)
+    if currConvoy <> prevConvoy then printfn "CONVOY ERROR %d vs %d" currConvoy prevConvoy
+
+    // for idx in [1..10] do
+    //     { Common.HelloWorld2.Message2 = sprintf "Hello %s (%d)" ctx.Sender idx } |> ctx.Reply
+
+    // printfn "HelloWorldConsumer done"
 
 
 [<EntryPoint>]
@@ -34,7 +47,6 @@ let main argv =
                      | _ -> "sample-server"
 
     use bus = FBus.QuickStart.configure() |> Builder.withName serverName
-                                          |> Builder.withShard "1"
                                           |> Builder.withFunConsumer handler
                                           |> Builder.build
 
