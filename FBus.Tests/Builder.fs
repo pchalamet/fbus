@@ -35,7 +35,7 @@ let ``withTransport set transport builder`` () =
         failwith "Not implemented"
 
     let builder = FBus.Builder.configure() |> Builder.withTransport expectedTransportBuilder
-    builder.Transport |> should equal (Some expectedTransportBuilder)
+    Object.ReferenceEquals(builder.Transport.Value, expectedTransportBuilder) |> should equal true
 
 [<Test>]
 let ``withSerializer set serializer`` () =
@@ -46,8 +46,7 @@ let ``withSerializer set serializer`` () =
     }
 
     let builder = FBus.Builder.configure() |> Builder.withSerializer expectedSerializer
-    builder.Serializer |> should equal (Some expectedSerializer)
-
+    Object.ReferenceEquals(builder.Serializer.Value, expectedSerializer) |> should equal true
 
 type MyConsumer1() =
     interface IBusConsumer<string> with

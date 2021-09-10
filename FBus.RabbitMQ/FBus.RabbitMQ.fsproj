@@ -1,33 +1,27 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
-
+<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFramework>netstandard2.1</TargetFramework>
   </PropertyGroup>
-
   <ItemGroup>
-    <Compile Include="Transport.fs" />
-    <Compile Include="RabbitMQ.fs" />
+    <Compile Include="Transport.fs"/>
+    <Compile Include="RabbitMQ.fs"/>
   </ItemGroup>
-
   <ItemGroup>
-    <ProjectReference Include="..\FBus\FBus.fsproj" />
+    <ProjectReference Include="..\FBus\FBus.fsproj"/>
   </ItemGroup>
-
   <ItemGroup>
-    <PackageReference Include="RabbitMQ.Client" Version="6.2.1" />
+    <PackageReference Include="RabbitMQ.Client" Version="6.2.2"/>
   </ItemGroup>
-
   <PropertyGroup>
     <!-- https://docs.microsoft.com/en-us/nuget/reference/msbuild-targets#packing-using-a-nuspec -->
     <PackageId>FBus.RabbitMQ</PackageId>
     <Authors>Pierre Chalamet</Authors>
     <Title>FBus.RabbitMQ</Title>
     <Description>RabbitMQ transport for FBus.</Description>
-    <Copyright>Copyright 2020 Pierre Chalamet</Copyright>
+    <Copyright>Copyright Pierre Chalamet</Copyright>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageProjectUrl>https://github.com/pchalamet/fbus</PackageProjectUrl>
     <RepositoryUrl>https://github.com/pchalamet/fbus.git</RepositoryUrl>
     <PackageTags>service;bus;service-bus;rabbitmq</PackageTags>
   </PropertyGroup>
-
 </Project>
