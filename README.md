@@ -148,7 +148,7 @@ FBus.Testing.Session | Description | Comments
 ## Thread safety
 FBus is thread safe and all existing extensions in this repository.
 
-# 💎 Extensibility
+# 🛠️ Extensibility
 Following extension points are supported:
 * Transports: which middleware is transporting messages.
 * Serializers: how messages are exchanged on the wire.
@@ -294,7 +294,7 @@ Host.CreateDefaultBuilder(argv)
     .Run()
 ```
 
-# 🛠️ Build it
+# 🏭 Build it
 A makefile is available:
 * `make [build]`: build FBus
 * `make test`: build and test FBus
