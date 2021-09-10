@@ -12,11 +12,11 @@ open RabbitMQ.Client.Events
 //
 //              Exchange Binding               Queue Binding
 //
-// fbus:msg:MsgType <--+--- fbus:shard:Client1 <------ fbus:consumer:Client1 (* concurrent and/or ephemeral *)
+// fbus:msg:MsgType <--+--- fbus:shard:Client1 <------ fbus:client:Client1 (* concurrent and/or ephemeral *)
 //                     |
-//                     +--- fbus:shard:Client2 <--+--- fbus:consumer:Client2-1 (* sharded and/or ephemeral *)
+//                     +--- fbus:shard:Client2 <--+--- fbus:client:Client2-1 (* sharded and/or ephemeral *)
 //                                                |
-//                                                +--- fbus:consumer:Client2-2
+//                                                +--- fbus:client:Client2-2
 //
 
 
@@ -71,8 +71,8 @@ type RabbitMQ(uri, busConfig: BusConfiguration, msgCallback) =
 
     let getQueueClient (clientName: string) (shardName: string option) = 
         match shardName with
-        | Some shardName -> $"fbus:consumer:{clientName}#{shardName}"
-        | _ -> $"fbus:consumer:{clientName}"
+        | Some shardName -> $"fbus:client:{clientName}#{shardName}"
+        | _ -> $"fbus:client:{clientName}"
 
     let configureAck () =
         channel.BasicQos(prefetchSize = 0ul, prefetchCount = 10us, ``global`` = false)
