@@ -18,7 +18,7 @@
     <Authors>Pierre Chalamet</Authors>
     <Title>FBus.RabbitMQ</Title>
     <Description>RabbitMQ transport for FBus.</Description>
-    <Copyright>Copyright Pierre Chalamet</Copyright>
+    <Copyright>Copyright 2020 Pierre Chalamet</Copyright>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageProjectUrl>https://github.com/pchalamet/fbus</PackageProjectUrl>
     <RepositoryUrl>https://github.com/pchalamet/fbus.git</RepositoryUrl>
