@@ -1,3 +1,4 @@
+# ✨ FBus
 FBus is a lightweight service-bus implementation written in F#.
 
 It comes with default implementation for:
@@ -9,7 +10,7 @@ It comes with default implementation for:
 * Full testing capabilities using In-Memory mode
 * Persistent queue/buffering across activation
 
-## Available packages
+# 📦 NuGet packages
 
 Package | Description
 --------|------------

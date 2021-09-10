@@ -1,4 +1,4 @@
-# FBus
+# ✨ FBus
 
 [![Build status](https://github.com/pchalamet/fbus/workflows/build/badge.svg)](https://github.com/pchalamet/fbus/actions?query=workflow%3Abuild) 
 
@@ -17,17 +17,17 @@ It comes with default implementation for:
 Features that won't be implemented in FBus:
 * Sagas: coordination is a big topic by itself - technically, everything required to handle this is available (ConversationId and MessageId). This can be handled outside of a service-bus.
 
-## Available packages
+# 📦 NuGet packages
 
 Package | Status | Description
 --------|--------|------------
-FBus | [![Nuget](https://img.shields.io/nuget/v/FBus?logo=nuget)](https://nuget.org/packages/FBus) | Core package
-FBus.RabbitMQ | [![Nuget](https://img.shields.io/nuget/v/FBus.RabbitMQ?logo=nuget)](https://nuget.org/packages/FBus.RabbitMQ) | RabbitMQ transport
-FBus.Json | [![Nuget](https://img.shields.io/nuget/v/FBus.Json?logo=nuget)](https://nuget.org/packages/FBus.Json) | System.Text.Json serializer
-FBus.GenericHost | [![Nuget](https://img.shields.io/nuget/v/FBus.GenericHost?logo=nuget)](https://nuget.org/packages/FBus.GenericHost) | Generic Host support
-FBus.QuickStart | [![Nuget](https://img.shields.io/nuget/v/FBus.QuickStart?logo=nuget)](https://nuget.org/packages/FBus.QuickStart) | All FBus packages to quick start a project
+FBus | [![Nuget](https://img.shields.io/nuget/v/FBus)](https://nuget.org/packages/FBus) | Core package
+FBus.RabbitMQ | [![Nuget](https://img.shields.io/nuget/v/FBus.RabbitMQ)](https://nuget.org/packages/FBus.RabbitMQ) | RabbitMQ transport
+FBus.Json | [![Nuget](https://img.shields.io/nuget/v/FBus.Json)](https://nuget.org/packages/FBus.Json) | System.Text.Json serializer
+FBus.GenericHost | [![Nuget](https://img.shields.io/nuget/v/FBus.GenericHost)](https://nuget.org/packages/FBus.GenericHost) | Generic Host support
+FBus.QuickStart | [![Nuget](https://img.shields.io/nuget/v/FBus.QuickStart)](https://nuget.org/packages/FBus.QuickStart) | All FBus packages to quick start a project
 
-# Api
+# 📚 Api
 
 ## Messages
 In order to exchange messages using FBus, you have first to define messages. There are 2 types:
@@ -50,6 +50,13 @@ type CommandMessage =
     interface FBus.IMessageCommand
 ```
 
+For sharding scenarios, messages must also implement the `IMessageKey` interface:
+```
+type IMessageKey = 
+    abstract Key: string with get
+```
+**NOTE:** the default routing key is an empty string.
+
 For more information, see CQRS/Event Sourcing literature.
 
 ## Builder
@@ -59,7 +66,7 @@ FBus.Builder | Description | Default
 -------------|-------------|--------
 `configure` | Start configuration with default parameters. |
 `withName` | Change service name. Used to identify a bus client (see `IBusInitiator.Send` and `IBusConversation.Send`) | Name based on computer name, pid and random number.
-`withShard` | Enable sharding. | None
+`withShard` | Name the shard. Name must be provided to enable sharding. | None
 `withTransport` | Transport to use. | None
 `withContainer` | Container to use | None
 `withSerializer` | Serializer to use | None
@@ -68,7 +75,7 @@ FBus.Builder | Description | Default
 `withRecovery` | Connect to dead letter for recovery only | false
 `build` | Returns a new bus instance (`FBus.IBusControl`) based on configuration | n/a
 
-Note: bus clients are ephemeral by default - this is useful if you just want to connect to the bus for spying or sending commands for eg :-) Assigning a name (see `withName`) makes the client public so no queues are deleted upon exit.
+**NOTE:** bus clients are ephemeral by default - this is useful if you just want to connect to the bus for spying or sending commands for eg :-) Assigning a name (see `withName`) makes the client public so no queues are deleted upon exit.
 
 ## Bus
 `IBusControl` is the primary interface to control the bus:
@@ -86,7 +93,7 @@ IBusInitiator | Description
 `Publish` | Broadcast an event message to all subscribers.
 `Send` | Send a command message to given client.
 
-Note: a new conversation is started when using this interface.
+**NOTE:** a new conversation is started when using this interface.
 
 ## Consumer
 A consumer processes incoming messages: a context is provided (`IBusConversation`) and a message.
@@ -102,7 +109,7 @@ IBusConversation | Description
 `Publish` | Broadcast an event message to all subscribers.
 `Send` | Send a command message to given client.
 
-Note: the current conversation is used when using this interface.
+**NOTE:** the current conversation is used when using this interface.
 
 There are two kind of handlers:
 
@@ -127,7 +134,7 @@ FBus.InMemory | Description | Comments
 `useSerializer` | Register marshal by reference serializer | Object is preserved and passed by reference.
 `useContainer` | Register default activator (see `System.Activator`) | Default constructor must exist.
 
-NOTE: InMemory serializer does leak messages. This is by design.
+**NOTE:** InMemory serializer does leak messages. This is by design.
 
 ## Testing
 FBus can work in-memory, this is especially useful when unit-testing. Prior running a test in-memory, an `FBus.Testing.Session` instance has to be created. Multiple sessions can be created, they are completely isolated.
@@ -138,7 +145,10 @@ FBus.Testing.Session | Description | Comments
 `WaitForCompletion` | Wait for all messages to be processed | This method blocks until completion.
 `ClearCache` | Clear InMemory serializer cache | Shall not be used unless necessary.
 
-# Extensibility
+## Thread safety
+FBus is thread safe and all existing extensions in this repository.
+
+# 💎 Extensibility
 Following extension points are supported:
 * Transports: which middleware is transporting messages.
 * Serializers: how messages are exchanged on the wire.
@@ -211,6 +221,15 @@ FBus.RabbitMQ | Description | Comments
 
 Transport leverages exchanges (one for each message type) to distribute messages across consumers (subscribing a queue).
 
+It supports only a simple concurrency model:
+* no concurrency at bus level for receive. This does not mean you can't have concurrency, you just have to handle it explicitely: you have to create multiple bus instances in-process and it's up to you to synchronize correctly among threads if required.
+* Sending is a thread safe operation - but locking happens behind the scene to access underlying channel/connection.
+* Automatic recovery is configured on connection.
+
+The default implementation use following settings:
+* messages are sent as persistent
+* a consumer fetches one message at a time and ack/nack accordingly
+* message goes to dead-letter on error
 
 ### Json (package FBus.Json)
 
@@ -230,21 +249,7 @@ FBus.GenericHost | Description | Comments
 -----------------|-------------|---------
 `AddFBus` | Inject FBus in GenericHost container | `FBus.IBusControl` and `FBus.IBusInitiator` are available in injection context. 
 
-# Thread safety
-FBus is thread-safe. Plugin implementation shall be thread-safe as well.
-
-## RabbitMQ transport
-`FBus.RabbitMQ` package implements a RabbitMQ transport. It supports only a simple concurrency model:
-* no concurrency at bus level for receive. This does not mean you can't have concurrency, you just have to handle it explicitely: you have to create multiple bus instances in-process and it's up to you to synchronize correctly among threads if required.
-* Sending is a thread safe operation - but locking happens behind the scene to access underlying channel/connection.
-* Automatic recovery is configured on connection.
-
-The default implementation use following settings:
-* messages are sent as persistent
-* a consumer fetches one message at a time and ack/nack accordingly
-* message goes to dead-letter on error
-
-# Samples
+# ⚽ Samples
 
 ## In-Process console
 ### Client
@@ -289,9 +294,14 @@ Host.CreateDefaultBuilder(argv)
     .Run()
 ```
 
-# Build it
+# 🛠️ Build it
 A makefile is available:
 * `make [build]`: build FBus
 * `make test`: build and test FBus
 
 If you prefer to build using your IDE, solution file is named `fbus.sln`.
+
+# 📜 Licensing
+The project is licensed under MIT.
+
+For more information on the license see the [license file](./LICENSE).
