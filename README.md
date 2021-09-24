@@ -275,8 +275,10 @@ type MessageConsumer() =
         member this.Handle context msg = 
             printfn "Received message: %A" msg
 
-use bus = FBus.QuickStart.configure() |> withConsumer<MessageConsumer> 
-                                      |> build
+use bus =
+    FBus.QuickStart.configure() 
+    |> withConsumer<MessageConsumer> 
+    |> build
 bus.Start() |> ignore
 ```
 
@@ -284,10 +286,11 @@ bus.Start() |> ignore
 ```
 ...
 let configureBus builder =
-    builder |> withName "server"
-            |> withConsumer<MessageConsumer>
-            |> Json.useDefaults
-            |> RabbitMQ.useDefaults
+    builder 
+    |> withName "server"
+    |> withConsumer<MessageConsumer>
+    |> Json.useDefaults
+    |> RabbitMQ.useDefaults
 
 Host.CreateDefaultBuilder(argv)
     .ConfigureServices(fun services -> services.AddFBus(configureBus) |> ignore)
