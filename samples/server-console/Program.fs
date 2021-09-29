@@ -28,16 +28,17 @@ let handler (ctx:FBus.IBusConversation) (msg: Common.HelloWorld) =
     printfn "-> message-id = %s" ctx.MessageId
 
     let rnd = System.Random()
-    let ts = 1000.0 + rnd.NextDouble() * 1000.0 * 10.0 |> int
+    let ts = rnd.NextDouble() * 1000.0 * 1.5 |> int
     System.Threading.Thread.Sleep(ts)
 
     let prevConvoy = System.Threading.Interlocked.Read(&convoy)
     if currConvoy <> prevConvoy then printfn "CONVOY ERROR %d vs %d" currConvoy prevConvoy
 
-    // for idx in [1..10] do
-    //     { Common.HelloWorld2.Message2 = sprintf "Hello %s (%d)" ctx.Sender idx } |> ctx.Reply
+    for idx in [1..10] do
+        printfn "Replying %d" idx
+        { Common.HelloWorld2.Message2 = sprintf "Hello %s (%d)" ctx.Sender idx } |> ctx.Reply
 
-    // printfn "HelloWorldConsumer done"
+    printfn "HelloWorldConsumer done"
 
 
 [<EntryPoint>]

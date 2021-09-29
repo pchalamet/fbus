@@ -9,7 +9,7 @@ Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "FBus.Tests", "FBus.Tests\FB
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "samples", "samples", "{676221DE-F0BE-4D9E-9329-28DEF7BD900E}"
 EndProject
-Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "client", "samples\client\client.fsproj", "{BA69898F-2F17-42D9-AFD3-0E24881AFD28}"
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "client-console", "samples\client-console\client-console.fsproj", "{BA69898F-2F17-42D9-AFD3-0E24881AFD28}"
 EndProject
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "server-generichost", "samples\server-generichost\server-generichost.fsproj", "{BB85A4CE-36EB-41B8-9C01-3D1B0B418A35}"
 EndProject

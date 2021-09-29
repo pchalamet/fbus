@@ -27,6 +27,9 @@ FBus.Json | [![Nuget](https://img.shields.io/nuget/v/FBus.Json)](https://nuget.o
 FBus.GenericHost | [![Nuget](https://img.shields.io/nuget/v/FBus.GenericHost)](https://nuget.org/packages/FBus.GenericHost) | Generic Host support
 FBus.QuickStart | [![Nuget](https://img.shields.io/nuget/v/FBus.QuickStart)](https://nuget.org/packages/FBus.QuickStart) | All FBus packages to quick start a project
 
+# Requirements
+Starting version 0.25.0, you **must** install plugin `rabbitmq_consistent_hash_exchange` if you plan to use RabbitMQ transport.
+
 # 📚 Api
 
 ## Messages
@@ -212,7 +215,8 @@ FBus.IBusHook | Description | Comments
 
 ### RabbitMQ (package FBus.RabbitMQ)
 
-**NOTE**: In order to use sharding with this transport, you **must** install plugin `rabbitmq_consistent_hash_exchange`.
+**NOTE**:
+You **must** install plugin `rabbitmq_consistent_hash_exchange` if you plan to use RabbitMQ transport.
 
 FBus.RabbitMQ | Description | Comments
 --------------|-------------|---------
