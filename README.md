@@ -37,32 +37,30 @@ In order to exchange messages using FBus, you have first to define messages. The
 * events: messages that are broadcasted (see `Publish`)
 * commands: messages that are sent to one client (see `Send` or `Reply`)
 
-For more information, see CQRS/Event Sourcing literature.
+It's advised to shared same definitions for types across publishers and consumers. If you do not share types, ensure you expose types using same namespaces.
 
-To avoid mistakes, messages are marked with a dummy interface:
+To avoid mistakes, messages are marked with a dummy interface.
 
-For events:
+### Events
 ```
 type EventMessage =
     { msg: string }
     interface FBus.IMessageEvent
 ````
 
-For commands:
+### Commands
 ```
 type CommandMessage =
     { msg: string }
     interface FBus.IMessageCommand
 ```
-
+### Sharding
 For sharding scenarios, messages must also implement the `IMessageKey` interface:
 ```
 type IMessageKey = 
     abstract Key: string with get
 ```
 **NOTE:** the default routing key is an empty string.
-
-**NOTE:** it's advised to shared same definitions for types across publishers and consumers. If you do not share types, ensure you expose types using same namespaces.
 
 ## Builder
 Prior using the bus, a configuration must be built:
