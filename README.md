@@ -37,9 +37,9 @@ In order to exchange messages using FBus, you have first to define messages. The
 * events: messages that are broadcasted (see `Publish`)
 * commands: messages that are sent to one client (see `Send` or `Reply`)
 
-**NOTE:** it's advised to shared same definitions for types across publishers and consumers. If you do not share types, ensure you expose types using same namespaces.
+For more information, see CQRS/Event Sourcing literature.
 
-In order to avoid mistakes, messages are marked with a dummy interface:
+To avoid mistakes, messages are marked with a dummy interface:
 
 For events:
 ```
@@ -62,7 +62,7 @@ type IMessageKey =
 ```
 **NOTE:** the default routing key is an empty string.
 
-For more information, see CQRS/Event Sourcing literature.
+**NOTE:** it's advised to shared same definitions for types across publishers and consumers. If you do not share types, ensure you expose types using same namespaces.
 
 ## Builder
 Prior using the bus, a configuration must be built:
