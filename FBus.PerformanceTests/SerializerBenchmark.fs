@@ -35,7 +35,7 @@ type SerializerBenchmark() =
 
     [<GlobalSetup>]
     member this.GlobalSetup() =
-        let busBuilder = FBus.Builder.configure() |>  session.Use
+        let busBuilder = FBus.Builder.configure() |> session.Use
                                                   |> Builder.withConsumer<InMemoryHandler>
                                                   |> this.InitSerializer
 
