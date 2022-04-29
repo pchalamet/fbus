@@ -37,6 +37,8 @@ In order to exchange messages using FBus, you have first to define messages. The
 * events: messages that are broadcasted (see `Publish`)
 * commands: messages that are sent to one client (see `Send` or `Reply`)
 
+**NOTE:** it's advised to shared same definitions for types across publishers and consumers. If you do not share types, ensure you expose types using same namespaces.
+
 In order to avoid mistakes, messages are marked with a dummy interface:
 
 For events:
@@ -149,7 +151,7 @@ FBus.Testing.Session | Description | Comments
 `ClearCache` | Clear InMemory serializer cache | Shall not be used unless necessary.
 
 ## Thread safety
-FBus is thread safe and all existing extensions in this repository.
+FBus is thread safe as all existing extensions in this repository.
 
 # 🛠️ Extensibility
 Following extension points are supported:
