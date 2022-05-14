@@ -255,6 +255,8 @@ FBus.GenericHost | Description | Comments
 -----------------|-------------|---------
 `AddFBus` | Inject FBus in GenericHost container | `FBus.IBusControl` and `FBus.IBusInitiator` are available in injection context. 
 
+**NOTE:** consumers are scoped (see `IServiceProvider.CreateScope()`).
+
 # ⚽ Samples
 
 ## In-Process console

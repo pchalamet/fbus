@@ -25,7 +25,7 @@ type GenericHost(services: IServiceCollection) =
 
         member _.NewScope ctx =
             match ctx with
-            | :? IServiceProvider as serviceProvider -> serviceProvider.CreateScope()
+            | :? IServiceProvider as serviceProvider -> serviceProvider.CreateScope() :> IDisposable
             | _ -> null
 
         member _.Resolve ctx handlerInfo =
