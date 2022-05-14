@@ -92,7 +92,11 @@ type Bus(busConfig: BusConfiguration) =
             let callsite = itfType.GetMethod("Handle")
             if callsite |> isNull then failwith "Handler method not found"
 
-            let handler = busConfig.Container.Resolve activationContext handlerInfo
+            use newActivationContext = busConfig.Container.NewScope activationContext
+            let scope =
+                if newActivationContext |> isNull then activationContext
+                else newActivationContext :> obj
+            let handler = busConfig.Container.Resolve scope handlerInfo
             if handler |> isNull then failwith "No handler found"
             callsite.Invoke(handler, [| ctx; msg |]) |> ignore
         with

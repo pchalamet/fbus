@@ -20,8 +20,13 @@ type GenericHost(services: IServiceCollection) =
         member _.Register (handlerInfo: HandlerInfo) =
             let itfType = typedefof<IBusConsumer<_>>.MakeGenericType(handlerInfo.MessageType)
             match handlerInfo.Handler with
-            | Class implementationType -> services.AddTransient(itfType, implementationType) |> ignore
+            | Class implementationType -> services.AddScoped(itfType, implementationType) |> ignore
             | Instance target -> services.AddSingleton(itfType, target) |> ignore
+
+        member _.NewScope ctx =
+            match ctx with
+            | :? IServiceProvider as serviceProvider -> serviceProvider.CreateScope()
+            | _ -> null
 
         member _.Resolve ctx handlerInfo =
             let itfType = typedefof<IBusConsumer<_>>.MakeGenericType(handlerInfo.MessageType)

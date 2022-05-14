@@ -23,6 +23,7 @@ let ``withContainer set container builder`` () =
     let expectedContainer = {
         new IBusContainer with
             member this.Register handlerInfo = failwith "Not Implemented"
+            member this.NewScope activationContext = failwith "Not Implemented"
             member this.Resolve activationContext handlerInfo = failwith "Not Implemented"
     }
 

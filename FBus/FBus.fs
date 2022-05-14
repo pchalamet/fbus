@@ -42,6 +42,7 @@ type HandlerInfo =
 
 type IBusContainer =
     abstract Register: HandlerInfo -> unit
+    abstract NewScope: context:obj -> IDisposable
     abstract Resolve: context:obj -> HandlerInfo -> obj
 
 type IBusTransport =

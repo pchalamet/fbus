@@ -76,6 +76,8 @@ let buildContainer = {
             else
                 handlerInfo.Handler |> should equal (Class typeof<IntConsumer>)
 
+        member _.NewScope ctx = null
+
         member _.Resolve ctx handlerInfo =
             Interlocked.Increment(&resolveCalls) |> ignore
             ctx |> should equal activationContext
