@@ -1,7 +1,6 @@
 namespace FBus.Extensions.Tests;
 
 using System;
-using FBus;
 using FBus.Extensions;
 
 public class FBusRabbitMQExtensionsTests
