@@ -6,7 +6,6 @@ using FBus.Extensions;
 
 public class FBusRabbitMQExtensionsTests
 {
-
     [Test]
     public void CheckCompile()
     {

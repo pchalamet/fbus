@@ -18,7 +18,6 @@ public class FBusJsonExtensionsTests
 
         Assert.Pass();
 
-
         void configure(JsonSerializerOptions options)
         {
         }
