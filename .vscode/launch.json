@@ -3,35 +3,13 @@
     // Hover to view descriptions of existing attributes.
     // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
     "version": "0.2.0",
-    "configurations": [
-        {
-            "name": "Launch fbus tests",
-            "type": "coreclr",
-            "request": "launch",
-            "preLaunchTask": "build",
-            "program": "${workspaceFolder}/FBus.Tests/bin/Debug/netcoreapp3.1/FBus.Tests.dll",
-            "args": [],
-            "cwd": "${workspaceFolder}",
-            "stopAtEntry": false,
-            "console": "internalConsole"
-        },
-        {
-            "name": "Launch generichost tests",
-            "type": "coreclr",
-            "request": "launch",
-            "preLaunchTask": "build",
-            "program": "${workspaceFolder}/FBus.GenericHost.Tests/bin/Debug/netcoreapp3.1/FBus.GenericHost.Tests.dll",
-            "args": [],
-            "cwd": "${workspaceFolder}",
-            "stopAtEntry": false,
-            "console": "internalConsole"
-        },
+    "configurations": [        
         {
             "name": "launch client",
             "type": "coreclr",
             "request": "launch",
             "preLaunchTask": "build",
-            "program": "${workspaceFolder}/samples/client/bin/Debug/netcoreapp3.1/client.dll",
+            "program": "${workspaceFolder}/samples/client-console/bin/Debug/net6.0/client-console.dll",
             "args": ["server1"],
             "cwd": "${workspaceFolder}",
             "stopAtEntry": false,
@@ -42,7 +20,7 @@
             "type": "coreclr",
             "request": "launch",
             "preLaunchTask": "build",
-            "program": "${workspaceFolder}/samples/server-console/bin/Debug/netstandard2.1/server-console.dll",
+            "program": "${workspaceFolder}/samples/server-console/bin/Debug/net6.0/server-console.dll",
             "args": [],
             "cwd": "${workspaceFolder}",
             "stopAtEntry": false,
