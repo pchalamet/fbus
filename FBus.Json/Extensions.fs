@@ -7,9 +7,9 @@ open FBus
 [<Extension; Sealed; AbstractClass>]
 type BusBuilderExtensions =
     [<Extension>]
-    static member UseJsonDefaults(busBuilder) =
+    static member UseJson(busBuilder) =
         busBuilder |> Json.useDefaults
 
     [<Extension>]
-    static member UseJsonWith(busBuilder, (initOptions: Action<System.Text.Json.JsonSerializerOptions>)) =
+    static member UseJson(busBuilder, (initOptions: Action<Text.Json.JsonSerializerOptions>)) =
         busBuilder |> Json.useWith (fun options -> initOptions.Invoke(options))

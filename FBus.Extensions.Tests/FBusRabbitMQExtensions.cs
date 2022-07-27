@@ -9,8 +9,8 @@ public class FBusRabbitMQExtensionsTests
     public void CheckCompile()
     {
         var busControl = FBus.Builder.Configure()
-                             .UseRabbitMQDefaults()
-                             .UseRabbitMQWith(new Uri("http://toto.com"));
+                             .UseRabbitMQ()
+                             .UseRabbitMQ(new Uri("http://toto.com"));
 
         Assert.Pass();
     }

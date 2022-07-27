@@ -6,9 +6,9 @@ open FBus
 [<Extension; Sealed; AbstractClass>]
 type BusBuilderExtensions =
     [<Extension>]
-    static member UseRabbitMQWith(busBuilder, uri) =
+    static member UseRabbitMQ(busBuilder, uri) =
         busBuilder |> RabbitMQ.useWith uri
 
     [<Extension>]
-    static member UseRabbitMQDefaults(busBuilder) =
+    static member UseRabbitMQ(busBuilder) =
         busBuilder |> RabbitMQ.useDefaults
