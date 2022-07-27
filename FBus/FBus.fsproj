@@ -13,6 +13,7 @@
     <Compile Include="Builder.fs" />
     <Compile Include="InMemory.fs" />
     <Compile Include="Testing.fs" />
+    <Compile Include="Extensions.fs" />
   </ItemGroup>
 
   <ItemGroup>
