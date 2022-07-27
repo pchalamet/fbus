@@ -5,6 +5,7 @@ using FBus;
 using FBus.Extensions;
 
 public record FakeCommand : IMessageCommand;
+
 public record FakeEvent : IMessageEvent;
 
 public class FakeConsumer : IBusConsumer<FakeCommand>, IBusConsumer<FakeEvent>
