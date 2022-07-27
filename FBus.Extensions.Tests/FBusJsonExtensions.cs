@@ -12,10 +12,9 @@ public class FBusJsonExtensionsTests
     [Test]
     public void CheckCompile()
     {
-        var busControl = FBus.Builder.configure()
+        var busControl = FBus.Builder.Configure()
                              .UseJsonDefaults()
-                             .UseJsonWith(configure)
-                             .Build();
+                             .UseJsonWith(configure);
 
         Assert.Pass();
 

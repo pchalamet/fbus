@@ -42,7 +42,7 @@
             "type": "coreclr",
             "request": "launch",
             "preLaunchTask": "build",
-            "program": "${workspaceFolder}/samples/server-console/bin/Debug/net5.0/server-console.dll",
+            "program": "${workspaceFolder}/samples/server-console/bin/Debug/netstandard2.1/server-console.dll",
             "args": [],
             "cwd": "${workspaceFolder}",
             "stopAtEntry": false,

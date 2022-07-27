@@ -5,7 +5,7 @@ public class FBusQuickStartExtensionsTests
     [Test]
     public void CheckCompile()
     {
-        var busControl = FBus.QuickStart.Configure();
+        var busControl = FBus.QuickStart.Configure().Build();
 
         Assert.Pass();
     }

@@ -7,7 +7,7 @@ public class FBusBridgeExtensionsTests
     [Test]
     public void CheckCompile()
     {
-        var busControl = FBus.Builder.configure()
+        var busBuilder = FBus.Builder.Configure()
                              .UseBridgeDefaults();
 
         Assert.Pass();

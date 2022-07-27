@@ -12,6 +12,7 @@ let private generateClientName () =
     let rnd = Random().Next()
     $"{computerName}-{pid}-{rnd}"
 
+[<CompiledName("Configure")>]
 let configure () =
     { BusBuilder.Name = generateClientName()
       BusBuilder.ShardName = None

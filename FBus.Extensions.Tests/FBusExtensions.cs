@@ -48,14 +48,13 @@ public class FBusExtensionsTests
     [Test]
     public void CheckCompile()
     {
-        var busControl = FBus.Builder.configure()
-            .WithName("toto")
-            .WithShard("titi")
-            .WithConsumer<FakeConsumer>()
-            .WithConsumer<string>(handler)
-            .WithRecovery()
-            .WithHook(new FakeHook())
-            .Build();
+        var busBuilder = FBus.Builder.Configure()
+                             .WithName("toto")
+                             .WithShard("titi")
+                             .WithConsumer<FakeConsumer>()
+                             .WithConsumer<string>(handler)
+                             .WithRecovery()
+                             .WithHook(new FakeHook());
 
         Assert.Pass();
 
