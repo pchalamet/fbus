@@ -21,6 +21,24 @@ public class FakeConsumer : IBusConsumer<FakeCommand>, IBusConsumer<FakeEvent>
     }
 }
 
+public class FakeContainer : IBusContainer
+{
+    public IDisposable NewScope(object context)
+    {
+        throw new NotImplementedException();
+    }
+
+    public void Register(HandlerInfo value)
+    {
+        throw new NotImplementedException();
+    }
+
+    public object Resolve(object context, HandlerInfo value)
+    {
+        throw new NotImplementedException();
+    }
+}
+
 public class FakeHook : IBusHook
 {
     public IDisposable OnBeforeProcessing(IBusConversation ctx)
@@ -52,6 +70,7 @@ public class FBusExtensionsTests
         var busBuilder = FBus.Builder.Configure()
                              .WithName("toto")
                              .WithShard("titi")
+                             .WithContainer(new FakeContainer())
                              .WithConsumer<FakeConsumer>()
                              .WithConsumer<string>(handler)
                              .WithRecovery()
