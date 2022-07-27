@@ -16,6 +16,7 @@ public class FBusJsonExtensionsTests
 
         void configure(JsonSerializerOptions options)
         {
+            throw new NotImplementedException();
         }
     }
 }
