@@ -8,8 +8,8 @@ open System.Runtime.CompilerServices
 [<Extension>]
 type Extensions =
     [<Extension>]
-    static member AddFBus(services: IServiceCollection, configurator: BusBuilder -> BusBuilder) =
-        let busControl = Builder.configure() |> configurator
+    static member AddFBus(services: IServiceCollection, configurator: Func<BusBuilder, BusBuilder>) =
+        let busControl = Builder.configure() |> FuncConvert.FromFunc(configurator)
                                              |> Builder.withContainer (GenericHost(services))
                                              |> Builder.build
 

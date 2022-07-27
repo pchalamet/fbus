@@ -16,8 +16,8 @@ let main argv =
 
     let configureBus builder =
         builder |> Builder.withName serverName
-                |> FBus.Json.useDefaults
-                |> FBus.RabbitMQ.useDefaults
+                |> Json.useDefaults
+                |> RabbitMQ.useDefaults
                 |> Builder.withConsumer<HelloWorldConsumer> 
 
     Host.CreateDefaultBuilder(argv)

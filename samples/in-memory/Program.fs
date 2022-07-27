@@ -30,15 +30,15 @@ type Consumer2() =
 
 [<EntryPoint>]
 let main argv =
-    let session = FBus.Testing.Session()
-    use bus1 = FBus.Builder.configure() |> session.Use
-                                        |> Builder.withConsumer<Consumer1>
-                                        |> Builder.build
+    let session = Testing.Session()
+    use bus1 = Builder.configure() |> session.Use
+                                   |> Builder.withConsumer<Consumer1>
+                                   |> Builder.build
     let busInitiator1 = bus1.Start()
     
-    use bus2 = FBus.Builder.configure() |> session.Use
-                                        |> Builder.withConsumer<Consumer2>
-                                        |> Builder.build
+    use bus2 = Builder.configure() |> session.Use
+                                   |> Builder.withConsumer<Consumer2>
+                                   |> Builder.build
     let busInitiator2 = bus2.Start()
 
     busInitiator1.Publish { HelloMessageRequest.Msg = "Hello in-memory !" }

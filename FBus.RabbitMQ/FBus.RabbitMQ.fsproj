@@ -5,6 +5,7 @@
   <ItemGroup>
     <Compile Include="Transport.fs"/>
     <Compile Include="RabbitMQ.fs"/>
+    <Compile Include="Extensions.fs"/>
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\FBus\FBus.fsproj"/>

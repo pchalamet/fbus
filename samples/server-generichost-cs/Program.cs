@@ -2,6 +2,7 @@
 using Microsoft.FSharp.Core;
 using FBus;
 using FBus.GenericHost;
+using FBus.Extensions;
 
 namespace client_cs
 {
@@ -19,18 +20,17 @@ namespace client_cs
         {
             var serverName = args.Length == 1 ? args[0] : "sample-server";
             Host.CreateDefaultBuilder(args)
-                .ConfigureServices(services => services.AddFBus((FSharpFunc<BusBuilder, BusBuilder>)configureBus))
+                .ConfigureServices(services => services.AddFBus(configureBus))
                 .UseConsoleLifetime()
                 .Build()
                 .Run();
 
             FBus.BusBuilder configureBus(FBus.BusBuilder busBuilder)
             {
-                busBuilder = Builder.WithName(serverName, busBuilder);
-                busBuilder = Json.UseDefaults(busBuilder);
-                busBuilder = FBus.RabbitMQ.UseDefaults(busBuilder);
-                busBuilder = Builder.WithConsumer<HelloWorldConsumer>(busBuilder);
-                return busBuilder;
+                return busBuilder.WithName(serverName)
+                                 .WithConsumer<HelloWorldConsumer>()
+                                 .UseJson()
+                                 .UseRabbitMQ();
             }
         }
     }

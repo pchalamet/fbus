@@ -11,6 +11,7 @@
   <ItemGroup>
     <Compile Include="Serializer.fs"/>
     <Compile Include="Json.fs"/>
+    <Compile Include="Extensions.fs"/>
   </ItemGroup>
   <PropertyGroup>
     <!-- https://docs.microsoft.com/en-us/nuget/reference/msbuild-targets#packing-using-a-nuspec -->
