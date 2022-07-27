@@ -3,6 +3,7 @@ namespace FBus.Extensions
 open System.Runtime.CompilerServices
 open FBus
 open System
+open FBus.Testing
 
 [<Extension; Sealed; AbstractClass>]
 type BusBuilderExtensions =
@@ -13,6 +14,10 @@ type BusBuilderExtensions =
     [<Extension>]
     static member WithShard(busBuilder, name) =
         busBuilder |> Builder.withShard name
+
+    [<Extension>]
+    static member WithContainer(busBuilder, container) =
+        busBuilder |> Builder.withContainer container
 
     [<Extension>]
     static member WithConsumer<'t>(busBuilder) =
@@ -33,3 +38,7 @@ type BusBuilderExtensions =
     [<Extension>]
     static member Build(busBuilder) =
         busBuilder |> Builder.build
+
+    [<Extension>]
+    static member UseSession(busBuilder, session: Session) =
+        session.Use(busBuilder)
