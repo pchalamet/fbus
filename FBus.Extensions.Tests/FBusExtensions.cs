@@ -67,6 +67,8 @@ public class FBusExtensionsTests
     [Test]
     public void CheckCompile()
     {
+        var session = new FBus.Testing.Session();
+
         var busBuilder = FBus.Builder.Configure()
                              .WithName("toto")
                              .WithShard("titi")
@@ -74,6 +76,7 @@ public class FBusExtensionsTests
                              .WithConsumer<FakeConsumer>()
                              .WithConsumer<string>(handler)
                              .WithRecovery()
+                             .UseSession(session)
                              .WithHook(new FakeHook());
 
         Assert.Pass();
