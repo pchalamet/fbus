@@ -17,4 +17,4 @@ type Extensions =
 
         services.AddSingleton(busControl)
                 .AddSingleton(busInitiator)
-                .AddHostedService<BusService>() |> ignore
+                .AddHostedService<BusService>()
