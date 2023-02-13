@@ -4,21 +4,21 @@
     <GenerateProgramFile>false</GenerateProgramFile>
   </PropertyGroup>
   <ItemGroup>
-    <ProjectReference Include="..\FBus\FBus.fsproj"/>
-    <ProjectReference Include="..\FBus.Json\FBus.Json.fsproj"/>
+    <ProjectReference Include="..\FBus\FBus.fsproj" />
+    <ProjectReference Include="..\FBus.Json\FBus.Json.fsproj" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Containers.fs"/>
-    <Compile Include="Serializers.fs"/>
-    <Compile Include="Transports.fs"/>
-    <Compile Include="Builder.fs"/>
-    <Compile Include="Control.fs"/>
-    <Compile Include="Program.fs"/>
+    <Compile Include="Containers.fs" />
+    <Compile Include="Serializers.fs" />
+    <Compile Include="Transports.fs" />
+    <Compile Include="Builder.fs" />
+    <Compile Include="Control.fs" />
+    <Compile Include="Program.fs" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="FsUnit" Version="4.0.6"/>
-    <PackageReference Include="nunit" Version="3.13.2"/>
-    <PackageReference Include="NUnit3TestAdapter" Version="4.0.0"/>
-    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.11.0"/>
+    <PackageReference Include="FsUnit" Version="5.2.0" />
+    <PackageReference Include="nunit" Version="3.13.3" />
+    <PackageReference Include="NUnit3TestAdapter" Version="4.3.1" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.4.1" />
   </ItemGroup>
 </Project>

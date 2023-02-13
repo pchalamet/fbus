@@ -4,17 +4,17 @@
     <GenerateProgramFile>false</GenerateProgramFile>
   </PropertyGroup>
   <ItemGroup>
-    <ProjectReference Include="..\FBus.Bridge\FBus.Bridge.fsproj"/>
+    <ProjectReference Include="..\FBus.Bridge\FBus.Bridge.fsproj" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Bridge.fs"/>
-    <Compile Include="Program.fs"/>
+    <Compile Include="Bridge.fs" />
+    <Compile Include="Program.fs" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="FsUnit" Version="4.0.6"/>
-    <PackageReference Include="nunit" Version="3.13.2"/>
-    <PackageReference Include="NUnit3TestAdapter" Version="4.0.0"/>
-    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.11.0"/>
-    <PackageReference Include="FSharp.SystemTextJson" Version="0.17.4"/>
+    <PackageReference Include="FsUnit" Version="5.2.0" />
+    <PackageReference Include="nunit" Version="3.13.3" />
+    <PackageReference Include="NUnit3TestAdapter" Version="4.3.1" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.4.1" />
+    <PackageReference Include="FSharp.SystemTextJson" Version="1.1.23" />
   </ItemGroup>
 </Project>
