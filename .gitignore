@@ -433,5 +433,5 @@ $RECYCLE.BIN/
 !.vscode/extensions.json
 
 .ionide
-out
+.out
 BenchmarkDotNet.Artifacts
