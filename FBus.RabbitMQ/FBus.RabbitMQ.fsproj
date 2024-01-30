@@ -11,7 +11,7 @@
     <ProjectReference Include="..\FBus\FBus.fsproj" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="RabbitMQ.Client" Version="6.4.0" />
+    <PackageReference Include="RabbitMQ.Client" Version="6.8.1" />
   </ItemGroup>
   <PropertyGroup>
     <!-- https://docs.microsoft.com/en-us/nuget/reference/msbuild-targets#packing-using-a-nuspec -->
