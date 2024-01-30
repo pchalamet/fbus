@@ -70,8 +70,7 @@ type Bus(busConfig: BusConfiguration) =
                                   if Reflection.FSharpType.IsFunction fType then
                                       let methodInfo = 
                                           fType.GetMethods()
-                                              |> Seq.filter (fun x -> x.Name = "Invoke" && x.GetParameters().Length = 1)
-                                              |> Seq.head
+                                              |> Seq.find (fun x -> x.Name = "Invoke" && x.GetParameters().Length = 1)
                                       let partalResult = methodInfo.Invoke(next, [| head |])
                                       dynamicFunctionInternal partalResult tail
                                   else
