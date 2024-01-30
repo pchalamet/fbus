@@ -26,6 +26,9 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Build & Test
+        run: make test config=Release version=${{ env.NUGET_VERSION }} 
+
+      - name: Pack
         run: make dist config=Release version=${{ env.NUGET_VERSION }} 
 
       - name: Upload NuGet
