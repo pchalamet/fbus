@@ -9,6 +9,7 @@ It comes with default implementation for:
 * System.Text.Json serialization
 * Full testing capabilities using In-Memory mode
 * Persistent queue/buffering across activation
+* Async support
 
 # 📦 NuGet packages
 

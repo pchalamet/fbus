@@ -117,16 +117,18 @@ IBusConversation | Description
 There are two kind of handlers:
 
 ### Class
-Implement `IBusConsumer` interface on the class. Multiple implementation are allowed as of F# 5.0.
-Use `withConsumer` to register the handlers.
+Implement `IBusConsumer` interface on the class to handle synchronous message handling. Multiple implementation are allowed as of F# 5.0.
+
+Use `withConsumer` to register synchronous handlers and asynchronous handlers.
 
 ```
 type IBusConsumer<'t> =
     abstract Handle: IBusConversation -> 't -> unit
+
+type IAsyncBusConsumer<'t> =
+    abstract HandleAsync: IBusConversation -> 't -> Task
 ```
-### Function
-A function which enable partial application scenario: use `withFunConsumer`.
-Use `withFunConsumer` to register the handler.
+
 
 ## InMemory
 FBus provides InMemory implementation for transport, serializer and activator. They only exist to help testing or to easily prototype.
@@ -163,7 +165,7 @@ There are 2 types of messages:
 * events: messages that are broadcasted (see `Publish`)
 * commands: messages that are sent to one client (understand `Send`)
 
-In order to avoid mistakes, messages are marked with a dummy interface.
+In order to avoid mistakes, messages are marked with a marker interface.
 
 For events:
 ```
@@ -195,9 +197,9 @@ Serializers transform objects into byte streams and vis-versa without relying on
 See `FBus.IBusSerializer`.
 
 ## Consumers
-Consumers can be configured at will. There is one major restriction: only one handler per type is supported. If you want several subscribers, you will have to handle delegation.
+Consumers can be configured at will. There is one major restriction: only one handler per type is supported. If you want several subscribers, you will have to handle delegation. Handler can support async.
 
-See `FBus.IBusConsumer<>`.
+See `FBus.IBusConsumer<>` and `FBus.IAsyncBusConsumer<>`.
 
 ## Hooks
 Allow one to observe errors while processing messages.
