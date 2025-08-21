@@ -44,13 +44,13 @@ type RabbitMQ(uri, busConfig: BusConfiguration, msgCallback) =
     // ========================================================================================================
     // WARNING: IModel is not thread safe: https://www.rabbitmq.com/dotnet-api-guide.html#concurrency
     // ========================================================================================================
-    let safeDo action =
+    let safeAction action =
         channelLock.WaitAsync() |> await
         try action()
         finally channelLock.Release() |> ignore
 
     let send headers (xchgName: string) (routingKey: string) body =
-        safeDo (fun () ->
+        safeAction (fun () ->
             if sendChannel.IsClosed then
                 sendChannel <- conn.CreateChannelAsync() |> awaitResult
 
@@ -64,10 +64,10 @@ type RabbitMQ(uri, busConfig: BusConfiguration, msgCallback) =
         )
 
     let ack (ea: BasicDeliverEventArgs) =
-        safeDo (fun () -> channel.BasicAckAsync(deliveryTag = ea.DeliveryTag, multiple = false).AsTask() |> await)
+        safeAction (fun () -> channel.BasicAckAsync(deliveryTag = ea.DeliveryTag, multiple = false).AsTask() |> await)
 
     let nack (ea: BasicDeliverEventArgs) =
-        safeDo (fun () -> channel.BasicNackAsync(deliveryTag = ea.DeliveryTag, multiple = false, requeue = false).AsTask() |> await)
+        safeAction (fun () -> channel.BasicNackAsync(deliveryTag = ea.DeliveryTag, multiple = false, requeue = false).AsTask() |> await)
 
     // ========================================================================================================
 
