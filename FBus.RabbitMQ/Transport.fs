@@ -44,44 +44,31 @@ type RabbitMQ(uri, busConfig: BusConfiguration, msgCallback) =
     // ========================================================================================================
     // WARNING: IModel is not thread safe: https://www.rabbitmq.com/dotnet-api-guide.html#concurrency
     // ========================================================================================================
-    let safeSend headers (xchgName: string) (routingKey: string) body =
-        let headers = headers |> Map.map (fun _ v -> v :> obj)
+    let safeDo action =
+        channelLock.WaitAsync() |> await
+        try action()
+        finally channelLock.Release() |> ignore
 
-        let send () =
+    let send headers (xchgName: string) (routingKey: string) body =
+        safeDo (fun () ->
             if sendChannel.IsClosed then
                 sendChannel <- conn.CreateChannelAsync() |> awaitResult
 
+            let headers = headers |> Map.map (fun _ v -> v :> obj)
             let props = BasicProperties(Headers = headers, Persistent = true)
             sendChannel.BasicPublishAsync(exchange = xchgName,
                                           routingKey = routingKey,
                                           mandatory = false,
                                           basicProperties = props,
                                           body = body).AsTask() |> await
-        channelLock.WaitAsync() |> await
-        try
-            send()
-        finally
-            channelLock.Release() |> ignore
+        )
 
-    let safeAck (ea: BasicDeliverEventArgs) =
-        let ack () =
-            channel.BasicAckAsync(deliveryTag = ea.DeliveryTag, multiple = false).AsTask() |> await
+    let ack (ea: BasicDeliverEventArgs) =
+        safeDo (fun () -> channel.BasicAckAsync(deliveryTag = ea.DeliveryTag, multiple = false).AsTask() |> await)
 
-        channelLock.WaitAsync() |> await
-        try
-            ack()
-        finally
-            channelLock.Release() |> ignore
+    let nack (ea: BasicDeliverEventArgs) =
+        safeDo (fun () -> channel.BasicNackAsync(deliveryTag = ea.DeliveryTag, multiple = false, requeue = false).AsTask() |> await)
 
-    let safeNack (ea: BasicDeliverEventArgs) =
-        let nack() =
-            channel.BasicNackAsync(deliveryTag = ea.DeliveryTag, multiple = false, requeue = false).AsTask() |> await
-
-        channelLock.WaitAsync() |> await
-        try
-            nack()
-        finally
-            channelLock.Release() |> ignore
     // ========================================================================================================
 
 
@@ -153,10 +140,9 @@ type RabbitMQ(uri, busConfig: BusConfiguration, msgCallback) =
                                                          |> Map
 
                 msgCallback headers ea.Body
-
-                safeAck ea
+                ack ea
             with
-                | _ -> safeNack ea
+                _ -> nack ea
         let handler = AsyncEventHandler<BasicDeliverEventArgs>(fun _ ea -> task { consumerCallback msgCallback ea |> ignore })
         consumer.add_ReceivedAsync handler
         channel.BasicConsumeAsync(queue = queueName, autoAck = false, consumer = consumer) |> await
@@ -170,11 +156,11 @@ type RabbitMQ(uri, busConfig: BusConfiguration, msgCallback) =
     interface IBusTransport with
         member _.Publish headers msgType body key =
             let xchgName = getExchangeMsg msgType
-            safeSend headers xchgName key body
+            send headers xchgName key body
 
         member _.Send headers client msgType body key =
             let xchgName = getExchangeShard client
-            safeSend headers xchgName key body
+            send headers xchgName key body
 
         member _.Dispose() =
             sendChannel.Dispose()
