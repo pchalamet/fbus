@@ -42,11 +42,8 @@ type InMemoryContext() =
                                                     transport.Dispatch headers msgType body)
 
     member _.Dispatch msgCallback headers body =
-        try
-            msgCallback headers body
-        with
-            | exn -> printfn "FAILURE: Dispatch failure %A" exn
-
+        try msgCallback headers body
+        with exn -> printfn "FAILURE: Dispatch failure %A" exn
         doneMsgInFlight()
 
 and InMemory(context: InMemoryContext, busConfig, msgCallback) =

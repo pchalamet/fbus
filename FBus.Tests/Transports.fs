@@ -51,7 +51,7 @@ type InMemoryHandlerFail2() =
             task {
                 { Content2 = msg.Content1 } |> ctx.Send "InMemoryHandler2"
                 do! System.Threading.Tasks.Task.Delay(100)
-                InMemoryHandlerFail1.HandledInvoked |> Option.iter (fun callback -> callback.HasBeenInvoked())
+                InMemoryHandlerFail2.HandledInvoked |> Option.iter (fun callback -> callback.HasBeenInvoked())
                 failwith "Test failure"
             }
 

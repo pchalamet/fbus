@@ -73,15 +73,6 @@ type Bus(busConfig: BusConfiguration) =
 
             msg <- busConfig.Serializer.Deserialize handlerInfo.MessageType content
 
-            let callsite =
-                if handlerInfo.Async then
-                    let itfType = typedefof<IAsyncBusConsumer<_>>.MakeGenericType(handlerInfo.MessageType)
-                    itfType.GetMethod("HandleAsync")
-                else
-                    let itfType = typedefof<IBusConsumer<_>>.MakeGenericType(handlerInfo.MessageType)
-                    itfType.GetMethod("Handle")
-            if callsite |> isNull then failwith "Handler method not found"
-
             use newActivationContext = busConfig.Container.NewScope activationContext
             let scope =
                 if newActivationContext |> isNull then activationContext
@@ -89,8 +80,12 @@ type Bus(busConfig: BusConfiguration) =
             let handler = busConfig.Container.Resolve scope handlerInfo
             if handler |> isNull then failwith "No handler found"
 
+            let callsite =
+                if handlerInfo.Async then typedefof<IAsyncBusConsumer<_>>.MakeGenericType(handlerInfo.MessageType).GetMethod("HandleAsync")
+                else typedefof<IBusConsumer<_>>.MakeGenericType(handlerInfo.MessageType).GetMethod("Handle")
+            if callsite |> isNull then failwith "Handler method not found"
             match callsite.Invoke(handler, [| ctx; msg |]) with
-            | :? Task as task -> task.GetAwaiter().GetResult()
+            | :? Task as task -> task |> Async.AwaitTask |> Async.RunSynchronously
             | _ -> ()
         with
             | :? Reflection.TargetInvocationException as tie -> busConfig.Hook |> Option.iter (fun hook -> hook.OnError ctx msg tie.InnerException)
