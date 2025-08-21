@@ -64,29 +64,6 @@ type MyConsumer2() =
             failwith "Not Implemented"
 
 [<Test>]
-let ``withConsumer add consumers`` () =
-    let funcHandler: IFunConsumer<decimal> = 
-        fun ctx msg -> failwith "Not implemented"
-
-    let build = 
-        FBus.Builder.configure()
-        |> Builder.withConsumer<MyConsumer1>
-        |> Builder.withConsumer<MyConsumer2>
-        |> Builder.withFunConsumer funcHandler
-
-    let expectedHandlers = Map [ "System.String", { MessageType = typeof<string>
-                                                    Handler = Class typeof<MyConsumer1> }
-                                 "System.Double", { MessageType = typeof<float>
-                                                    Handler = Class typeof<MyConsumer1> }
-                                 "System.Int32", { MessageType = typeof<int>
-                                                   Handler = Class typeof<MyConsumer2> } 
-                                 "System.Decimal", { MessageType = typeof<decimal>
-                                                     Handler = Instance funcHandler } ]
-
-    build.Handlers |> should equal expectedHandlers
-
-
-[<Test>]
 let ``withRecovery set recovery flag`` () =
     let builder = FBus.Builder.configure() |> Builder.withRecovery
     builder.IsRecovery |> should equal true

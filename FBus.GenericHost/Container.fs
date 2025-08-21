@@ -19,9 +19,7 @@ type GenericHost(services: IServiceCollection) =
     interface IBusContainer with
         member _.Register (handlerInfo: HandlerInfo) =
             let itfType = typedefof<IBusConsumer<_>>.MakeGenericType(handlerInfo.MessageType)
-            match handlerInfo.Handler with
-            | Class implementationType -> services.AddScoped(itfType, implementationType) |> ignore
-            | Instance target -> services.AddSingleton(itfType, target) |> ignore
+            services.AddScoped(itfType, handlerInfo.Handler) |> ignore
 
         member _.NewScope ctx =
             match ctx with

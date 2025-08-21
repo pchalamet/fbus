@@ -2,10 +2,6 @@
 open FBus
 open System
 
-type private FunBusConsumer<'t>(func: IFunConsumer<'t>) =
-    interface IBusConsumer<'t> with
-        member _.Handle ctx msg = func ctx msg
-
 let private generateClientName () =
     let computerName = Environment.MachineName
     let pid = Diagnostics.Process.GetCurrentProcess().Id
@@ -44,25 +40,28 @@ let withSerializer serializer busBuilder =
 
 let withConsumer<'t> busBuilder =
     let findMessageHandler (t: System.Type) =
-        if t.IsGenericType && t.GetGenericTypeDefinition() = typedefof<IBusConsumer<_>> then 
-            let msgType = t.GetGenericArguments().[0]
-            Some msgType
-        else None
+        if t.IsGenericType then
+            if t.GetGenericTypeDefinition() = typedefof<IBusConsumer<_>> then 
+                let msgType = t.GetGenericArguments().[0]
+                Some (false, msgType)
+            elif t.GetGenericTypeDefinition() = typedefof<IAsyncBusConsumer<_>> then 
+                let msgType = t.GetGenericArguments().[0]
+                Some (true, msgType)
+            else
+                None
+        else
+            None
 
     let findMessageHandlers (t: System.Type) =    
         t.GetInterfaces() |> Array.choose findMessageHandler
-                            |> Array.map (fun msgType -> { MessageType = msgType
-                                                           Handler = Class t })
-                            |> List.ofArray
+                          |> Array.map (fun (async, msgType) -> { MessageType = msgType
+                                                                  Async = async
+                                                                  Handler = t })
+                          |> List.ofArray
 
     let handlers = typeof<'t> |> findMessageHandlers
     if handlers = List.empty then failwith "No handler implemented"
     { busBuilder with BusBuilder.Handlers = handlers |> List.fold (fun acc h -> acc |> Map.add h.MessageType.FullName h) busBuilder.Handlers }
-
-let withFunConsumer (func: IFunConsumer<'t>) busBuilder =
-    let handlerInfo = { MessageType = typeof<'t>
-                        Handler = Instance func }
-    { busBuilder with BusBuilder.Handlers = busBuilder.Handlers |> Map.add typeof<'t>.FullName handlerInfo }
 
 let withRecovery busBuilder =
     { busBuilder with BusBuilder.IsRecovery = true }
@@ -89,15 +88,6 @@ let build (busBuilder : BusBuilder) =
                     | Some transport -> transport
                     | _ -> failwith "Transport must be initialized"
 
-    let toRuntimeHandler _ (handlerInfo: HandlerInfo) =
-        match handlerInfo.Handler with
-        | Class _ -> handlerInfo
-        | Instance func -> let funcBusConsumerType = typedefof<FunBusConsumer<_>>.MakeGenericType(handlerInfo.MessageType)
-                           let funcBusConsumer = System.Activator.CreateInstance(funcBusConsumerType, func)
-                           { handlerInfo with Handler = Instance funcBusConsumer }
-
-    let runtimeHandlers = busBuilder.Handlers |> Map.map toRuntimeHandler
-
     let busConfig = { Name = busBuilder.Name
                       ShardName = busBuilder.ShardName
                       IsEphemeral = busBuilder.IsEphemeral
@@ -106,6 +96,6 @@ let build (busBuilder : BusBuilder) =
                       Serializer = serializer
                       Hook = busBuilder.Hook
                       Transport = transport
-                      Handlers = runtimeHandlers }
+                      Handlers = busBuilder.Handlers }
 
     new Control.Bus(busConfig) :> IBusControl

@@ -6,7 +6,7 @@
     <ProjectReference Include="..\FBus\FBus.fsproj" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="FSharp.SystemTextJson" Version="1.2.42" />
+    <PackageReference Include="FSharp.SystemTextJson" Version="1.4.36" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Serializer.fs" />

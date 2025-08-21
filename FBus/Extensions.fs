@@ -24,10 +24,6 @@ type BusBuilderExtensions =
         busBuilder |> Builder.withConsumer<'t>
 
     [<Extension>]
-    static member WithConsumer<'t>(busBuilder, action: Action<IBusConversation, 't>) =
-        busBuilder |> Builder.withFunConsumer (FuncConvert.FromAction action)
-
-    [<Extension>]
     static member WithRecovery(busBuilder) =
         busBuilder |> Builder.withRecovery
 
