@@ -36,9 +36,24 @@ type InMemoryHandlerFail1() =
 type InMemoryHandler2() =
     static member val HandledInvoked: IHandlerInvoked option = None with get, set
 
-    interface FBus.IBusConsumer<InMemoryMessage2> with
-        member _.Handle ctx msg = 
-            InMemoryHandler2.HandledInvoked |> Option.iter (fun callback -> callback.HasBeenInvoked())
+    interface FBus.IAsyncBusConsumer<InMemoryMessage2> with
+        member _.HandleAsync ctx msg =
+            task {
+                do! System.Threading.Tasks.Task.Delay(100)
+                InMemoryHandler2.HandledInvoked |> Option.iter (fun callback -> callback.HasBeenInvoked())
+            }
+
+type InMemoryHandlerFail2() =
+    static member val HandledInvoked: IHandlerInvoked option = None with get, set
+
+    interface FBus.IAsyncBusConsumer<InMemoryMessage1> with
+        member _.HandleAsync ctx msg = 
+            task {
+                { Content2 = msg.Content1 } |> ctx.Send "InMemoryHandler2"
+                do! System.Threading.Tasks.Task.Delay(100)
+                InMemoryHandlerFail1.HandledInvoked |> Option.iter (fun callback -> callback.HasBeenInvoked())
+                failwith "Test failure"
+            }
 
 let startServer<'t> (session: FBus.Testing.Session) name =
     let checkErrorHook = {
@@ -94,6 +109,31 @@ let ``check inmemory message exchange with handler failure`` () =
     InMemoryHandlerFail1.HandledInvoked <- Some callback1
     InMemoryHandler2.HandledInvoked <- Some callback2
     use bus1 = startServer<InMemoryHandlerFail1> session "InMemoryHandler1"
+    use bus2 = startServer<InMemoryHandler2> session "InMemoryHandler2"
+
+    use clientBus = FBus.Builder.configure() |> session.Use |> FBus.Builder.build
+    let clientInitiator = clientBus.Start() 
+
+    { Content1 = "Hello InMemory" } |> clientInitiator.Publish
+
+    session.WaitForCompletion()
+
+    serverHasBeenInvoked1 |> should equal 1
+    serverHasBeenInvoked2 |> should equal 1
+
+// We are expecting both handlers to be called
+// As we know handler1 will fail, waitForCompletion() shall still exit
+[<Test>]
+let ``check inmemory async message exchange with handler failure`` () =
+    let session = FBus.Testing.Session()
+
+    let mutable serverHasBeenInvoked1 = 0
+    let mutable serverHasBeenInvoked2 = 0
+    let callback1 = { new IHandlerInvoked with member _.HasBeenInvoked() = System.Threading.Interlocked.Increment(&serverHasBeenInvoked1) |> ignore }
+    let callback2 = { new IHandlerInvoked with member _.HasBeenInvoked() = System.Threading.Interlocked.Increment(&serverHasBeenInvoked2) |> ignore }
+    InMemoryHandlerFail2.HandledInvoked <- Some callback1
+    InMemoryHandler2.HandledInvoked <- Some callback2
+    use bus1 = startServer<InMemoryHandlerFail2> session "InMemoryHandler1"
     use bus2 = startServer<InMemoryHandler2> session "InMemoryHandler2"
 
     use clientBus = FBus.Builder.configure() |> session.Use |> FBus.Builder.build
