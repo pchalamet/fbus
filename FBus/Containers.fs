@@ -8,7 +8,4 @@ type Activator() =
 
         member _.NewScope ctx = null
 
-        member _.Resolve activationContext handlerInfo =
-            match handlerInfo.Handler with
-            | Class implementationType -> System.Activator.CreateInstance(implementationType)
-            | Instance target -> target
+        member _.Resolve activationContext handlerInfo = System.Activator.CreateInstance handlerInfo.Handler

@@ -1,5 +1,6 @@
 namespace FBus
 open System
+open System.Threading.Tasks
 
 type IMessageCommand = interface end
 
@@ -30,15 +31,13 @@ type IBusConversation =
 type IBusConsumer<'t> =
     abstract Handle: IBusConversation -> msg:'t -> unit
 
-type IFunConsumer<'t> = IBusConversation -> 't -> unit
-
-type Handler = 
-    | Class of implementationType:Type
-    | Instance of obj
+type IAsyncBusConsumer<'T> =
+    abstract member HandleAsync: IBusConversation -> 'T -> Task
 
 type HandlerInfo =
     { MessageType: Type
-      Handler: Handler }
+      Async: bool
+      Handler: Type }
 
 type IBusContainer =
     abstract Register: HandlerInfo -> unit

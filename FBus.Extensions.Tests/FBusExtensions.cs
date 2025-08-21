@@ -74,16 +74,10 @@ public class FBusExtensionsTests
                              .WithShard("titi")
                              .WithContainer(new FakeContainer())
                              .WithConsumer<FakeConsumer>()
-                             .WithConsumer<string>(handler)
                              .WithRecovery()
                              .UseSession(session)
                              .WithHook(new FakeHook());
 
         Assert.Pass();
-
-        void handler(IBusConversation conversation, string msg)
-        {
-            throw new NotImplementedException();
-        }
     }
 }

@@ -1,6 +1,7 @@
 namespace FBus.Control
 open System
 open FBus
+open System.Threading.Tasks
 
 
 type Bus(busConfig: BusConfiguration) =
@@ -63,21 +64,6 @@ type Bus(busConfig: BusConfiguration) =
 
         use hookState = busConfig.Hook |> Option.map (fun hook -> hook.OnBeforeProcessing ctx) |> Option.defaultValue null
 
-        let dynamicFunction (fn:obj) (args:obj list) =
-            let rec dynamicFunctionInternal (next:obj) (args:obj list) =
-                match args with
-                | head :: tail -> let fType = next.GetType()
-                                  if Reflection.FSharpType.IsFunction fType then
-                                      let methodInfo = 
-                                          fType.GetMethods()
-                                              |> Seq.find (fun x -> x.Name = "Invoke" && x.GetParameters().Length = 1)
-                                      let partalResult = methodInfo.Invoke(next, [| head |])
-                                      dynamicFunctionInternal partalResult tail
-                                  else
-                                      failwithf "Expecting FSharpFunc"
-                | _ -> ()
-            dynamicFunctionInternal fn (args |> List.ofSeq )
-
         try
             let msgType = headers |> Map.find FBUS_MSGTYPE
 
@@ -87,8 +73,13 @@ type Bus(busConfig: BusConfiguration) =
 
             msg <- busConfig.Serializer.Deserialize handlerInfo.MessageType content
 
-            let itfType = typedefof<IBusConsumer<_>>.MakeGenericType(handlerInfo.MessageType)
-            let callsite = itfType.GetMethod("Handle")
+            let callsite =
+                if handlerInfo.Async then
+                    let itfType = typedefof<IAsyncBusConsumer<_>>.MakeGenericType(handlerInfo.MessageType)
+                    itfType.GetMethod("HandleAsync")
+                else
+                    let itfType = typedefof<IBusConsumer<_>>.MakeGenericType(handlerInfo.MessageType)
+                    itfType.GetMethod("Handle")
             if callsite |> isNull then failwith "Handler method not found"
 
             use newActivationContext = busConfig.Container.NewScope activationContext
@@ -97,7 +88,10 @@ type Bus(busConfig: BusConfiguration) =
                 else newActivationContext :> obj
             let handler = busConfig.Container.Resolve scope handlerInfo
             if handler |> isNull then failwith "No handler found"
-            callsite.Invoke(handler, [| ctx; msg |]) |> ignore
+
+            match callsite.Invoke(handler, [| ctx; msg |]) with
+            | :? Task as task -> task.GetAwaiter().GetResult()
+            | _ -> ()
         with
             | :? Reflection.TargetInvocationException as tie -> busConfig.Hook |> Option.iter (fun hook -> hook.OnError ctx msg tie.InnerException)
                                                                 reraise()

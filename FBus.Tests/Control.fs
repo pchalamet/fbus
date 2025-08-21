@@ -72,9 +72,9 @@ let buildContainer = {
 
             [typeof<StringMessage>; typeof<IntMessage>] |> List.contains  handlerInfo.MessageType |> should be True
             if handlerInfo.MessageType = typeof<StringMessage> then
-                handlerInfo.Handler |> should equal (Class typeof<StringConsumer>)
+                handlerInfo.Handler |> should equal (typeof<StringConsumer>)
             else
-                handlerInfo.Handler |> should equal (Class typeof<IntConsumer>)
+                handlerInfo.Handler |> should equal (typeof<IntConsumer>)
 
         member _.NewScope ctx = null
 
@@ -84,10 +84,10 @@ let buildContainer = {
 
             [typeof<StringMessage>; typeof<IntMessage>] |> List.contains  handlerInfo.MessageType |> should be True
             if handlerInfo.MessageType = typeof<StringMessage> then
-                handlerInfo.Handler |> should equal (Class typeof<StringConsumer>)
+                handlerInfo.Handler |> should equal (typeof<StringConsumer>)
                 StringConsumer(consumerStringCallback) :> obj
             else
-                handlerInfo.Handler |> should equal (Class typeof<IntConsumer>)
+                handlerInfo.Handler |> should equal (typeof<IntConsumer>)
                 IntConsumer(consumerIntCallback) :> obj
 }
 
