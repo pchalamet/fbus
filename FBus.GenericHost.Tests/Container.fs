@@ -38,9 +38,11 @@ type InMemoryHandler1(handlerInvoked: IHandlerInvoked, scopedDependency: ScopedD
             handlerInvoked.HasBeenInvoked()
 
 type InMemoryHandler2(handlerInvoked: IHandlerInvoked, scopedDependency: ScopedDependency) =
-    interface FBus.IBusConsumer<InMemoryMessage2> with
-        member this.Handle ctx msg = 
-            handlerInvoked.HasBeenInvoked()
+    interface FBus.IAsyncBusConsumer<InMemoryMessage2> with
+        member this.HandleAsync ctx msg = 
+            task {
+                handlerInvoked.HasBeenInvoked()
+            }
 
 let startServer<'t> (session: FBus.Testing.Session) name callback callbackdispose =
     let handledInvoked = {

@@ -18,7 +18,9 @@ type internal BusService(busControl: IBusControl, serviceProvider: IServiceProvi
 type GenericHost(services: IServiceCollection) =
     interface IBusContainer with
         member _.Register (handlerInfo: HandlerInfo) =
-            let itfType = typedefof<IBusConsumer<_>>.MakeGenericType(handlerInfo.MessageType)
+            let itfType =
+                if handlerInfo.Async then typedefof<IAsyncBusConsumer<_>>.MakeGenericType(handlerInfo.MessageType)
+                else typedefof<IBusConsumer<_>>.MakeGenericType(handlerInfo.MessageType)
             services.AddScoped(itfType, handlerInfo.Handler) |> ignore
 
         member _.NewScope ctx =
@@ -27,7 +29,9 @@ type GenericHost(services: IServiceCollection) =
             | _ -> null
 
         member _.Resolve ctx handlerInfo =
-            let itfType = typedefof<IBusConsumer<_>>.MakeGenericType(handlerInfo.MessageType)
+            let itfType =
+                if handlerInfo.Async then typedefof<IAsyncBusConsumer<_>>.MakeGenericType(handlerInfo.MessageType)
+                else typedefof<IBusConsumer<_>>.MakeGenericType(handlerInfo.MessageType)
             match ctx with
             | :? IServiceProvider as serviceProvider -> serviceProvider.GetService(itfType)
             | _ -> null
