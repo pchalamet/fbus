@@ -20,48 +20,55 @@ open RabbitMQ.Client.Events
 //
 
 
-type RabbitMQ(uri, busConfig: BusConfiguration, msgCallback) =
-    let channelLock = obj()
-    let factory = ConnectionFactory(Uri = uri, AutomaticRecoveryEnabled = true)
-    let conn = factory.CreateConnection()
-    let channel = conn.CreateModel()
-    let mutable sendChannel = conn.CreateModel()
+[<AutoOpen>]
+module Async =
+    let inline await (t: System.Threading.Tasks.Task) = t |> Async.AwaitTask |> Async.RunSynchronously
+    let inline awaitResult<'t> (t: System.Threading.Tasks.Task<'t>) = t |> Async.AwaitTask |> Async.RunSynchronously
 
-    let tryGetHeaderAsString (key: string) (props: IBasicProperties) =
+type RabbitMQ7(uri, busConfig: BusConfiguration, msgCallback) =
+
+    let channelLock = new System.Threading.SemaphoreSlim(1, 1)
+    let factory = ConnectionFactory(Uri = uri, AutomaticRecoveryEnabled = true)
+    let conn = factory.CreateConnectionAsync() |> awaitResult
+    let options = CreateChannelOptions(publisherConfirmationsEnabled = true,publisherConfirmationTrackingEnabled = true)
+    let channel = conn.CreateChannelAsync(options) |> awaitResult
+    let mutable sendChannel = conn.CreateChannelAsync() |> awaitResult
+
+    let tryGetHeaderAsString (key: string) (props: IReadOnlyBasicProperties) =
             match props.Headers.TryGetValue key with
             | true, (:? (byte[]) as s) -> Some (System.Text.Encoding.UTF8.GetString(s))
             | _ -> None
 
 
+
     // ========================================================================================================
     // WARNING: IModel is not thread safe: https://www.rabbitmq.com/dotnet-api-guide.html#concurrency
     // ========================================================================================================
-    let safeSend headers xchgName routingKey body =
-        let headers = headers |> Map.map (fun _ v -> v :> obj)
+    let safeAction action =
+        channelLock.WaitAsync() |> await
+        try action()
+        finally channelLock.Release() |> ignore
 
-        let send () =
+    let send headers (xchgName: string) (routingKey: string) body =
+        safeAction (fun () ->
             if sendChannel.IsClosed then
-                sendChannel <- conn.CreateModel()
+                sendChannel <- conn.CreateChannelAsync() |> awaitResult
 
-            let props = sendChannel.CreateBasicProperties(Headers = headers, Persistent = true)
-            sendChannel.BasicPublish(exchange = xchgName,
-                                     routingKey = routingKey,
-                                     basicProperties = props,
-                                     body = body)
+            let headers = headers |> Map.map (fun _ v -> v :> obj)
+            let props = BasicProperties(Headers = headers, Persistent = true)
+            sendChannel.BasicPublishAsync(exchange = xchgName,
+                                          routingKey = routingKey,
+                                          mandatory = false,
+                                          basicProperties = props,
+                                          body = body).AsTask() |> await
+        )
 
-        lock channelLock send
+    let ack (ea: BasicDeliverEventArgs) =
+        safeAction (fun () -> channel.BasicAckAsync(deliveryTag = ea.DeliveryTag, multiple = false).AsTask() |> await)
 
-    let safeAck (ea: BasicDeliverEventArgs) =
-        let ack () =
-            channel.BasicAck(deliveryTag = ea.DeliveryTag, multiple = false)
+    let nack (ea: BasicDeliverEventArgs) =
+        safeAction (fun () -> channel.BasicNackAsync(deliveryTag = ea.DeliveryTag, multiple = false, requeue = false).AsTask() |> await)
 
-        lock channelLock ack
-
-    let safeNack (ea: BasicDeliverEventArgs) =
-        let nack() =
-            channel.BasicNack(deliveryTag = ea.DeliveryTag, multiple = false, requeue = false)
-
-        lock channelLock nack
     // ========================================================================================================
 
 
@@ -75,8 +82,8 @@ type RabbitMQ(uri, busConfig: BusConfiguration, msgCallback) =
         | _ -> $"fbus:client:{clientName}"
 
     let configureAck () =
-        channel.BasicQos(prefetchSize = 0ul, prefetchCount = 10us, ``global`` = false)
-        channel.ConfirmSelect()
+        channel.BasicQosAsync(prefetchSize = 0ul, prefetchCount = 10us, ``global`` = false)
+        |> await
 
     let queueName = getQueueClient busConfig.Name busConfig.ShardName
 
@@ -88,12 +95,12 @@ type RabbitMQ(uri, busConfig: BusConfiguration, msgCallback) =
         let deadLetterQueueName = queueName + ":dead-letter"
         if busConfig.IsEphemeral then Map.empty
         else
-            channel.ExchangeDeclare(exchange = xchgDeadLetter,
+            channel.ExchangeDeclareAsync(exchange = xchgDeadLetter,
                                     ``type`` = ExchangeType.Direct,
-                                    durable = true, autoDelete = false)
-            channel.QueueDeclare(queue = deadLetterQueueName,
-                                 durable = true, exclusive = false, autoDelete = false) |> ignore
-            channel.QueueBind(queue = deadLetterQueueName, exchange = xchgDeadLetter, routingKey = deadLetterQueueName)
+                                    durable = true, autoDelete = false) |> await
+            channel.QueueDeclareAsync(queue = deadLetterQueueName,
+                                      durable = true, exclusive = false, autoDelete = false)  |> await
+            channel.QueueBindAsync(queue = deadLetterQueueName, exchange = xchgDeadLetter, routingKey = deadLetterQueueName) |> await
 
             Map [ "x-dead-letter-exchange", xchgDeadLetter :> obj
                   "x-dead-letter-routing-key", deadLetterQueueName :> obj ]
@@ -102,29 +109,29 @@ type RabbitMQ(uri, busConfig: BusConfiguration, msgCallback) =
         // =========================================================================================
         // message queues are bound to an exchange (fanout) - all bound subscribers receive messages
         // =========================================================================================
-        channel.QueueDeclare(queueName,
-                             durable = true, exclusive = false, autoDelete = busConfig.IsEphemeral,
-                             arguments = queueArgs) |> ignore
+        channel.QueueDeclareAsync(queueName,
+                                  durable = true, exclusive = false, autoDelete = busConfig.IsEphemeral,
+                                  arguments = queueArgs) |> await
 
     let bindExchangeAndQueue msgType =
         let xchgMsg = getExchangeMsg msgType
-        channel.ExchangeDeclare(exchange = xchgMsg, ``type`` = ExchangeType.Fanout, 
-                                durable = true, autoDelete = false)
+        channel.ExchangeDeclareAsync(exchange = xchgMsg, ``type`` = ExchangeType.Fanout, 
+                                     durable = true, autoDelete = false) |> await
 
         // NOTE: if exchange creation crashes then check "rabbitmq_consistent_hash_exchange" is correctly installed
         let xchgShard = getExchangeShard busConfig.Name
-        channel.ExchangeDeclare(exchange = xchgShard, ``type`` = "x-consistent-hash", 
-                                durable = true, autoDelete = busConfig.IsEphemeral)
+        channel.ExchangeDeclareAsync(exchange = xchgShard, ``type`` = "x-consistent-hash", 
+                                     durable = true, autoDelete = busConfig.IsEphemeral) |> await
 
-        channel.ExchangeBind(xchgShard, xchgMsg, routingKey = "")
+        channel.ExchangeBindAsync(xchgShard, xchgMsg, routingKey = "") |> await
 
-        channel.QueueBind(queue = queueName, exchange = xchgShard, routingKey = "1")
+        channel.QueueBindAsync(queue = queueName, exchange = xchgShard, routingKey = "1") |> await
 
     let subscribeMessages () =
         busConfig.Handlers |> Map.iter (fun msgType _ -> msgType |> bindExchangeAndQueue)
 
     let listenMessages () =
-        let consumer = EventingBasicConsumer(channel)
+        let consumer = AsyncEventingBasicConsumer(channel)
         let consumerCallback msgCallback (ea: BasicDeliverEventArgs) =
             try
                 let headers = ea.BasicProperties.Headers |> Seq.choose (fun kvp -> ea.BasicProperties
@@ -133,13 +140,12 @@ type RabbitMQ(uri, busConfig: BusConfiguration, msgCallback) =
                                                          |> Map
 
                 msgCallback headers ea.Body
-
-                safeAck ea
+                ack ea
             with
-                | _ -> safeNack ea
-
-        consumer.Received.Add (consumerCallback msgCallback)
-        channel.BasicConsume(queue = queueName, autoAck = false, consumer = consumer) |> ignore
+                _ -> nack ea
+        let handler = AsyncEventHandler<BasicDeliverEventArgs>(fun _ ea -> task { consumerCallback msgCallback ea |> ignore })
+        consumer.add_ReceivedAsync handler
+        channel.BasicConsumeAsync(queue = queueName, autoAck = false, consumer = consumer) |> await
 
     do
         configureAck()
@@ -150,11 +156,11 @@ type RabbitMQ(uri, busConfig: BusConfiguration, msgCallback) =
     interface IBusTransport with
         member _.Publish headers msgType body key =
             let xchgName = getExchangeMsg msgType
-            safeSend headers xchgName key body
+            send headers xchgName key body
 
         member _.Send headers client msgType body key =
             let xchgName = getExchangeShard client
-            safeSend headers xchgName key body
+            send headers xchgName key body
 
         member _.Dispose() =
             sendChannel.Dispose()

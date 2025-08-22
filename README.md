@@ -23,6 +23,7 @@ Package | Status | Description
 --------|--------|------------
 FBus | [![Nuget](https://img.shields.io/nuget/v/FBus)](https://nuget.org/packages/FBus) | Core package
 FBus.RabbitMQ | [![Nuget](https://img.shields.io/nuget/v/FBus.RabbitMQ)](https://nuget.org/packages/FBus.RabbitMQ) | RabbitMQ transport
+FBus.RabbitMQ7 | [![Nuget](https://img.shields.io/nuget/v/FBus.RabbitMQ7)](https://nuget.org/packages/FBus.RabbitMQ7) | RabbitMQ v7 transport
 FBus.Json | [![Nuget](https://img.shields.io/nuget/v/FBus.Json)](https://nuget.org/packages/FBus.Json) | System.Text.Json serializer
 FBus.GenericHost | [![Nuget](https://img.shields.io/nuget/v/FBus.GenericHost)](https://nuget.org/packages/FBus.GenericHost) | Generic Host support
 FBus.QuickStart | [![Nuget](https://img.shields.io/nuget/v/FBus.QuickStart)](https://nuget.org/packages/FBus.QuickStart) | All FBus packages to quick start a project
@@ -216,6 +217,10 @@ FBus.IBusHook | Description | Comments
 ## Available extensions
 
 ### RabbitMQ (package FBus.RabbitMQ)
+
+This package comes in 2 flavors:
+- `FBus.RabbitMQ`: support for RabbitMQ v6 client
+- `FBus.RabbitMQ7`: support for RabbitMQ v7 client
 
 **NOTE**:
 You **must** install plugin `rabbitmq_consistent_hash_exchange` if you plan to use RabbitMQ transport.
