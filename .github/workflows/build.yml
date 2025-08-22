@@ -31,11 +31,12 @@ jobs:
       - name: Pack
         run: make dist config=Release version=${{ env.NUGET_VERSION }} 
 
-      - name: Upload NuGet
+      - name: Archive NuGet Outputs
         uses: actions/upload-artifact@v4
         with:
-          path: .out
-          name: nugets
+          name: nuget
+          include-hidden-files: true
+          path: .out/*.nupkg
 
   publish:
     if: github.ref_type == 'tag'
