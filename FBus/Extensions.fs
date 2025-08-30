@@ -2,7 +2,6 @@ namespace FBus.Extensions
 
 open System.Runtime.CompilerServices
 open FBus
-open System
 open FBus.Testing
 
 [<Extension; Sealed; AbstractClass>]
@@ -30,6 +29,10 @@ type BusBuilderExtensions =
     [<Extension>]
     static member WithHook(busBuilder, hook) =
         busBuilder |> Builder.withHook hook
+
+    [<Extension>]
+    static member WithConcurrency(busBuilder, maxParallel: int) =
+        busBuilder |> Builder.withConcurrency maxParallel
 
     [<Extension>]
     static member Build(busBuilder) =

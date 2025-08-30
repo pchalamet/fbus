@@ -26,6 +26,10 @@ type RabbitMQ(uri, busConfig: BusConfiguration, msgCallback) =
     let conn = factory.CreateConnection()
     let channel = conn.CreateModel()
     let mutable sendChannel = conn.CreateModel()
+    let maxConcurrency = max 1 busConfig.Concurrency
+    // Default prefetch: 10 when single-threaded; else max(10, concurrency)
+    let prefetchCount: uint16 = if maxConcurrency <= 1 then 10us else uint16 (max 10 maxConcurrency)
+    let semaphore = new System.Threading.SemaphoreSlim(maxConcurrency, maxConcurrency)
 
     let tryGetHeaderAsString (key: string) (props: IBasicProperties) =
             match props.Headers.TryGetValue key with
@@ -75,7 +79,8 @@ type RabbitMQ(uri, busConfig: BusConfiguration, msgCallback) =
         | _ -> $"fbus:client:{clientName}"
 
     let configureAck () =
-        channel.BasicQos(prefetchSize = 0ul, prefetchCount = 10us, ``global`` = false)
+        // Keep good defaults: prefetch 10 at concurrency=1; else max(10, concurrency)
+        channel.BasicQos(prefetchSize = 0ul, prefetchCount = prefetchCount, ``global`` = false)
         channel.ConfirmSelect()
 
     let queueName = getQueueClient busConfig.Name busConfig.ShardName
@@ -126,17 +131,25 @@ type RabbitMQ(uri, busConfig: BusConfiguration, msgCallback) =
     let listenMessages () =
         let consumer = EventingBasicConsumer(channel)
         let consumerCallback msgCallback (ea: BasicDeliverEventArgs) =
-            try
-                let headers = ea.BasicProperties.Headers |> Seq.choose (fun kvp -> ea.BasicProperties
-                                                                                   |> tryGetHeaderAsString kvp.Key
-                                                                                   |> Option.map (fun s -> kvp.Key, s))
-                                                         |> Map
+            // Schedule processing asynchronously and gate by semaphore for controlled concurrency
+            let _ = System.Threading.Tasks.Task.Run(fun () ->
+                semaphore.Wait()
+                try
+                    try
+                        let headers = ea.BasicProperties.Headers
+                                       |> Seq.choose (fun kvp -> ea.BasicProperties
+                                                                 |> tryGetHeaderAsString kvp.Key
+                                                                 |> Option.map (fun s -> kvp.Key, s))
+                                       |> Map
 
-                msgCallback headers ea.Body
-
-                safeAck ea
-            with
-                | _ -> safeNack ea
+                        msgCallback headers ea.Body
+                        safeAck ea
+                    with
+                        | _ -> safeNack ea
+                finally
+                    semaphore.Release() |> ignore
+            )
+            ()
 
         consumer.Received.Add (consumerCallback msgCallback)
         channel.BasicConsume(queue = queueName, autoAck = false, consumer = consumer) |> ignore
@@ -157,6 +170,7 @@ type RabbitMQ(uri, busConfig: BusConfiguration, msgCallback) =
             safeSend headers xchgName key body
 
         member _.Dispose() =
+            semaphore.Dispose()
             sendChannel.Dispose()
             channel.Dispose()
             conn.Dispose()

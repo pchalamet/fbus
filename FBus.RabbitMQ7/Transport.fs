@@ -28,6 +28,10 @@ module Async =
 type RabbitMQ7(uri, busConfig: BusConfiguration, msgCallback) =
 
     let channelLock = new System.Threading.SemaphoreSlim(1, 1)
+    let maxConcurrency = max 1 busConfig.Concurrency
+    // Default prefetch: 10 when single-threaded; else max(10, concurrency)
+    let prefetchCount: uint16 = if maxConcurrency <= 1 then 10us else uint16 (max 10 maxConcurrency)
+    let processingSemaphore = new System.Threading.SemaphoreSlim(maxConcurrency, maxConcurrency)
     let factory = ConnectionFactory(Uri = uri, AutomaticRecoveryEnabled = true)
     let conn = factory.CreateConnectionAsync() |> awaitResult
     let options = CreateChannelOptions(publisherConfirmationsEnabled = true,publisherConfirmationTrackingEnabled = true)
@@ -82,7 +86,7 @@ type RabbitMQ7(uri, busConfig: BusConfiguration, msgCallback) =
         | _ -> $"fbus:client:{clientName}"
 
     let configureAck () =
-        channel.BasicQosAsync(prefetchSize = 0ul, prefetchCount = 10us, ``global`` = false)
+        channel.BasicQosAsync(prefetchSize = 0ul, prefetchCount = prefetchCount, ``global`` = false)
         |> await
 
     let queueName = getQueueClient busConfig.Name busConfig.ShardName
@@ -132,18 +136,24 @@ type RabbitMQ7(uri, busConfig: BusConfiguration, msgCallback) =
 
     let listenMessages () =
         let consumer = AsyncEventingBasicConsumer(channel)
-        let consumerCallback msgCallback (ea: BasicDeliverEventArgs) =
+        let consumerCallback msgCallback (ea: BasicDeliverEventArgs) = task {
+            do! processingSemaphore.WaitAsync()
             try
-                let headers = ea.BasicProperties.Headers |> Seq.choose (fun kvp -> ea.BasicProperties
-                                                                                   |> tryGetHeaderAsString kvp.Key
-                                                                                   |> Option.map (fun s -> kvp.Key, s))
-                                                         |> Map
+                try
+                    let headers = ea.BasicProperties.Headers
+                                   |> Seq.choose (fun kvp -> ea.BasicProperties
+                                                             |> tryGetHeaderAsString kvp.Key
+                                                             |> Option.map (fun s -> kvp.Key, s))
+                                   |> Map
 
-                msgCallback headers ea.Body
-                ack ea
-            with
-                _ -> nack ea
-        let handler = AsyncEventHandler<BasicDeliverEventArgs>(fun _ ea -> task { consumerCallback msgCallback ea |> ignore })
+                    msgCallback headers ea.Body
+                    ack ea
+                with
+                    _ -> nack ea
+            finally
+                processingSemaphore.Release() |> ignore
+        }
+        let handler = AsyncEventHandler<BasicDeliverEventArgs>(fun _ ea -> consumerCallback msgCallback ea)
         consumer.add_ReceivedAsync handler
         channel.BasicConsumeAsync(queue = queueName, autoAck = false, consumer = consumer) |> await
 
@@ -163,6 +173,7 @@ type RabbitMQ7(uri, busConfig: BusConfiguration, msgCallback) =
             send headers xchgName key body
 
         member _.Dispose() =
+            processingSemaphore.Dispose()
             sendChannel.Dispose()
             channel.Dispose()
             conn.Dispose()

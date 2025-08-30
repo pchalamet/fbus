@@ -18,6 +18,7 @@ let configure () =
       BusBuilder.Transport = None
       BusBuilder.Serializer = None
       BusBuilder.Hook = None
+      BusBuilder.Concurrency = None
       BusBuilder.Handlers = Map.empty }
 
 let withName name busBuilder =
@@ -69,6 +70,10 @@ let withRecovery busBuilder =
 let withHook hook busBuilder =
     { busBuilder with BusBuilder.Hook = Some hook }
 
+let withConcurrency maxParallel busBuilder =
+    if maxParallel < 1 then failwith "Concurrency must be >= 1"
+    { busBuilder with BusBuilder.Concurrency = Some maxParallel }
+
 let build (busBuilder : BusBuilder) =
     let busBuilder = if busBuilder.IsRecovery then
                         { busBuilder with BusBuilder.Name = busBuilder.Name + ":dead-letter"
@@ -95,6 +100,7 @@ let build (busBuilder : BusBuilder) =
                       Container = container
                       Serializer = serializer
                       Hook = busBuilder.Hook
+                      Concurrency = busBuilder.Concurrency |> Option.defaultValue 1
                       Transport = transport
                       Handlers = busBuilder.Handlers }
 
