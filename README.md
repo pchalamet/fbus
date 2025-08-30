@@ -71,6 +71,7 @@ FBus.Builder | Description | Default
 `configure` | Start configuration with default parameters. |
 `withName` | Change service name. Used to identify a bus client (see `IBusInitiator.Send` and `IBusConversation.Send`) | Name based on computer name, pid and random number.
 `withShard` | Name the shard. Name must be provided to enable sharding. | None
+`withConcurrency` | Allow parallel processing. | 1 |
 `withTransport` | Transport to use. | None
 `withContainer` | Container to use | None
 `withSerializer` | Serializer to use | None
@@ -109,7 +110,7 @@ IBusConversation | Description
 `Sender` | Name of the client.
 `ConversationId` | Id of the conversation (identifier is flowing from initiator to subsequent consumers).
 `MessageId` | Id the this message.
-`Reply` | Provide a shortcut to reply to sender.
+`Reply` | Provide a shortcut to reply to sender with an event.
 `Publish` | Broadcast an event message to all subscribers.
 `Send` | Send a command message to given client.
 

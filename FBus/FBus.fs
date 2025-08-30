@@ -82,6 +82,6 @@ type BusBuilder =
       Container: IBusContainer option
       Serializer: IBusSerializer option
       Hook: IBusHook option
-      Concurrency: int option
+      Concurrency: int
       Transport: (BusConfiguration -> (Map<string,string> -> ReadOnlyMemory<byte> -> unit) -> IBusTransport) option
       Handlers : Map<string, HandlerInfo> }

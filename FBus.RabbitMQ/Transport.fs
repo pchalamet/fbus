@@ -32,9 +32,9 @@ type RabbitMQ(uri, busConfig: BusConfiguration, msgCallback) =
     let semaphore = new System.Threading.SemaphoreSlim(maxConcurrency, maxConcurrency)
 
     let tryGetHeaderAsString (key: string) (props: IBasicProperties) =
-            match props.Headers.TryGetValue key with
-            | true, (:? (byte[]) as s) -> Some (System.Text.Encoding.UTF8.GetString(s))
-            | _ -> None
+        match props.Headers.TryGetValue key with
+        | true, (:? (byte[]) as s) -> Some (System.Text.Encoding.UTF8.GetString(s))
+        | _ -> None
 
 
     // ========================================================================================================
