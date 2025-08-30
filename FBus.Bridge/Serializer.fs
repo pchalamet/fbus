@@ -16,7 +16,7 @@ type BridgeCommandMessage =
 
 type BridgeSerializer() =
     interface IBusSerializer with
-        member _.Serialize (v: obj) =
+        member _.Serialize v =
             match v with
             | :? BridgeEventMessage as msg -> let body = System.Text.Encoding.UTF8.GetBytes(msg.Message)
                                               msg.Type, ReadOnlyMemory(body)

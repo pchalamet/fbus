@@ -39,11 +39,12 @@ type RabbitMQ7(uri, busConfig: BusConfiguration, msgCallback) =
     let mutable sendChannel = conn.CreateChannelAsync() |> awaitResult
 
     let tryGetHeaderAsString (key: string) (props: IReadOnlyBasicProperties) =
-            match props.Headers.TryGetValue key with
+        match props.Headers with
+        | NonNull headers ->
+            match headers.TryGetValue key with
             | true, (:? (byte[]) as s) -> Some (System.Text.Encoding.UTF8.GetString(s))
             | _ -> None
-
-
+        | _ -> None
 
     // ========================================================================================================
     // WARNING: IModel is not thread safe: https://www.rabbitmq.com/dotnet-api-guide.html#concurrency
@@ -140,11 +141,14 @@ type RabbitMQ7(uri, busConfig: BusConfiguration, msgCallback) =
             do! processingSemaphore.WaitAsync()
             try
                 try
-                    let headers = ea.BasicProperties.Headers
-                                   |> Seq.choose (fun kvp -> ea.BasicProperties
-                                                             |> tryGetHeaderAsString kvp.Key
-                                                             |> Option.map (fun s -> kvp.Key, s))
-                                   |> Map
+                    let headers =
+                        ea.BasicProperties.Headers |> Option.ofObj |> Option.map (fun headers ->
+                            headers
+                            |> Seq.choose (fun kvp -> ea.BasicProperties
+                                                        |> tryGetHeaderAsString kvp.Key
+                                                        |> Option.map (fun s -> kvp.Key, s))
+                            |> Map)
+                        |> Option.defaultValue Map.empty
 
                     msgCallback headers ea.Body
                     ack ea

@@ -214,7 +214,7 @@ let ``handlers can be activated concurrently`` () =
     let createTransport (busConfig: BusConfiguration) (cb: Map<string,string> -> ReadOnlyMemory<byte> -> unit) : IBusTransport =
         // Build headers/body for our test message
         let mkDelivery id =
-            let msg = { Id = id } :> obj
+            let msg = { Id = id }
             let msgType, body = busConfig.Serializer.Serialize msg
             let headers =
                 [ "fbus:msg-type", msgType

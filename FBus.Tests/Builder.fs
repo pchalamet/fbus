@@ -59,17 +59,31 @@ let ``withSerializer set serializer`` () =
     let builder = FBus.Builder.configure() |> Builder.withSerializer expectedSerializer
     Object.ReferenceEquals(builder.Serializer.Value, expectedSerializer) |> should equal true
 
+
+type StringRequest = 
+    { Content: string }
+    interface FBus.IMessageEvent
+
+type FloatRequest = 
+    { Content: float }
+    interface FBus.IMessageEvent
+
+type IntRequest = 
+    { Content: int }
+    interface FBus.IMessageEvent
+
+
 type MyConsumer1() =
-    interface IBusConsumer<string> with
+    interface IBusConsumer<StringRequest> with
         member this.Handle context msg = 
             failwith "Not Implemented"
 
-    interface IBusConsumer<float> with
+    interface IBusConsumer<FloatRequest> with
         member this.Handle context msg = 
             failwith "Not Implemented"
 
 type MyConsumer2() =
-    interface IBusConsumer<int> with
+    interface IBusConsumer<IntRequest> with
         member this.Handle context msg = 
             failwith "Not Implemented"
 

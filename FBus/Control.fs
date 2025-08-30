@@ -26,12 +26,12 @@ type Bus(busConfig: BusConfiguration) =
 
     let defaultHeaders = Map [ FBUS_SENDER, busConfig.Name ]
 
-    let getMessageKey (msg: obj) =
+    let getMessageKey (msg: IMessage) =
         match msg with
         | :? IMessageKey as key -> key.Key
         | _ -> ""
 
-    let publish msg headers =
+    let publish (msg: IMessage) headers =
         let routing = msg |> getMessageKey
         match busTransport with
         | None -> failwith "Bus is not started"
@@ -39,7 +39,7 @@ type Bus(busConfig: BusConfiguration) =
                                let msgHeaders = headers |> Map.add FBUS_MSGTYPE msgtype
                                busTransport.Publish msgHeaders msgtype body routing
 
-    let send client msg headers =
+    let send client (msg: IMessage) headers =
         let routing = msg |> getMessageKey
         match busTransport with
         | None -> failwith "Bus is not started"
@@ -47,8 +47,8 @@ type Bus(busConfig: BusConfiguration) =
                                let msgHeaders = headers |> Map.add FBUS_MSGTYPE msgtype
                                busTransport.Send msgHeaders client msgtype body routing
 
-    let msgCallback activationContext headers content =
-        let mutable msg: obj = null
+    let msgCallback (activationContext: obj|null) headers content =
+        let mutable msg: obj | null = null
         let ctx = 
             let conversationHeaders () = 
                 defaultHeaders |> Map.add FBUS_MESSAGE_ID (Guid.NewGuid().ToString())
@@ -75,10 +75,13 @@ type Bus(busConfig: BusConfiguration) =
 
             use newActivationContext = busConfig.Container.NewScope activationContext
             let scope =
-                if newActivationContext |> isNull then activationContext
-                else newActivationContext :> obj
+                match newActivationContext with
+                | Null -> activationContext
+                | NonNull _ -> newActivationContext :> obj|null
             let handler = busConfig.Container.Resolve scope handlerInfo
-            if handler |> isNull then failwith "No handler found"
+            match handler with
+            | Null -> failwith "No handler found"
+            | _ -> ()
 
             let callsite =
                 if handlerInfo.Async then typedefof<IAsyncBusConsumer<_>>.MakeGenericType(handlerInfo.MessageType).GetMethod("HandleAsync")
@@ -97,7 +100,7 @@ type Bus(busConfig: BusConfiguration) =
         defaultHeaders |> Map.add FBUS_CONVERSATION_ID (Guid.NewGuid().ToString())
                        |> Map.add FBUS_MESSAGE_ID (Guid.NewGuid().ToString())
 
-    let start activationContext =
+    let start (activationContext: obj|null) =
         match busTransport with
         | Some _ -> failwith "Bus is already started"
         | None -> busTransport <- Some (busConfig.Transport busConfig (msgCallback activationContext))

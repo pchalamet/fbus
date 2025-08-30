@@ -27,7 +27,7 @@ let main argv =
      
                      member _.OnBeforeProcessing conversation =
                          printfn ">>> OnBeforeProcessing"
-                         null :> IDisposable
+                         null
      
                      member _.OnError conversation msg exn =
                          printfn ">>> Error: %A %A" msg exn

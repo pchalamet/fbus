@@ -7,20 +7,20 @@ type HelloMessageRequest =
 
 type HelloMessageResponse =
     { Msg: string }
-    interface FBus.IMessageCommand
+    interface FBus.IMessageEvent
 
 
 type Consumer1() =
-    interface FBus.IBusConsumer<string> with
-        member _.Handle ctx (msg: string) = 
+    interface FBus.IBusConsumer<HelloMessageRequest> with
+        member _.Handle ctx msg = 
             printfn "Received string message [%A] from [%s]" msg ctx.Sender
             printfn "-> sender = %s" ctx.Sender
             printfn "-> conversation-id = %s" ctx.ConversationId
             printfn "-> message-id = %s" ctx.MessageId
 
 type Consumer2() =
-    interface FBus.IBusConsumer<string> with
-        member _.Handle ctx (msg: string) = 
+    interface FBus.IBusConsumer<HelloMessageRequest> with
+        member _.Handle ctx msg = 
             printfn "Received string message [%A] from [%s]" msg ctx.Sender
             printfn "-> sender = %s" ctx.Sender
             printfn "-> conversation-id = %s" ctx.ConversationId

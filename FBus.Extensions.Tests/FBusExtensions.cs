@@ -23,7 +23,7 @@ public class FakeConsumer : IBusConsumer<FakeCommand>, IBusConsumer<FakeEvent>
 
 public class FakeContainer : IBusContainer
 {
-    public IDisposable NewScope(object context)
+    public IDisposable? NewScope(object? context)
     {
         throw new NotImplementedException();
     }
@@ -33,7 +33,7 @@ public class FakeContainer : IBusContainer
         throw new NotImplementedException();
     }
 
-    public object Resolve(object context, HandlerInfo value)
+    public object Resolve(object? context, HandlerInfo value)
     {
         throw new NotImplementedException();
     }
@@ -46,7 +46,7 @@ public class FakeHook : IBusHook
         throw new NotImplementedException();
     }
 
-    public void OnError(IBusConversation ctx, object msg, Exception exn)
+    public void OnError(IBusConversation ctx, object? msg, Exception exn)
     {
         throw new NotImplementedException();
     }

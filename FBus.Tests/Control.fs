@@ -15,7 +15,7 @@ type StringMessage =
 
 type IntMessage =
     { Int: int }
-    interface FBus.IMessageCommand
+    interface FBus.IMessageEvent
 
 type StringConsumer(callback: IBusConversation -> string -> unit) =
     interface IBusConsumer<StringMessage> with
@@ -85,10 +85,10 @@ let buildContainer = {
             [typeof<StringMessage>; typeof<IntMessage>] |> List.contains  handlerInfo.MessageType |> should be True
             if handlerInfo.MessageType = typeof<StringMessage> then
                 handlerInfo.Handler |> should equal (typeof<StringConsumer>)
-                StringConsumer(consumerStringCallback) :> obj
+                StringConsumer(consumerStringCallback)
             else
                 handlerInfo.Handler |> should equal (typeof<IntConsumer>)
-                IntConsumer(consumerIntCallback) :> obj
+                IntConsumer(consumerIntCallback)
 }
 
 let serializer = Serializers.Json() :> IBusSerializer

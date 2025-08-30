@@ -3,12 +3,16 @@ open NUnit.Framework
 open FsUnit
 open FBus
 
+type StringRequest =
+    { Content: string }
+    interface FBus.IMessageEvent
+
 type StringConsumer() =
     new(v: int) =
         failwith "Should not be invoked"
         StringConsumer()
 
-    interface IBusConsumer<string> with
+    interface IBusConsumer<StringRequest> with
         member this.Handle context msg = 
             failwith "Not Implemented"
 
