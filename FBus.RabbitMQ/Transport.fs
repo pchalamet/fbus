@@ -32,9 +32,10 @@ type RabbitMQ(uri, busConfig: BusConfiguration, msgCallback) =
     let semaphore = new System.Threading.SemaphoreSlim(maxConcurrency, maxConcurrency)
 
     let tryGetHeaderAsString (key: string) (props: IBasicProperties) =
-        match props.Headers.TryGetValue key with
-        | true, (:? (byte[]) as s) -> Some (System.Text.Encoding.UTF8.GetString(s))
-        | _ -> None
+        props.Headers |> Option.ofObj |> Option.bind (fun headers ->
+            match headers.TryGetValue key with
+            | true, (:? (byte[]) as s) -> Some (System.Text.Encoding.UTF8.GetString(s))
+            | _ -> None)
 
 
     // ========================================================================================================
@@ -131,16 +132,19 @@ type RabbitMQ(uri, busConfig: BusConfiguration, msgCallback) =
     let listenMessages () =
         let consumer = EventingBasicConsumer(channel)
         let consumerCallback msgCallback (ea: BasicDeliverEventArgs) =
-            // Schedule processing asynchronously and gate by semaphore for controlled concurrency
+            // acquire before scheduling to avoid flooding the ThreadPool
+            semaphore.Wait()
             let _ = System.Threading.Tasks.Task.Run(fun () ->
-                semaphore.Wait()
                 try
                     try
-                        let headers = ea.BasicProperties.Headers
-                                       |> Seq.choose (fun kvp -> ea.BasicProperties
-                                                                 |> tryGetHeaderAsString kvp.Key
-                                                                 |> Option.map (fun s -> kvp.Key, s))
-                                       |> Map
+                        let headers =
+                            ea.BasicProperties.Headers |> Option.ofObj |> Option.map (fun headers ->
+                                headers
+                                |> Seq.choose (fun kvp -> ea.BasicProperties
+                                                          |> tryGetHeaderAsString kvp.Key
+                                                          |> Option.map (fun s -> kvp.Key, s))
+                                |> Map)
+                            |> Option.defaultValue Map.empty
 
                         msgCallback headers ea.Body
                         safeAck ea
