@@ -80,7 +80,6 @@ type RabbitMQ(uri, busConfig: BusConfiguration, msgCallback) =
         | _ -> $"fbus:client:{clientName}"
 
     let configureAck () =
-        // Keep good defaults: prefetch 10 at concurrency=1; else max(10, concurrency)
         channel.BasicQos(prefetchSize = 0ul, prefetchCount = prefetchCount, ``global`` = false)
         channel.ConfirmSelect()
 
