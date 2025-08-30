@@ -48,7 +48,7 @@ type Bus(busConfig: BusConfiguration) =
                                busTransport.Send msgHeaders client msgtype body routing
 
     let msgCallback activationContext headers content =
-        let mutable msg: obj = null
+        let mutable msg: obj | null = null
         let ctx = 
             let conversationHeaders () = 
                 defaultHeaders |> Map.add FBUS_MESSAGE_ID (Guid.NewGuid().ToString())
@@ -75,10 +75,13 @@ type Bus(busConfig: BusConfiguration) =
 
             use newActivationContext = busConfig.Container.NewScope activationContext
             let scope =
-                if newActivationContext |> isNull then activationContext
-                else newActivationContext :> obj
+                match newActivationContext with
+                | Null -> activationContext
+                | NonNull newActivationContext -> newActivationContext :> obj
             let handler = busConfig.Container.Resolve scope handlerInfo
-            if handler |> isNull then failwith "No handler found"
+            match handler with
+            | Null -> failwith "No handler found"
+            | _ -> ()
 
             let callsite =
                 if handlerInfo.Async then typedefof<IAsyncBusConsumer<_>>.MakeGenericType(handlerInfo.MessageType).GetMethod("HandleAsync")

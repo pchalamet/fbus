@@ -26,13 +26,13 @@ type IBusConversationContext =
 type IBusConversation =
     inherit IBusConversationContext
     inherit IBusInitiator
-    abstract Reply<'t when 't :> IMessageCommand> : msg:'t -> unit
+    abstract Reply<'t when 't :> IMessageCommand and 't: not null> : msg:'t -> unit
 
 type IBusConsumer<'t> =
     abstract Handle: IBusConversation -> msg:'t -> unit
 
-type IAsyncBusConsumer<'T> =
-    abstract member HandleAsync: IBusConversation -> 'T -> Task
+type IAsyncBusConsumer<'t> =
+    abstract member HandleAsync: IBusConversation -> 't -> Task
 
 type HandlerInfo =
     { MessageType: Type
@@ -41,8 +41,8 @@ type HandlerInfo =
 
 type IBusContainer =
     abstract Register: HandlerInfo -> unit
-    abstract NewScope: context:obj -> IDisposable
-    abstract Resolve: context:obj -> HandlerInfo -> obj
+    abstract NewScope: context:obj -> IDisposable | null
+    abstract Resolve: context:obj -> HandlerInfo -> obj | null
 
 type IBusTransport =
     inherit IDisposable
@@ -56,8 +56,8 @@ type IBusSerializer =
 type IBusHook =
     abstract OnStart: ctx:IBusInitiator -> unit
     abstract OnStop: ctx:IBusInitiator -> unit
-    abstract OnBeforeProcessing: ctx:IBusConversation -> IDisposable
-    abstract OnError: ctx:IBusConversation -> msg:obj -> exn: Exception -> unit
+    abstract OnBeforeProcessing: ctx:IBusConversation -> IDisposable | null
+    abstract OnError: ctx:IBusConversation -> msg:obj|null -> exn: Exception -> unit
 
 type BusConfiguration =
     { Name: string
