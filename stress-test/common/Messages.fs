@@ -8,7 +8,7 @@ type Ping =
 type Pong =
     { Message: string 
       Seq: int }
-    interface FBus.IMessageCommand
+    interface FBus.IMessageEvent
 
 type BangEvent =
     { Message: string }

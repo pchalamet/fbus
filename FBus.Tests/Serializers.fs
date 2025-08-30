@@ -7,11 +7,11 @@ open FBus
 
 
 
-type MyType = {
-    Int: int
-    MaybeString: string option
-    Map: Map<string, int option>
-}
+type MyType =
+    { Int: int
+      MaybeString: string option
+      Map: Map<string, int option> }
+    interface FBus.IMessageCommand
 
 
 

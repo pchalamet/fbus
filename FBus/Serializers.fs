@@ -10,7 +10,7 @@ type InMemory() =
         refs.Clear()
 
     interface IBusSerializer with
-        member _.Serialize (v: obj) =
+        member _.Serialize v =
             let msgtype = v.GetType().FullName
             let id = Guid.NewGuid()
             let body = id.ToByteArray() |> ReadOnlyMemory

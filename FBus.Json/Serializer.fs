@@ -15,10 +15,12 @@ type Json(?initOptions: JsonSerializerOptions -> unit) =
         options
 
     interface IBusSerializer with
-        member _.Serialize (v: obj) =
+        member _.Serialize v =
             let msgtype = v.GetType().FullName
             let body = JsonSerializer.SerializeToUtf8Bytes(v, options)
             msgtype, ReadOnlyMemory(body)
 
         member _.Deserialize (t: System.Type) (body: ReadOnlyMemory<byte>) =
-            JsonSerializer.Deserialize(body.Span, t, options)
+            match JsonSerializer.Deserialize(body.Span, t, options) with
+            | NonNull obj -> obj
+            | _ -> failwith "Failed to deserialize"

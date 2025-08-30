@@ -5,11 +5,11 @@ open FBus
 open System
 open System.Text.Json
 
-type MyType = {
-    Int: int
-    MaybeString: string option
-    Map: Map<string, int option>
-}
+type MyType =
+    { Int: int
+      MaybeString: string option
+      Map: Map<string, int option> }
+    interface FBus.IMessageEvent
 
 [<Test>]
 let ``Bridge serialization`` () =

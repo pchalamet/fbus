@@ -9,7 +9,7 @@ type HelloWorld =
 
 type HelloWorld2 =
     { Message2: string }
-    interface FBus.IMessageCommand
+    interface FBus.IMessageEvent
 
 type HelloWorld3 =
     { Message3: string }

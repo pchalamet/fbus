@@ -2,9 +2,11 @@ namespace FBus
 open System
 open System.Threading.Tasks
 
-type IMessageCommand = interface end
+type IMessage = interface end
 
-type IMessageEvent = interface end
+type IMessageCommand = inherit IMessage
+
+type IMessageEvent = inherit IMessage
 
 type IMessageKey = 
     abstract Key: string with get
@@ -15,7 +17,7 @@ type IBusInitiator =
 
 type IBusControl =
     inherit IDisposable
-    abstract Start: obj|null -> IBusInitiator
+    abstract Start: objnull -> IBusInitiator
     abstract Stop: unit -> unit
 
 type IBusConversationContext =
@@ -26,12 +28,12 @@ type IBusConversationContext =
 type IBusConversation =
     inherit IBusConversationContext
     inherit IBusInitiator
-    abstract Reply<'t when 't :> IMessageCommand and 't: not null> : msg:'t -> unit
+    abstract Reply<'t when 't :> IMessageEvent> : msg:'t -> unit
 
-type IBusConsumer<'t> =
+type IBusConsumer<'t when 't :> IMessage> =
     abstract Handle: IBusConversation -> msg:'t -> unit
 
-type IAsyncBusConsumer<'t> =
+type IAsyncBusConsumer<'t when 't :> IMessage> =
     abstract member HandleAsync: IBusConversation -> 't -> Task
 
 type HandlerInfo =
@@ -41,8 +43,8 @@ type HandlerInfo =
 
 type IBusContainer =
     abstract Register: HandlerInfo -> unit
-    abstract NewScope: context:obj|null -> IDisposable | null
-    abstract Resolve: context:obj|null -> HandlerInfo -> obj | null
+    abstract NewScope: context:objnull -> IDisposable | null
+    abstract Resolve: context:objnull -> HandlerInfo -> objnull
 
 type IBusTransport =
     inherit IDisposable

@@ -26,12 +26,12 @@ type Bus(busConfig: BusConfiguration) =
 
     let defaultHeaders = Map [ FBUS_SENDER, busConfig.Name ]
 
-    let getMessageKey (msg: obj) =
+    let getMessageKey (msg: IMessage) =
         match msg with
         | :? IMessageKey as key -> key.Key
         | _ -> ""
 
-    let publish msg headers =
+    let publish (msg: IMessage) headers =
         let routing = msg |> getMessageKey
         match busTransport with
         | None -> failwith "Bus is not started"
@@ -39,7 +39,7 @@ type Bus(busConfig: BusConfiguration) =
                                let msgHeaders = headers |> Map.add FBUS_MSGTYPE msgtype
                                busTransport.Publish msgHeaders msgtype body routing
 
-    let send client msg headers =
+    let send client (msg: IMessage) headers =
         let routing = msg |> getMessageKey
         match busTransport with
         | None -> failwith "Bus is not started"
