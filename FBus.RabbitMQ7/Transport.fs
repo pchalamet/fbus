@@ -39,12 +39,10 @@ type RabbitMQ7(uri, busConfig: BusConfiguration, msgCallback) =
     let mutable sendChannel = conn.CreateChannelAsync() |> awaitResult
 
     let tryGetHeaderAsString (key: string) (props: IReadOnlyBasicProperties) =
-        match props.Headers with
-        | NonNull headers ->
+        props.Headers |> Option.ofObj |> Option.bind (fun headers ->
             match headers.TryGetValue key with
             | true, (:? (byte[]) as s) -> Some (System.Text.Encoding.UTF8.GetString(s))
-            | _ -> None
-        | _ -> None
+            | _ -> None)
 
     // ========================================================================================================
     // WARNING: IModel is not thread safe: https://www.rabbitmq.com/dotnet-api-guide.html#concurrency
