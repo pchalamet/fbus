@@ -6,6 +6,16 @@ open FsUnit
 open FBus
 
 [<Test>]
+let ``withConcurrency sets max parallel handlers`` () =
+    let builder = FBus.Builder.configure() |> Builder.withConcurrency 4
+    builder.Concurrency |> should equal (Some 4)
+
+[<Test>]
+let ``withConcurrency rejects invalid values`` () =
+    (fun () -> FBus.Builder.configure() |> Builder.withConcurrency 0 |> ignore)
+    |> should (throwWithMessage "Concurrency must be >= 1") typeof<Exception>
+
+[<Test>]
 let ``withName set permanent client`` () =
     let builder = FBus.Builder.configure()
 
