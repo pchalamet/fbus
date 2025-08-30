@@ -15,7 +15,7 @@ type IBusInitiator =
 
 type IBusControl =
     inherit IDisposable
-    abstract Start: obj -> IBusInitiator
+    abstract Start: obj|null -> IBusInitiator
     abstract Stop: unit -> unit
 
 type IBusConversationContext =
@@ -41,8 +41,8 @@ type HandlerInfo =
 
 type IBusContainer =
     abstract Register: HandlerInfo -> unit
-    abstract NewScope: context:obj -> IDisposable | null
-    abstract Resolve: context:obj -> HandlerInfo -> obj | null
+    abstract NewScope: context:obj|null -> IDisposable | null
+    abstract Resolve: context:obj|null -> HandlerInfo -> obj | null
 
 type IBusTransport =
     inherit IDisposable

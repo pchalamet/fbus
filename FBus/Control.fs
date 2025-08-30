@@ -47,7 +47,7 @@ type Bus(busConfig: BusConfiguration) =
                                let msgHeaders = headers |> Map.add FBUS_MSGTYPE msgtype
                                busTransport.Send msgHeaders client msgtype body routing
 
-    let msgCallback activationContext headers content =
+    let msgCallback (activationContext: obj|null) headers content =
         let mutable msg: obj | null = null
         let ctx = 
             let conversationHeaders () = 
@@ -77,7 +77,7 @@ type Bus(busConfig: BusConfiguration) =
             let scope =
                 match newActivationContext with
                 | Null -> activationContext
-                | NonNull newActivationContext -> newActivationContext :> obj
+                | NonNull _ -> newActivationContext :> obj|null
             let handler = busConfig.Container.Resolve scope handlerInfo
             match handler with
             | Null -> failwith "No handler found"
@@ -100,7 +100,7 @@ type Bus(busConfig: BusConfiguration) =
         defaultHeaders |> Map.add FBUS_CONVERSATION_ID (Guid.NewGuid().ToString())
                        |> Map.add FBUS_MESSAGE_ID (Guid.NewGuid().ToString())
 
-    let start activationContext =
+    let start (activationContext: obj|null) =
         match busTransport with
         | Some _ -> failwith "Bus is already started"
         | None -> busTransport <- Some (busConfig.Transport busConfig (msgCallback activationContext))
