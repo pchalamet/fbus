@@ -27,6 +27,8 @@ type RabbitMQ(uri, busConfig: BusConfiguration, msgCallback) =
     let channel = conn.CreateModel()
     let mutable sendChannel = conn.CreateModel()
     let maxConcurrency = max 1 busConfig.Concurrency
+    // Default prefetch: 10 when single-threaded; else max(10, concurrency)
+    let prefetchCount: uint16 = if maxConcurrency <= 1 then 10us else uint16 (max 10 maxConcurrency)
     let semaphore = new System.Threading.SemaphoreSlim(maxConcurrency, maxConcurrency)
 
     let tryGetHeaderAsString (key: string) (props: IBasicProperties) =
@@ -77,9 +79,8 @@ type RabbitMQ(uri, busConfig: BusConfiguration, msgCallback) =
         | _ -> $"fbus:client:{clientName}"
 
     let configureAck () =
-        // Limit in-flight deliveries to the concurrency level
-        let prefetch = uint16 maxConcurrency
-        channel.BasicQos(prefetchSize = 0ul, prefetchCount = prefetch, ``global`` = false)
+        // Keep good defaults: prefetch 10 at concurrency=1; else max(10, concurrency)
+        channel.BasicQos(prefetchSize = 0ul, prefetchCount = prefetchCount, ``global`` = false)
         channel.ConfirmSelect()
 
     let queueName = getQueueClient busConfig.Name busConfig.ShardName

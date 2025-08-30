@@ -29,6 +29,8 @@ type RabbitMQ7(uri, busConfig: BusConfiguration, msgCallback) =
 
     let channelLock = new System.Threading.SemaphoreSlim(1, 1)
     let maxConcurrency = max 1 busConfig.Concurrency
+    // Default prefetch: 10 when single-threaded; else max(10, concurrency)
+    let prefetchCount: uint16 = if maxConcurrency <= 1 then 10us else uint16 (max 10 maxConcurrency)
     let processingSemaphore = new System.Threading.SemaphoreSlim(maxConcurrency, maxConcurrency)
     let factory = ConnectionFactory(Uri = uri, AutomaticRecoveryEnabled = true)
     let conn = factory.CreateConnectionAsync() |> awaitResult
@@ -84,8 +86,7 @@ type RabbitMQ7(uri, busConfig: BusConfiguration, msgCallback) =
         | _ -> $"fbus:client:{clientName}"
 
     let configureAck () =
-        let prefetch = uint16 maxConcurrency
-        channel.BasicQosAsync(prefetchSize = 0ul, prefetchCount = prefetch, ``global`` = false)
+        channel.BasicQosAsync(prefetchSize = 0ul, prefetchCount = prefetchCount, ``global`` = false)
         |> await
 
     let queueName = getQueueClient busConfig.Name busConfig.ShardName
