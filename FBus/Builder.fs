@@ -18,7 +18,7 @@ let configure () =
       BusBuilder.Transport = None
       BusBuilder.Serializer = None
       BusBuilder.Hook = None
-      BusBuilder.Concurrency = None
+      BusBuilder.Concurrency = 1
       BusBuilder.Handlers = Map.empty }
 
 let withName name busBuilder =
@@ -72,7 +72,7 @@ let withHook hook busBuilder =
 
 let withConcurrency maxParallel busBuilder =
     if maxParallel < 1 then failwith "Concurrency must be >= 1"
-    { busBuilder with BusBuilder.Concurrency = Some maxParallel }
+    { busBuilder with BusBuilder.Concurrency = maxParallel }
 
 let build (busBuilder : BusBuilder) =
     let busBuilder = if busBuilder.IsRecovery then
@@ -100,7 +100,7 @@ let build (busBuilder : BusBuilder) =
                       Container = container
                       Serializer = serializer
                       Hook = busBuilder.Hook
-                      Concurrency = busBuilder.Concurrency |> Option.defaultValue 1
+                      Concurrency = busBuilder.Concurrency
                       Transport = transport
                       Handlers = busBuilder.Handlers }
 

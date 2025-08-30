@@ -8,7 +8,7 @@ open FBus
 [<Test>]
 let ``withConcurrency sets max parallel handlers`` () =
     let builder = FBus.Builder.configure() |> Builder.withConcurrency 4
-    builder.Concurrency |> should equal (Some 4)
+    builder.Concurrency |> should equal 4
 
 [<Test>]
 let ``withConcurrency rejects invalid values`` () =
