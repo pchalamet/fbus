@@ -7,16 +7,17 @@ open Common
 let rnd = Random()
 
 type MessageConsumer() =
-    interface FBus.IBusConsumer<Pong> with
-        member _.Handle ctx msg = 
-            printfn "Received string message [%A] from [%s]" msg ctx.Sender
+    interface FBus.IAsyncBusConsumer<Pong> with
+        member _.HandleAsync ctx msg = 
+            task {
+                printfn "Received string message [%A] from [%s]" msg ctx.Sender
 
-            let proba = rnd.NextDouble()
-            if proba < 0.5 then
-                printfn ">>>> Replying"
-                { Pong.Message = $"Ping/{msg.Message}"
-                  Seq = msg.Seq } |> ctx.Reply
-
+                let proba = rnd.NextDouble()
+                if proba < 0.5 then
+                    printfn ">>>> Replying"
+                    { Pong.Message = $"Ping/{msg.Message}"
+                      Seq = msg.Seq } |> ctx.Reply
+            }
 
 let hook = { new FBus.IBusHook with
                  member _.OnStart initiator =
@@ -37,6 +38,7 @@ let hook = { new FBus.IBusHook with
 [<EntryPoint>]
 let main argv =
     use bus = FBus.QuickStart.configure() |> Builder.withName "fbus-stresstest-client"
+                                          |> Builder.withConcurrency 4
                                           |> Builder.withConsumer<MessageConsumer>
                                           |> Builder.withHook hook
                                           |> Builder.build

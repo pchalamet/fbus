@@ -2,6 +2,7 @@ namespace FBus.Transports
 open FBus
 open RabbitMQ.Client
 open RabbitMQ.Client.Events
+open System
 
 //
 // Binding model is as follow:
@@ -22,10 +23,11 @@ open RabbitMQ.Client.Events
 
 type RabbitMQ(uri, busConfig: BusConfiguration, msgCallback) =
     let channelLock = obj()
+    let sendLock = obj()
     let factory = ConnectionFactory(Uri = uri, AutomaticRecoveryEnabled = true)
     let conn = factory.CreateConnection()
     let channel = conn.CreateModel()
-    let mutable sendChannel = conn.CreateModel()
+    let mutable sendChannel = conn.CreateModel() |> Some
     let maxConcurrency = max 1 busConfig.Concurrency
     // Default prefetch: 10 when single-threaded; else max(10, concurrency)
     let prefetchCount: uint16 = if maxConcurrency <= 1 then 10us else uint16 (max 10 maxConcurrency)
@@ -45,26 +47,46 @@ type RabbitMQ(uri, busConfig: BusConfiguration, msgCallback) =
         let headers = headers |> Map.map (fun _ v -> v :> obj)
 
         let send () =
-            if sendChannel.IsClosed then
-                sendChannel <- conn.CreateModel()
+            let rec trySend remaining (wait: int) =
+                // Ensure connection is open before creating/using a channel
+                if not conn.IsOpen then
+                    if remaining = 0 then failwith "Connection not open"
+                    System.Threading.Thread.Sleep(wait)
+                    trySend (remaining-1) (min 5000 (wait*2))
+                else
+                    try
+                        // (Re)create channel only when needed
+                        if sendChannel.IsNone || not sendChannel.Value.IsOpen then
+                            let newChannel = conn.CreateModel()
+                            sendChannel <- Some newChannel
 
-            let props = sendChannel.CreateBasicProperties(Headers = headers, Persistent = true)
-            sendChannel.BasicPublish(exchange = xchgName,
-                                     routingKey = routingKey,
-                                     basicProperties = props,
-                                     body = body)
+                        let props = sendChannel.Value.CreateBasicProperties(Headers = headers, Persistent = true)
+                        sendChannel.Value.BasicPublish(exchange = xchgName,
+                                                       routingKey = routingKey,
+                                                       basicProperties = props,
+                                                       body = body)
+                    with _ ->
+                        // reset the channel and retry with backoff
+                        sendChannel |> Option.iter (fun ch ->
+                            try ch.Dispose() with _ -> ()
+                            sendChannel <- None)
+                        if remaining = 0 then reraise()
+                        System.Threading.Thread.Sleep(wait)
+                        trySend (remaining-1) (min 5000 (wait*2))
+            trySend 7 50
 
-        lock channelLock send
+        // Use a dedicated lock for sending to avoid blocking acks/nacks during recovery
+        lock sendLock send
 
-    let safeAck (ea: BasicDeliverEventArgs) =
+    let safeAck deliveryTag =
         let ack () =
-            channel.BasicAck(deliveryTag = ea.DeliveryTag, multiple = false)
+            channel.BasicAck(deliveryTag = deliveryTag, multiple = false)
 
         lock channelLock ack
 
-    let safeNack (ea: BasicDeliverEventArgs) =
+    let safeNack deliveryTag =
         let nack() =
-            channel.BasicNack(deliveryTag = ea.DeliveryTag, multiple = false, requeue = false)
+            channel.BasicNack(deliveryTag = deliveryTag, multiple = false, requeue = false)
 
         lock channelLock nack
     // ========================================================================================================
@@ -133,22 +155,25 @@ type RabbitMQ(uri, busConfig: BusConfiguration, msgCallback) =
         let consumerCallback msgCallback (ea: BasicDeliverEventArgs) =
             // acquire before scheduling to avoid flooding the ThreadPool
             semaphore.Wait()
+            let headers =
+                ea.BasicProperties.Headers |> Option.ofObj |> Option.map (fun headers ->
+                    headers
+                    |> Seq.choose (fun kvp ->
+                        ea.BasicProperties
+                        |> tryGetHeaderAsString kvp.Key
+                        |> Option.map (fun s -> kvp.Key, s))
+                    |> Map)
+                |> Option.defaultValue Map.empty
+            let body = ea.Body.ToArray() |> ReadOnlyMemory
+            let deliveryTag = ea.DeliveryTag
+
             let _ = System.Threading.Tasks.Task.Run(fun () ->
                 try
                     try
-                        let headers =
-                            ea.BasicProperties.Headers |> Option.ofObj |> Option.map (fun headers ->
-                                headers
-                                |> Seq.choose (fun kvp -> ea.BasicProperties
-                                                          |> tryGetHeaderAsString kvp.Key
-                                                          |> Option.map (fun s -> kvp.Key, s))
-                                |> Map)
-                            |> Option.defaultValue Map.empty
-
-                        msgCallback headers ea.Body
-                        safeAck ea
+                        msgCallback headers body
+                        safeAck deliveryTag
                     with
-                        | _ -> safeNack ea
+                        | _ -> safeNack deliveryTag
                 finally
                     semaphore.Release() |> ignore
             )
@@ -174,6 +199,6 @@ type RabbitMQ(uri, busConfig: BusConfiguration, msgCallback) =
 
         member _.Dispose() =
             semaphore.Dispose()
-            sendChannel.Dispose()
+            sendChannel |> Option.iter (fun ch -> try ch.Dispose() with _ -> ())
             channel.Dispose()
             conn.Dispose()

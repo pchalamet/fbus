@@ -18,8 +18,11 @@ type MessageConsumer() =
     interface FBus.IBusConsumer<Pong> with
         member _.Handle ctx msg = handle ctx msg.Message msg.Seq
 
-    interface FBus.IBusConsumer<Ping> with
-        member _.Handle ctx msg = handle ctx msg.Message msg.Seq
+    interface FBus.IAsyncBusConsumer<Ping> with
+        member _.HandleAsync ctx msg = 
+            task {
+                handle ctx msg.Message msg.Seq
+            }
 
 
 let hook = { new FBus.IBusHook with
@@ -41,6 +44,7 @@ let hook = { new FBus.IBusHook with
 [<EntryPoint>]
 let main argv =
     use bus = FBus.QuickStart.configure() |> Builder.withName "fbus-stresstest-server"
+                                          |> Builder.withConcurrency 2
                                           |> Builder.withConsumer<MessageConsumer>
                                           |> Builder.withHook hook
                                           |> Builder.build
