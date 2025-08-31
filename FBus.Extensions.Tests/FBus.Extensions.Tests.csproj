@@ -18,7 +18,6 @@
 
   <ItemGroup>
     <ProjectReference Include="../FBus/FBus.fsproj" />
-    <ProjectReference Include="../FBus.Bridge/FBus.Bridge.fsproj" />
     <ProjectReference Include="../FBus.GenericHost/FBus.GenericHost.fsproj" />
     <ProjectReference Include="../FBus.Json/FBus.Json.fsproj" />
     <ProjectReference Include="../FBus.QuickStart/FBus.QuickStart.fsproj" />

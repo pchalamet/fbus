@@ -45,10 +45,6 @@ Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "common", "stress-test\commo
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "server-generichost-cs", "samples\server-generichost-cs\server-generichost-cs.csproj", "{9CB08725-33DB-42C0-97F6-7A989D1DC1D7}"
 EndProject
-Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "FBus.Bridge", "FBus.Bridge\FBus.Bridge.fsproj", "{EFDF7942-8BCB-4721-9E0E-049791A065AA}"
-EndProject
-Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "FBus.Bridge.Tests", "FBus.Bridge.Tests\FBus.Bridge.Tests.fsproj", "{C9DD0A29-BB55-4EC0-A150-4AC996393620}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FBus.Extensions.Tests", "FBus.Extensions.Tests\FBus.Extensions.Tests.csproj", "{F885EE7F-B1AF-441A-98ED-9D83FA9EB84E}"
 EndProject
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "FBus.RabbitMQ7", "FBus.RabbitMQ7\FBus.RabbitMQ7.fsproj", "{CEB9345A-3DCE-4DA8-A8CA-B8EBED628094}"
