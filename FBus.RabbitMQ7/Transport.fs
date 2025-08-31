@@ -28,15 +28,16 @@ module Async =
 type RabbitMQ7(uri, busConfig: BusConfiguration, msgCallback) =
 
     let channelLock = new System.Threading.SemaphoreSlim(1, 1)
+    let sendLock = new System.Threading.SemaphoreSlim(1, 1)
     let maxConcurrency = max 1 busConfig.Concurrency
     // Default prefetch: 10 when single-threaded; else max(10, concurrency)
     let prefetchCount: uint16 = if maxConcurrency <= 1 then 10us else uint16 (max 10 maxConcurrency)
     let processingSemaphore = new System.Threading.SemaphoreSlim(maxConcurrency, maxConcurrency)
     let factory = ConnectionFactory(Uri = uri, AutomaticRecoveryEnabled = true)
     let conn = factory.CreateConnectionAsync() |> awaitResult
-    let options = CreateChannelOptions(publisherConfirmationsEnabled = true,publisherConfirmationTrackingEnabled = true)
+    let options = CreateChannelOptions(publisherConfirmationsEnabled = true, publisherConfirmationTrackingEnabled = true)
     let channel = conn.CreateChannelAsync(options) |> awaitResult
-    let mutable sendChannel = conn.CreateChannelAsync() |> awaitResult
+    let mutable sendChannel = conn.CreateChannelAsync() |> awaitResult |> Some
 
     let tryGetHeaderAsString (key: string) (props: IReadOnlyBasicProperties) =
         props.Headers |> Option.ofObj |> Option.bind (fun headers ->
@@ -53,18 +54,44 @@ type RabbitMQ7(uri, busConfig: BusConfiguration, msgCallback) =
         finally channelLock.Release() |> ignore
 
     let send headers (xchgName: string) (routingKey: string) body =
-        safeAction (fun () ->
-            if sendChannel.IsClosed then
-                sendChannel <- conn.CreateChannelAsync() |> awaitResult
-
+        // Use a dedicated lock for sending to avoid blocking acks/nacks during recovery
+        sendLock.WaitAsync() |> await
+        try
             let headers = headers |> Map.map (fun _ v -> v :> obj)
-            let props = BasicProperties(Headers = headers, Persistent = true)
-            sendChannel.BasicPublishAsync(exchange = xchgName,
-                                          routingKey = routingKey,
-                                          mandatory = false,
-                                          basicProperties = props,
-                                          body = body).AsTask() |> await
-        )
+            let rec trySend remaining (wait: int) =
+                // Ensure connection is open before creating/using a channel
+                if not conn.IsOpen then
+                    if remaining = 0 then failwith "Connection not open"
+                    System.Threading.Thread.Sleep(wait)
+                    trySend (remaining-1) (min 5000 (wait*2))
+                else
+                    try
+                        // (Re)create channel only when needed
+                        if sendChannel.IsNone || sendChannel.Value.IsClosed then
+                            System.Threading.Thread.Sleep(wait)
+                            let newChannel = conn.CreateChannelAsync() |> awaitResult
+                            sendChannel <- Some newChannel
+
+                        let props = BasicProperties(Headers = headers, Persistent = true)
+                        sendChannel.Value.BasicPublishAsync(exchange = xchgName,
+                                                            routingKey = routingKey,
+                                                            mandatory = false,
+                                                            basicProperties = props,
+                                                            body = body).AsTask() |> await
+                    with
+                    | :? Exceptions.AlreadyClosedException
+                    | :? System.IO.EndOfStreamException
+                    | :? System.ObjectDisposedException
+                    | :? System.IO.IOException ->
+                        // reset the channel and retry with backoff
+                        sendChannel |> Option.iter (fun ch -> try ch.Dispose() with _ -> ())
+                        sendChannel <- None
+                        if remaining = 0 then reraise()
+                        System.Threading.Thread.Sleep(wait)
+                        trySend (remaining-1) (min 5000 (wait*2))
+            trySend 7 50
+        finally
+            sendLock.Release() |> ignore
 
     let ack (ea: BasicDeliverEventArgs) =
         safeAction (fun () -> channel.BasicAckAsync(deliveryTag = ea.DeliveryTag, multiple = false).AsTask() |> await)
@@ -176,6 +203,6 @@ type RabbitMQ7(uri, busConfig: BusConfiguration, msgCallback) =
 
         member _.Dispose() =
             processingSemaphore.Dispose()
-            sendChannel.Dispose()
+            sendChannel |> Option.iter (fun ch -> try ch.Dispose() with _ -> ())
             channel.Dispose()
             conn.Dispose()
