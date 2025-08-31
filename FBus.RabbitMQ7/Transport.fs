@@ -67,10 +67,8 @@ type RabbitMQ7(uri, busConfig: BusConfiguration, msgCallback) =
                 else
                     try
                         // (Re)create channel only when needed
-                        if sendChannel.IsNone || sendChannel.Value.IsClosed then
-                            System.Threading.Thread.Sleep(wait)
-                            let newChannel = conn.CreateChannelAsync() |> awaitResult
-                            sendChannel <- Some newChannel
+                        if sendChannel.IsNone || not sendChannel.Value.IsOpen then
+                            sendChannel <- conn.CreateChannelAsync() |> awaitResult |> Some
 
                         let props = BasicProperties(Headers = headers, Persistent = true)
                         sendChannel.Value.BasicPublishAsync(exchange = xchgName,
@@ -78,11 +76,7 @@ type RabbitMQ7(uri, busConfig: BusConfiguration, msgCallback) =
                                                             mandatory = false,
                                                             basicProperties = props,
                                                             body = body).AsTask() |> await
-                    with
-                    | :? Exceptions.AlreadyClosedException
-                    | :? System.IO.EndOfStreamException
-                    | :? System.ObjectDisposedException
-                    | :? System.IO.IOException ->
+                    with _ ->
                         // reset the channel and retry with backoff
                         sendChannel |> Option.iter (fun ch -> try ch.Dispose() with _ -> ())
                         sendChannel <- None
@@ -169,9 +163,10 @@ type RabbitMQ7(uri, busConfig: BusConfiguration, msgCallback) =
                     let headers =
                         ea.BasicProperties.Headers |> Option.ofObj |> Option.map (fun headers ->
                             headers
-                            |> Seq.choose (fun kvp -> ea.BasicProperties
-                                                        |> tryGetHeaderAsString kvp.Key
-                                                        |> Option.map (fun s -> kvp.Key, s))
+                            |> Seq.choose (fun kvp ->
+                                ea.BasicProperties
+                                |> tryGetHeaderAsString kvp.Key
+                                |> Option.map (fun s -> kvp.Key, s))
                             |> Map)
                         |> Option.defaultValue Map.empty
 

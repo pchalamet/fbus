@@ -51,12 +51,11 @@ type RabbitMQ(uri, busConfig: BusConfiguration, msgCallback) =
                 // Ensure connection is open before creating/using a channel
                 if not conn.IsOpen then
                     if remaining = 0 then failwith "Connection not open"
-                    System.Threading.Thread.Sleep(wait)
                     trySend (remaining-1) (min 5000 (wait*2))
                 else
                     try
                         // (Re)create channel only when needed
-                        if sendChannel.IsNone || sendChannel.Value.IsClosed then
+                        if sendChannel.IsNone || not sendChannel.Value.IsOpen then
                             System.Threading.Thread.Sleep(wait)
                             let newChannel = conn.CreateModel()
                             sendChannel <- Some newChannel
@@ -66,11 +65,7 @@ type RabbitMQ(uri, busConfig: BusConfiguration, msgCallback) =
                                                        routingKey = routingKey,
                                                        basicProperties = props,
                                                        body = body)
-                    with
-                    | :? Exceptions.AlreadyClosedException
-                    | :? System.IO.EndOfStreamException
-                    | :? System.ObjectDisposedException
-                    | :? System.IO.IOException ->
+                    with _ ->
                         // reset the channel and retry with backoff
                         sendChannel |> Option.iter (fun ch -> try ch.Dispose() with _ -> ())
                         sendChannel <- None
@@ -162,9 +157,10 @@ type RabbitMQ(uri, busConfig: BusConfiguration, msgCallback) =
             let headers =
                 ea.BasicProperties.Headers |> Option.ofObj |> Option.map (fun headers ->
                     headers
-                    |> Seq.choose (fun kvp -> ea.BasicProperties
-                                                |> tryGetHeaderAsString kvp.Key
-                                                |> Option.map (fun s -> kvp.Key, s))
+                    |> Seq.choose (fun kvp ->
+                        ea.BasicProperties
+                        |> tryGetHeaderAsString kvp.Key
+                        |> Option.map (fun s -> kvp.Key, s))
                     |> Map)
                 |> Option.defaultValue Map.empty
             let body = ea.Body.ToArray() |> ReadOnlyMemory
