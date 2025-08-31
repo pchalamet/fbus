@@ -78,8 +78,9 @@ type RabbitMQ7(uri, busConfig: BusConfiguration, msgCallback) =
                                                             body = body).AsTask() |> await
                     with _ ->
                         // reset the channel and retry with backoff
-                        sendChannel |> Option.iter (fun ch -> try ch.Dispose() with _ -> ())
-                        sendChannel <- None
+                        sendChannel |> Option.iter (fun ch ->
+                            try ch.Dispose() with _ -> ()
+                            sendChannel <- None)
                         if remaining = 0 then reraise()
                         System.Threading.Thread.Sleep(wait)
                         trySend (remaining-1) (min 5000 (wait*2))
