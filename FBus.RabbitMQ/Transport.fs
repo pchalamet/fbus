@@ -57,8 +57,10 @@ type RabbitMQ(uri, busConfig: BusConfiguration, msgCallback) =
                     try
                         // (Re)create channel only when needed
                         if sendChannel.IsNone || not sendChannel.Value.IsOpen then
-                            let newChannel = conn.CreateModel()
-                            sendChannel <- Some newChannel
+                            sendChannel |> Option.iter (fun ch ->
+                                try ch.Dispose() with _ -> ()
+                                sendChannel <- None)
+                            sendChannel <- conn.CreateModel() |> Some
 
                         let props = sendChannel.Value.CreateBasicProperties(Headers = headers, Persistent = true)
                         sendChannel.Value.BasicPublish(exchange = xchgName,

@@ -68,6 +68,9 @@ type RabbitMQ7(uri, busConfig: BusConfiguration, msgCallback) =
                     try
                         // (Re)create channel only when needed
                         if sendChannel.IsNone || not sendChannel.Value.IsOpen then
+                            sendChannel |> Option.iter (fun ch ->
+                                try ch.Dispose() with _ -> ()
+                                sendChannel <- None)
                             sendChannel <- conn.CreateChannelAsync() |> awaitResult |> Some
 
                         let props = BasicProperties(Headers = headers, Persistent = true)
